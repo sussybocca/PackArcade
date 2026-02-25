@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackCDN · CDN Pack Maker</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+            min-height:100vh; display:flex; justify-content:center; align-items:center;
+            background:#0a0a14; color:#fff; padding:20px;
+        }
+        .glass-container {
+            max-width:800px; width:100%;
+            background:rgba(10,10,20,0.6); backdrop-filter:blur(12px);
+            border-radius:60px; padding:40px 50px;
+            border:1px solid rgba(255,255,255,0.1);
+            box-shadow:0 30px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05) inset, 0 0 40px rgba(100,150,255,0.2);
+            text-align:center;
+        }
+        h1 {
+            font-size:3rem; font-weight:800;
+            background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);
+            -webkit-background-clip:text; background-clip:text; color:transparent;
+            margin-bottom:10px; letter-spacing:-0.02em;
+        }
+        .subtitle {
+            color:rgba(255,255,255,0.6); font-size:1.1rem; margin-bottom:40px;
+            text-transform:uppercase; letter-spacing:3px;
+            border-bottom:1px dashed rgba(255,255,255,0.2); padding-bottom:20px;
+        }
+        .input-group { margin-bottom:25px; text-align:left; }
+        label {
+            display:block; margin-bottom:8px; font-weight:500;
+            color:rgba(255,255,255,0.8); font-size:0.95rem; letter-spacing:0.5px;
+        }
+        input, textarea, select {
+            width:100%; padding:16px 20px; background:rgba(0,0,0,0.4);
+            border:1px solid rgba(255,255,255,0.15); border-radius:50px;
+            font-size:1rem; color:white; transition:0.2s;
+            font-family:inherit;
+        }
+        textarea { border-radius:30px; resize:vertical; min-height:80px; }
+        select { appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat:no-repeat; background-position:right 20px center; background-size:16px; }
+        input:focus, textarea:focus, select:focus {
+            outline:none; border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,0.3);
+        }
+        input::placeholder, textarea::placeholder { color:rgba(255,255,255,0.3); }
+        .row { display:flex; gap:20px; flex-wrap:wrap; }
+        .row .input-group { flex:1; min-width:200px; }
+        .color-row { display:flex; gap:15px; align-items:center; flex-wrap:wrap; }
+        .color-row .input-group { flex:1; }
+        input[type="color"] { height:60px; padding:5px; border-radius:30px; }
+        .advanced-toggle {
+            background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+            border-radius:50px; padding:15px 25px; margin:30px 0 20px;
+            cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+            font-weight:600; color:#a78bfa;
+        }
+        .advanced-toggle:hover { background:rgba(255,255,255,0.1); }
+        .advanced-content { display:none; margin-top:20px; }
+        .advanced-content.show { display:block; }
+        .preview-box {
+            background:var(--bg); color:var(--text); padding:20px; border-radius:30px;
+            margin:20px 0; border:2px solid rgba(255,255,255,0.2);
+        }
+        .preview-box button {
+            background:var(--button); color:var(--buttonText); border:none;
+            border-radius:40px; padding:10px 25px; font-weight:600; margin-top:10px;
+            width:auto; display:inline-block;
+        }
+        button {
+            background:linear-gradient(145deg,#3b82f6,#8b5cf6); border:none;
+            border-radius:50px; padding:16px 40px; font-size:1.2rem; font-weight:700;
+            color:white; cursor:pointer; transition:0.2s;
+            box-shadow:0 10px 20px rgba(0,0,0,0.3); width:100%; margin-top:10px;
+            letter-spacing:1px;
+        }
+        button:hover { transform:scale(1.02); box-shadow:0 0 30px #8b5cf6; }
+        button:disabled { opacity:0.5; pointer-events:none; }
+        .loading-spinner {
+            display:inline-block; width:20px; height:20px;
+            border:3px solid rgba(255,255,255,0.3); border-radius:50%;
+            border-top-color:white; animation:spin 1s ease-in-out infinite;
+            margin-right:8px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .error-message {
+            color:#f87171; background:rgba(127,29,29,0.3);
+            padding:15px; border-radius:30px; margin-top:20px;
+            border:1px solid #f87171;
+        }
+        .back-link {
+            display:inline-block; margin-top:30px; color:rgba(255,255,255,0.5);
+            text-decoration:none; border-bottom:1px dotted;
+        }
+        .back-link:hover { color:white; }
+        .hidden { display:none; }
+    </style>
+</head>
+<body>
+    <div class="glass-container">
+        <h1>📦 CDN Pack Maker</h1>
+        <div class="subtitle">turn any link into a shareable pack</div>
+
+        <div class="input-group">
+            <label for="urlInput">🔗 URL to pack</label>
+            <input type="url" id="urlInput" placeholder="https://example.com/game.html" required>
+        </div>
+        <div class="input-group">
+            <label for="nameInput">📛 Pack name (optional, auto‑generated if empty)</label>
+            <input type="text" id="nameInput" placeholder="my-awesome-pack">
+        </div>
+
+        <!-- Advanced options toggle -->
+        <div class="advanced-toggle" id="advancedToggle">
+            <span>⚙️ Advanced Options</span>
+            <span>▼</span>
+        </div>
+        <div class="advanced-content" id="advancedContent">
+            <!-- Theme colors -->
+            <h3 style="text-align:left; margin-bottom:15px; color:#a78bfa;">🎨 Popup Theme</h3>
+            <div class="color-row">
+                <div class="input-group">
+                    <label>Background</label>
+                    <input type="color" id="bgColor" value="#ffffff">
+                </div>
+                <div class="input-group">
+                    <label>Text</label>
+                    <input type="color" id="textColor" value="#0f172a">
+                </div>
+            </div>
+            <div class="color-row">
+                <div class="input-group">
+                    <label>Button</label>
+                    <input type="color" id="btnColor" value="#3b82f6">
+                </div>
+                <div class="input-group">
+                    <label>Button Text</label>
+                    <input type="color" id="btnTextColor" value="#ffffff">
+                </div>
+            </div>
+
+            <!-- Live preview -->
+            <div class="preview-box" id="previewBox" style="--bg:#ffffff; --text:#0f172a; --button:#3b82f6; --buttonText:#ffffff;">
+                <h3 id="previewTitle">Popup Preview</h3>
+                <p id="previewMessage">Your custom message here.</p>
+                <button id="previewButton">Install Now</button>
+            </div>
+
+            <!-- Pack metadata -->
+            <h3 style="text-align:left; margin:25px 0 15px; color:#a78bfa;">📋 Pack Metadata</h3>
+            <div class="input-group">
+                <label>Description</label>
+                <textarea id="descInput" placeholder="Describe your pack">Pack created from URL</textarea>
+            </div>
+            <div class="row">
+                <div class="input-group">
+                    <label>Version</label>
+                    <input type="text" id="versionInput" value="1.0.0" placeholder="1.0.0">
+                </div>
+                <div class="input-group">
+                    <label>License</label>
+                    <input type="text" id="licenseInput" value="MIT" placeholder="MIT">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Keywords (comma separated)</label>
+                <input type="text" id="keywordsInput" placeholder="game, demo, web">
+            </div>
+            <div class="row">
+                <div class="input-group">
+                    <label>Pack Type</label>
+                    <select id="packTypeSelect">
+                        <option value="basic">Basic (low complexity)</option>
+                        <option value="standard">Standard (medium complexity)</option>
+                        <option value="advanced">Advanced (high complexity)</option>
+                        <option value="wasm">WASM (WebAssembly)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Complexity</label>
+                    <select id="complexitySelect">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Sandbox Level</label>
+                <select id="sandboxSelect">
+                    <option value="strict">Strict</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="relaxed">Relaxed</option>
+                    <option value="wasm-sandbox">WASM Sandbox</option>
+                </select>
+            </div>
+            <div class="input-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="compileWasmCheck" style="width:auto;">
+                <label for="compileWasmCheck" style="margin:0;">Compile to WASM (if supported)</label>
+            </div>
+
+            <!-- Raw JSON editor -->
+            <h3 style="text-align:left; margin:25px 0 15px; color:#a78bfa;">📄 Extra pack.json fields (raw JSON)</h3>
+            <div class="input-group">
+                <textarea id="extraJsonInput" placeholder='{"author":"YourName", "homepage":"..."}'></textarea>
+            </div>
+        </div>
+
+        <button id="generateBtn">✨ Generate CDN Pack</button>
+
+        <div id="errorArea" class="error-message hidden"></div>
+
+        <a href="index.html" class="back-link">← Back to catalog</a>
+    </div>
+
+    <script>
+        (function() {
+            // DOM elements
+            const urlInput = document.getElementById('urlInput');
+            const nameInput = document.getElementById('nameInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const errorArea = document.getElementById('errorArea');
+            const advancedToggle = document.getElementById('advancedToggle');
+            const advancedContent = document.getElementById('advancedContent');
+            const bgColor = document.getElementById('bgColor');
+            const textColor = document.getElementById('textColor');
+            const btnColor = document.getElementById('btnColor');
+            const btnTextColor = document.getElementById('btnTextColor');
+            const previewBox = document.getElementById('previewBox');
+            const previewTitle = document.getElementById('previewTitle');
+            const previewMessage = document.getElementById('previewMessage');
+            const previewButton = document.getElementById('previewButton');
+            const descInput = document.getElementById('descInput');
+            const versionInput = document.getElementById('versionInput');
+            const licenseInput = document.getElementById('licenseInput');
+            const keywordsInput = document.getElementById('keywordsInput');
+            const packTypeSelect = document.getElementById('packTypeSelect');
+            const complexitySelect = document.getElementById('complexitySelect');
+            const sandboxSelect = document.getElementById('sandboxSelect');
+            const compileWasmCheck = document.getElementById('compileWasmCheck');
+            const extraJsonInput = document.getElementById('extraJsonInput');
+
+            const PUBLISH_API = '/api/publish';
+
+            // Toggle advanced panel
+            advancedToggle.addEventListener('click', () => {
+                advancedContent.classList.toggle('show');
+                advancedToggle.querySelector('span:last-child').textContent = 
+                    advancedContent.classList.contains('show') ? '▲' : '▼';
+            });
+
+            // Update preview on color change
+            function updatePreview() {
+                previewBox.style.setProperty('--bg', bgColor.value);
+                previewBox.style.setProperty('--text', textColor.value);
+                previewBox.style.setProperty('--button', btnColor.value);
+                previewBox.style.setProperty('--buttonText', btnTextColor.value);
+                // Optionally set preview text
+                previewTitle.style.color = textColor.value;
+                previewMessage.style.color = textColor.value;
+                previewButton.style.backgroundColor = btnColor.value;
+                previewButton.style.color = btnTextColor.value;
+            }
+            [bgColor, textColor, btnColor, btnTextColor].forEach(el => el.addEventListener('input', updatePreview));
+            updatePreview();
+
+            // Helper functions
+            function showError(message) {
+                errorArea.textContent = message;
+                errorArea.classList.remove('hidden');
+            }
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    generateBtn.disabled = true;
+                    generateBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+                } else {
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '✨ Generate CDN Pack';
+                }
+            }
+
+            function sanitizeName(str) {
+                return str.toLowerCase()
+                    .replace(/https?:\/\//, '')
+                    .replace(/[^a-z0-9]/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '') || 'pack';
+            }
+
+            function getFilenameFromUrl(url) {
+                const urlObj = new URL(url);
+                const path = urlObj.pathname;
+                const parts = path.split('/');
+                let file = parts.pop() || 'index.html';
+                if (!file.includes('.')) file += '.html';
+                return file;
+            }
+
+            function getContentType(url) {
+                const ext = url.split('.').pop().toLowerCase();
+                const textExts = ['html','htm','js','mjs','cjs','ts','jsx','tsx','css','scss','json','txt','md','xml','yaml','yml'];
+                return textExts.includes(ext) ? 'text' : 'binary';
+            }
+
+            function arrayBufferToBase64(buffer) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            generateBtn.addEventListener('click', async () => {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    alert('Please enter a URL');
+                    return;
+                }
+                try {
+                    new URL(url);
+                } catch {
+                    showError('Please enter a valid URL (include http:// or https://)');
+                    return;
+                }
+
+                setLoading(true);
+                errorArea.classList.add('hidden');
+
+                try {
+                    // Fetch URL content
+                    const response = await fetch(url, {
+                        mode: 'cors',
+                        credentials: 'omit',
+                        headers: { 'Accept': '*/*' }
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+                    }
+
+                    const contentTypeHeader = response.headers.get('content-type') || '';
+                    const isText = contentTypeHeader.startsWith('text/') || 
+                                   contentTypeHeader.includes('javascript') ||
+                                   contentTypeHeader.includes('json') ||
+                                   contentTypeHeader.includes('xml') ||
+                                   contentTypeHeader.includes('html') ||
+                                   getContentType(url) === 'text';
+
+                    let fileContent;
+                    if (isText) {
+                        fileContent = await response.text();
+                    } else {
+                        const buffer = await response.arrayBuffer();
+                        fileContent = arrayBufferToBase64(buffer);
+                    }
+
+                    let packName = nameInput.value.trim();
+                    if (!packName) packName = sanitizeName(url);
+
+                    const filename = getFilenameFromUrl(url);
+
+                    // Build packJson from all options
+                    const packJson = {
+                        name: packName,
+                        version: versionInput.value.trim() || '1.0.0',
+                        description: descInput.value.trim() || `Pack created from ${url}`,
+                        main: filename,
+                        license: licenseInput.value.trim() || 'MIT',
+                        complexity: complexitySelect.value,
+                        pack: {
+                            type: packTypeSelect.value,
+                            sandbox: { level: sandboxSelect.value }
+                        },
+                        keywords: keywordsInput.value.split(',').map(k => k.trim()).filter(k => k)
+                    };
+
+                    // Add theme colors under a custom field (e.g., "popup")
+                    packJson.popup = {
+                        theme: {
+                            background: bgColor.value,
+                            text: textColor.value,
+                            button: btnColor.value,
+                            buttonText: btnTextColor.value
+                        }
+                    };
+
+                    // Merge extra JSON fields if provided
+                    const extraJson = extraJsonInput.value.trim();
+                    if (extraJson) {
+                        try {
+                            const extra = JSON.parse(extraJson);
+                            Object.assign(packJson, extra);
+                        } catch (e) {
+                            throw new Error('Invalid extra JSON');
+                        }
+                    }
+
+                    const files = {};
+                    files[filename] = fileContent;
+
+                    const publishResponse = await fetch(PUBLISH_API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: packName,
+                            packJson: JSON.stringify(packJson),
+                            files: files,
+                            isPublic: true,
+                            packageType: packTypeSelect.value,
+                            version: packJson.version,
+                            compileToWasm: compileWasmCheck.checked,
+                            isNewVersion: false
+                        })
+                    });
+
+                    const publishData = await publishResponse.json();
+
+                    if (!publishData.success) {
+                        throw new Error(publishData.error || 'Publish failed');
+                    }
+
+                    // Redirect to details page with pack ID and edit token (if any)
+                    const urlId = publishData.urlId;
+                    const token = publishData.editToken || '';
+                    const detailsPage = `pack-info.html?id=${encodeURIComponent(urlId)}${token ? '&token='+encodeURIComponent(token) : ''}`;
+                    window.location.href = detailsPage;
+
+                } catch (err) {
+                    console.error(err);
+                    showError(err.message || 'An unexpected error occurred');
+                } finally {
+                    setLoading(false);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
