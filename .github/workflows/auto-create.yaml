@@ -1,0 +1,220 @@
+name: Auto‑link Imagine Files
+
+on:
+  push:
+    paths:
+      - 'public/imagine/**'          # triggers for any change inside imagine/
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-selector:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install HTML parser
+        run: npm install --no-save --no-package-lock node-html-parser
+
+      - name: Update selector.html with new imagine files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { parse } = require('node-html-parser');
+
+            const selectorPath = 'public/selector.html';
+            const imagineDir = 'public/imagine';
+
+            // 1. Read the main selector page
+            const selectorHtml = fs.readFileSync(selectorPath, 'utf8');
+            const root = parse(selectorHtml);
+
+            // 2. Find the <script> that contains the cardsData array
+            const scripts = root.querySelectorAll('script');
+            let cardsDataScript = null;
+            for (const script of scripts) {
+              const content = script.textContent || script.innerHTML;
+              if (content.includes('const cardsData = [')) {
+                cardsDataScript = script;
+                break;
+              }
+            }
+            if (!cardsDataScript) {
+              core.setFailed('Could not find cardsData array in selector.html');
+              return;
+            }
+
+            // 3. Parse the existing cardsData array (simple but works for this structure)
+            const scriptContent = cardsDataScript.textContent;
+            const match = scriptContent.match(/const cardsData = (\[[\s\S]*?\]);/);
+            if (!match) {
+              core.setFailed('Failed to extract cardsData array');
+              return;
+            }
+            const cardsDataStr = match[1];
+            let cardsData;
+            try {
+              // Use eval carefully – we trust the content
+              cardsData = eval('(' + cardsDataStr + ')');
+            } catch (e) {
+              core.setFailed('Error parsing cardsData: ' + e.message);
+              return;
+            }
+
+            // 4. Recursively get all HTML/HTM files inside imagine/
+            function getAllHtmlFiles(dir, baseDir = dir) {
+              let results = [];
+              const list = fs.readdirSync(dir);
+              for (const item of list) {
+                const fullPath = path.join(dir, item);
+                const stat = fs.statSync(fullPath);
+                if (stat.isDirectory()) {
+                  results = results.concat(getAllHtmlFiles(fullPath, baseDir));
+                } else if (item.endsWith('.html') || item.endsWith('.htm')) {
+                  const relativePath = path.relative(baseDir, fullPath);
+                  results.push({ fullPath, relativePath });
+                }
+              }
+              return results;
+            }
+
+            if (!fs.existsSync(imagineDir)) {
+              console.log('⚠️  imagine/ folder not found – nothing to do.');
+              return;
+            }
+
+            const files = getAllHtmlFiles(imagineDir);
+            if (files.length === 0) {
+              console.log('No HTML files found in imagine/ – nothing to do.');
+              return;
+            }
+
+            // Helper: extract title
+            function extractTitle(filePath) {
+              try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const doc = parse(content);
+                const titleTag = doc.querySelector('title');
+                return titleTag ? titleTag.text.trim() : null;
+              } catch {
+                return null;
+              }
+            }
+
+            // Helper: extract description
+            function extractDescription(filePath) {
+              try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const doc = parse(content);
+                const metaDesc = doc.querySelector('meta[name="description"]');
+                if (metaDesc) {
+                  return metaDesc.getAttribute('content') || '';
+                }
+                const firstP = doc.querySelector('p');
+                if (firstP) {
+                  return firstP.text.trim().substring(0, 150) + '…';
+                }
+              } catch {}
+              return 'Explore this immersive experience.';
+            }
+
+            // Helper: extract category from meta tag (default: "demos")
+            function extractCategory(filePath) {
+              try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const doc = parse(content);
+                const metaCat = doc.querySelector('meta[name="category"]');
+                if (metaCat) {
+                  return metaCat.getAttribute('content') || 'demos';
+                }
+              } catch {}
+              return 'demos'; // fallback category
+            }
+
+            // Helper: check if a card with the same link already exists
+            function cardExists(link) {
+              return cardsData.some(card => card.link === link);
+            }
+
+            // 5. Add new entries
+            let addedCount = 0;
+            for (const { fullPath, relativePath } of files) {
+              const link = `imagine/${relativePath.replace(/\\/g, '/')}`;
+              if (cardExists(link)) {
+                console.log(`Card for ${relativePath} already exists – skipping.`);
+                continue;
+              }
+
+              const title = extractTitle(fullPath) || 
+                path.basename(relativePath, path.extname(relativePath)).replace(/[-_]/g, ' ') +
+                ' ' + path.extname(relativePath).substring(1).toUpperCase();
+              const description = extractDescription(fullPath);
+              const category = extractCategory(fullPath);
+
+              // Default icon (you could also extract from meta)
+              const icon = '📄';
+
+              // Build a new card object matching the structure in cardsData
+              const newCard = {
+                icon: icon,
+                title: title,
+                description: description,
+                features: [
+                  'Immersive experience',
+                  'New dimension',
+                  'Interactive content'
+                ],
+                link: link,
+                category: category,
+                highlight: false
+              };
+
+              cardsData.push(newCard);
+              addedCount++;
+              console.log(`✅ Added card for ${relativePath} (category: ${category})`);
+            }
+
+            if (addedCount === 0) {
+              console.log('No new cards to add.');
+              return;
+            }
+
+            // 6. Replace the cardsData array in the script
+            const newCardsDataStr = JSON.stringify(cardsData, null, 2)
+              .replace(/"([^"]+)":/g, '$1:'); // remove quotes around keys to match original style
+
+            const updatedScriptContent = scriptContent.replace(
+              /const cardsData = \[[\s\S]*?\];/,
+              `const cardsData = ${newCardsDataStr};`
+            );
+
+            cardsDataScript.textContent = updatedScriptContent;
+
+            // 7. Write the updated HTML back
+            fs.writeFileSync(selectorPath, root.toString());
+            console.log('selector.html updated successfully.');
+
+      - name: Commit and push changes (only if selector.html changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/selector.html
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto‑add imagine file links [skip ci]"
+            git push
+          else
+            echo "No changes to selector.html; skipping commit."
+          fi
