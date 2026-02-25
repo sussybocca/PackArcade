@@ -22,16 +22,28 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: #0e121f;
       color: #eef2ff;
       line-height: 1.5;
-      background: radial-gradient(circle at 10% 20%, rgba(45, 40, 75, 0.8), #0b0e17 80%);
       position: relative;
       display: flex;
       flex-direction: column;
+      background: radial-gradient(circle at 10% 20%, rgba(45, 40, 75, 0.8), #0b0e17 80%); /* fallback */
     }
 
-    /* floating glow orbs */
+    /* ----- BACKGROUND VIDEO ----- */
+    #bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;                /* behind everything */
+      pointer-events: none;        /* allow clicks to pass through */
+      opacity: 0.7;                /* blend with gradient, adjust as you like */
+    }
+
+    /* floating glow orbs (now sit above video) */
     body::before {
       content: '';
       position: fixed;
@@ -63,7 +75,7 @@
     .container {
       width: 100%;
       height: 100%;
-      padding: 0.5rem 0.8rem 0.8rem 0.8rem; /* minimal padding to maximize space */
+      padding: 0.5rem 0.8rem 0.8rem 0.8rem;
       position: relative;
       z-index: 2;
       display: flex;
@@ -76,7 +88,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 1rem; /* reduced from 2rem */
+      margin-bottom: 1rem;
       justify-content: center;
       background: rgba(15, 20, 35, 0.6);
       backdrop-filter: blur(16px);
@@ -114,11 +126,11 @@
       font-weight: 600;
     }
 
-    /* immersive card grid - takes remaining height */
+    /* immersive card grid */
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem; /* reduced gap */
+      gap: 1rem;
       perspective: 1200px;
       flex: 1;
       align-content: start;
@@ -270,6 +282,44 @@
       color: #a8b2e0;
     }
 
+    /* ----- MUSIC TOGGLE BUTTON ----- */
+    #music-toggle {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 100;
+      background: rgba(20, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.7rem 1.2rem;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      line-height: 1;
+    }
+
+    #music-toggle:hover {
+      background: rgba(50, 55, 80, 0.9);
+      border-color: rgba(180, 130, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    #music-toggle.muted {
+      opacity: 0.6;
+    }
+
+    #music-toggle span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* video fallback: if video fails, background stays gradient */
     @media (max-width: 600px) {
       .container { padding: 0.3rem; }
       .filter-bar { padding: 0.6rem 1rem; }
@@ -278,6 +328,19 @@
   </style>
 </head>
 <body>
+
+  <!-- BACKGROUND VIDEO (muted for autoplay, loop, playsinline) -->
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="Videos/bg.mp4" type="video/mp4">
+    <!-- Fallback: if video not found, nothing shows and gradient remains -->
+  </video>
+
+  <!-- HIDDEN AUDIO ELEMENT FOR LOBBY MUSIC -->
+  <audio id="lobby-music" loop preload="auto">
+    <source src="audio/LobbyMusic.mp3" type="audio/mpeg">
+    <!-- Fallback: if mp3 not available, audio stays silent -->
+  </audio>
+
   <div class="container">
     
     <!-- ========== FULL CARDS DATA ARRAY ========== -->
@@ -725,6 +788,11 @@
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
 
+  <!-- MUSIC TOGGLE BUTTON -->
+  <button id="music-toggle" class="muted" title="Toggle lobby music">
+    <span>🔇</span> <span>Music</span>
+  </button>
+
   <script>
     (function() {
       const grid = document.getElementById('cardsGrid');
@@ -779,6 +847,43 @@
       }
 
       renderCards('all');
+    })();
+
+    // ----- MUSIC CONTROL -----
+    (function() {
+      const audio = document.getElementById('lobby-music');
+      const toggleBtn = document.getElementById('music-toggle');
+      let isPlaying = false;
+
+      // If audio file fails to load, disable button
+      audio.addEventListener('error', () => {
+        toggleBtn.style.display = 'none'; // hide if no music file
+      });
+
+      toggleBtn.addEventListener('click', () => {
+        if (isPlaying) {
+          audio.pause();
+          toggleBtn.innerHTML = '<span>🔇</span> <span>Music</span>';
+        } else {
+          // Browsers require user interaction to play audio
+          audio.play().then(() => {
+            toggleBtn.innerHTML = '<span>🔊</span> <span>Music</span>';
+            isPlaying = true;
+          }).catch(e => {
+            console.warn('Audio play failed:', e);
+            // If play fails (e.g., file missing), hide button
+            toggleBtn.style.display = 'none';
+          });
+          return; // early return because play is async
+        }
+        isPlaying = !isPlaying;
+      });
+
+      // Optional: if audio ends, reset icon (though loop is on)
+      audio.addEventListener('ended', () => {
+        isPlaying = false;
+        toggleBtn.innerHTML = '<span>🔇</span> <span>Music</span>';
+      });
     })();
   </script>
 </body>
