@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Selector · Immersive UI</title>
+  <!-- immersive font & base styling -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0e121f;  /* fallback – gradient overlay will be applied */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #eef2ff;
+      line-height: 1.5;
+      /* immersive animated background */
+      background: radial-gradient(circle at 10% 20%, rgba(45, 40, 75, 0.8), #0b0e17 80%);
+      position: relative;
+    }
+
+    /* floating glow orbs (purely decorative) */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 70vmax;
+      height: 70vmax;
+      top: 10vh;
+      right: -10vw;
+      background: radial-gradient(circle, rgba(100, 80, 220, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(80px);
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      width: 60vmin;
+      height: 60vmin;
+      bottom: 0;
+      left: 0;
+      background: radial-gradient(circle, rgba(180, 130, 255, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(70px);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem 2rem;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+    }
+
+    /* category filter bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 3rem;
+      justify-content: center;
+      background: rgba(15, 20, 35, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 1rem 1.8rem;
+      border-radius: 60px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: none;
+      color: #b1b9d9;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(4px);
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(145deg, #4a40bf, #7a5be8);
+      color: white;
+      box-shadow: 0 8px 18px -6px #4a40bf80;
+      font-weight: 600;
+    }
+
+    /* immersive card grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      perspective: 1200px;
+    }
+
+    /* card styles */
+    .card {
+      background: rgba(20, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 32px;
+      padding: 1.8rem 1.5rem 1.8rem 1.5rem;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      transition: all 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      color: #eef2ff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-8px) rotateX(2deg) rotateY(1deg);
+      background: rgba(30, 35, 60, 0.8);
+      border-color: rgba(140, 120, 255, 0.3);
+      box-shadow: 0 30px 60px -15px #000000cc, 0 0 0 2px rgba(140, 120, 255, 0.2) inset;
+    }
+
+    /* highlight special cards (e.g., featured) */
+    .card.highlight {
+      background: linear-gradient(145deg, #2f2a60, #282350);
+      border: 1px solid #a28eff55;
+      box-shadow: 0 25px 45px -12px #6240ff, 0 0 0 1px #b5a0ff inset;
+    }
+
+    .card.highlight::after {
+      content: '★ FEATURED';
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: #ffd966cc;
+      backdrop-filter: blur(4px);
+      color: #1a142b;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 1rem;
+      border-radius: 40px;
+      letter-spacing: 0.5px;
+    }
+
+    .card-icon {
+      font-size: 3.2rem;
+      line-height: 1;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 8px 12px #00000050);
+    }
+
+    .card-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.65rem;
+      background: linear-gradient(to right, #fff, #d2c9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 0.95rem;
+      color: #b9c2e8;
+      margin-bottom: 1.4rem;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .feature-tag {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 40px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #cbd0ec;
+      backdrop-filter: blur(2px);
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #ffffffdd;
+      text-decoration: none;
+      transition: all 0.2s;
+      margin-top: auto;
+      align-self: flex-start;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-link:hover {
+      background: #5e50dc;
+      border-color: #a88eff;
+      box-shadow: 0 6px 14px #3f2db0;
+      gap: 0.8rem;
+    }
+
+    .card-link span {
+      font-size: 1.1rem;
+    }
+
+    /* category badge inside card */
+    .category-badge {
+      position: absolute;
+      bottom: 18px;
+      right: 20px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.02);
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      color: #929cce;
+      border: 1px solid rgba(255,255,255,0.05);
+      letter-spacing: 0.3px;
+    }
+
+    /* empty state */
+    .empty-message {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 48px;
+      backdrop-filter: blur(8px);
+      border: 1px dashed #536;
+      font-size: 1.2rem;
+      color: #a8b2e0;
+    }
+
+    /* responsive */
+    @media (max-width: 600px) {
+      .container { padding: 1rem; }
+      .cards-grid { gap: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- This script block is automatically updated by the GitHub workflow -->
+    <script>
+      const cardsData = [
+        // Default demo entries – they will be replaced/amended by the action.
+        // The structure matches what the workflow expects.
+        {
+          icon: "🌌",
+          title: "Nebula Drifter",
+          description: "Pilot your ship through living starscapes. Collect cosmic energy and avoid black holes.",
+          features: ["Open world", "Space", "Atmospheric"],
+          link: "imagine/nebula-drifter.html",
+          category: "games",
+          highlight: true
+        },
+        {
+          icon: "🏯",
+          title: "Echoes of the Samurai",
+          description: "Step into feudal Japan. Every decision reshapes the timeline.",
+          features: ["RPG", "Historical", "Branching story"],
+          link: "imagine/echoes-samurai.html",
+          category: "interactive",
+          highlight: false
+        },
+        {
+          icon: "🧩",
+          title: "Quantum Puzzles",
+          description: "Manipulate particles to solve physics‑defying puzzles. 50+ levels.",
+          features: ["Brain teaser", "Minimalist", "Quantum"],
+          link: "imagine/quantum-puzzles.html",
+          category: "puzzle",
+          highlight: false
+        },
+        {
+          icon: "🏝️",
+          title: "Luma Island VR",
+          description: "Relax on a glowing tropical island. Build, fish, and discover ancient secrets.",
+          features: ["VR supported", "Relaxing", "Crafting"],
+          link: "imagine/luma-island.html",
+          category: "experience",
+          highlight: false
+        }
+      ];
+    </script>
+
+    <!-- Category filter UI (dynamic) -->
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-category="all">All</button>
+      <!-- Other categories will be added by JS based on cardsData -->
+    </div>
+
+    <!-- Cards grid will be injected here -->
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  <!-- Rendering script – independent of the data array -->
+  <script>
+    (function() {
+      // cardsData is already defined in the previous script block
+      const grid = document.getElementById('cardsGrid');
+      const filterBar = document.getElementById('filterBar');
+
+      // Extract unique categories from cardsData
+      const categories = ['all', ...new Set(cardsData.map(c => c.category).filter(Boolean))];
+
+      // Build filter buttons dynamically (preserve the 'all' button that's already there)
+      const existingAllBtn = filterBar.querySelector('[data-category="all"]');
+      filterBar.innerHTML = ''; // clear, we'll rebuild
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn' + (cat === 'all' ? ' active' : '');
+        btn.setAttribute('data-category', cat);
+        btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1); // capitalize
+        btn.addEventListener('click', () => {
+          // update active class
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderCards(cat);
+        });
+        filterBar.appendChild(btn);
+      });
+
+      // Render cards based on selected category
+      function renderCards(category = 'all') {
+        const filtered = category === 'all' 
+          ? cardsData 
+          : cardsData.filter(c => c.category === category);
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div class="empty-message">✨ No games in this dimension yet ✨</div>`;
+          return;
+        }
+
+        let html = '';
+        filtered.forEach(card => {
+          const highlightClass = card.highlight ? 'highlight' : '';
+          const featuresHtml = card.features.map(f => `<span class="feature-tag">${f}</span>`).join('');
+          // ensure card.link is correctly prefixed – we assume it already contains 'imagine/...'
+          const link = card.link.startsWith('http') ? card.link : card.link;
+
+          html += `
+            <div class="card ${highlightClass}" onclick="window.location.href='${link}'">
+              <div class="card-icon">${card.icon || '📁'}</div>
+              <h3 class="card-title">${card.title}</h3>
+              <p class="card-desc">${card.description}</p>
+              <div class="features">${featuresHtml}</div>
+              <a href="${link}" class="card-link" onclick="event.stopPropagation();">
+                <span>▶</span> enter
+              </a>
+              <span class="category-badge">${card.category || 'demos'}</span>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+      }
+
+      // initial render (all)
+      renderCards('all');
+    })();
+  </script>
+</body>
+</html>
