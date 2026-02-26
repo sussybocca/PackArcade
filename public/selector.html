@@ -277,7 +277,7 @@
       color: #a8b2e0;
     }
 
-    /* ----- MUSIC CONTROLS (button + dropdown) ----- */
+    /* ----- MUSIC CONTROLS (left side) ----- */
     .music-controls {
       position: fixed;
       bottom: 20px;
@@ -309,10 +309,6 @@
       background: rgba(50, 55, 80, 0.9);
       border-color: rgba(180, 130, 255, 0.5);
       transform: scale(1.05);
-    }
-
-    #music-toggle.muted {
-      opacity: 0.6;
     }
 
     #music-toggle span {
@@ -347,12 +343,82 @@
       color: white;
     }
 
+    /* ----- ARCADE FX CONTROLS (right side) ----- */
+    .fx-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    #fx-toggle {
+      background: rgba(20, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.7rem 1.2rem;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      line-height: 1;
+    }
+
+    #fx-toggle:hover {
+      background: rgba(50, 55, 80, 0.9);
+      border-color: rgba(180, 130, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    #fx-toggle span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    #fx-select {
+      background: rgba(20, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.7rem 1.2rem;
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #fx-select:hover {
+      background: rgba(50, 55, 80, 0.9);
+      border-color: rgba(180, 130, 255, 0.5);
+    }
+
+    #fx-select option {
+      background: #1a1f33;
+      color: white;
+    }
+
     @media (max-width: 600px) {
       .container { padding: 0.3rem; }
       .filter-bar { padding: 0.6rem 1rem; }
       .cards-grid { gap: 0.8rem; }
-      .music-controls { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      #song-select { max-width: 180px; }
+      .music-controls, .fx-controls { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 0.5rem; 
+      }
+      #song-select, #fx-select { max-width: 180px; }
     }
   </style>
 </head>
@@ -362,7 +428,9 @@
     <source src="Videos/bg.mp4" type="video/mp4">
   </video>
 
+  <!-- Audio elements -->
   <audio id="lobby-music" loop preload="auto"></audio>
+  <audio id="arcade-fx" loop preload="auto"></audio> <!-- New FX element with loop -->
 
   <div class="container">
     
@@ -829,13 +897,23 @@
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
 
-  <!-- music controls: button + dropdown -->
+  <!-- Music controls (left) -->
   <div class="music-controls">
     <button id="music-toggle" class="muted" title="Toggle lobby music">
       <span>🔇</span> <span>Music</span>
     </button>
     <select id="song-select" title="Select a song">
       <option value="">Loading songs...</option>
+    </select>
+  </div>
+
+  <!-- Arcade FX controls (right) -->
+  <div class="fx-controls">
+    <button id="fx-toggle" class="muted" title="Toggle arcade sound effect">
+      <span>🔇</span> <span>Arcade FX</span>
+    </button>
+    <select id="fx-select" title="Select an effect">
+      <option value="">Loading effects...</option>
     </select>
   </div>
 
@@ -896,58 +974,50 @@
       renderCards('all');
     })();
 
-    // ----- DYNAMIC MUSIC PLAYER WITH GITHUB API -----
+    // ----- DYNAMIC MUSIC PLAYER WITH GITHUB API (unchanged) -----
     (function() {
       const audio = document.getElementById('lobby-music');
       const toggleBtn = document.getElementById('music-toggle');
       const songSelect = document.getElementById('song-select');
       
       let isPlaying = false;
-      let playlist = []; // will store { name, url }
+      let playlist = [];
       let currentTrackIndex = 0;
 
-      // GitHub API endpoint for the audio folder
       const apiUrl = 'https://api.github.com/repos/sussybocca/PackArcade/contents/public/audio';
 
-      // Fetch MP3 list
       async function loadPlaylist() {
         try {
           const response = await fetch(apiUrl);
           if (!response.ok) throw new Error('GitHub API error');
           const data = await response.json();
           
-          // Filter for .mp3 files (case-insensitive)
           const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
           
           if (mp3Files.length === 0) throw new Error('No MP3 files found');
 
-          // Build playlist with raw GitHub URLs
           playlist = mp3Files.map(file => ({
-            name: file.name.replace(/\.mp3$/i, ''), // display name without extension
+            name: file.name.replace(/\.mp3$/i, ''),
             url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/audio/${encodeURIComponent(file.name)}`
           }));
 
-          // Populate dropdown
           songSelect.innerHTML = '';
           playlist.forEach((song, index) => {
             const option = document.createElement('option');
-            option.value = index; // store index for easy access
+            option.value = index;
             option.textContent = song.name;
             songSelect.appendChild(option);
           });
 
-          // Set first song as default
           currentTrackIndex = 0;
           audio.src = playlist[0].url;
           audio.load();
 
-          // Enable controls
           toggleBtn.disabled = false;
           songSelect.disabled = false;
 
         } catch (error) {
           console.warn('Failed to load playlist from GitHub:', error);
-          // Fallback to a default local file (if it exists)
           playlist = [{ name: 'LobbyMusic', url: 'audio/LobbyMusic.mp3' }];
           songSelect.innerHTML = '<option value="0">LobbyMusic (fallback)</option>';
           audio.src = playlist[0].url;
@@ -955,21 +1025,18 @@
         }
       }
 
-      // Change song when dropdown changes
       songSelect.addEventListener('change', () => {
         const index = parseInt(songSelect.value, 10);
         if (!isNaN(index) && playlist[index]) {
           currentTrackIndex = index;
           audio.src = playlist[currentTrackIndex].url;
           audio.load();
-          // If currently playing, continue with new song
           if (isPlaying) {
             audio.play().catch(e => console.warn('Play after song change failed:', e));
           }
         }
       });
 
-      // Play/pause toggle
       toggleBtn.addEventListener('click', () => {
         if (isPlaying) {
           audio.pause();
@@ -983,12 +1050,11 @@
             })
             .catch(e => {
               console.warn('Audio play failed:', e);
-              toggleBtn.style.display = 'none'; // hide if completely broken
+              toggleBtn.style.display = 'none';
             });
         }
       });
 
-      // When a song ends, play the next one automatically
       audio.addEventListener('ended', () => {
         if (playlist.length > 1) {
           currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -997,16 +1063,13 @@
           if (isPlaying) {
             audio.play().catch(e => console.warn('Auto-play next failed:', e));
           }
-          // Update dropdown selection
           songSelect.value = currentTrackIndex;
         } else {
-          // Only one song, just reset icon
           isPlaying = false;
           toggleBtn.innerHTML = '<span>🔇</span> <span>Music</span>';
         }
       });
 
-      // If audio errors (e.g., file not found), move to next or disable
       audio.addEventListener('error', () => {
         console.warn('Audio error, trying next song...');
         if (playlist.length > 1) {
@@ -1017,6 +1080,132 @@
             audio.play().catch(e => console.warn('Play after error failed:', e));
           }
           songSelect.value = currentTrackIndex;
+        } else {
+          toggleBtn.style.display = 'none';
+        }
+      });
+
+      loadPlaylist();
+    })();
+
+    // ----- DYNAMIC ARCADE FX PLAYER (NEW) -----
+    (function() {
+      const audio = document.getElementById('arcade-fx');
+      const toggleBtn = document.getElementById('fx-toggle');
+      const fxSelect = document.getElementById('fx-select');
+      
+      let isPlaying = false;
+      let playlist = [];
+      let currentTrackIndex = 0;
+
+      // GitHub API endpoint for the Arcade_FX folder
+      const apiUrl = 'https://api.github.com/repos/sussybocca/PackArcade/contents/public/Arcade_FX';
+
+      async function loadPlaylist() {
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error('GitHub API error');
+          const data = await response.json();
+          
+          // Filter for .mp3 files
+          const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
+          
+          if (mp3Files.length === 0) throw new Error('No MP3 files found in Arcade_FX');
+
+          // Build playlist with raw GitHub URLs
+          playlist = mp3Files.map(file => ({
+            name: file.name.replace(/\.mp3$/i, ''),
+            url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/Arcade_FX/${encodeURIComponent(file.name)}`
+          }));
+
+          // Populate dropdown
+          fxSelect.innerHTML = '';
+          playlist.forEach((fx, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = fx.name;
+            fxSelect.appendChild(option);
+          });
+
+          // Set first effect as default
+          currentTrackIndex = 0;
+          audio.src = playlist[0].url;
+          audio.load();
+
+          // Enable controls
+          toggleBtn.disabled = false;
+          fxSelect.disabled = false;
+
+        } catch (error) {
+          console.warn('Failed to load Arcade FX playlist from GitHub:', error);
+          // Fallback to a default local file (if it exists)
+          playlist = [{ name: 'DefaultFX', url: 'Arcade_FX/default.mp3' }];
+          fxSelect.innerHTML = '<option value="0">DefaultFX (fallback)</option>';
+          audio.src = playlist[0].url;
+          audio.load();
+        }
+      }
+
+      // Change effect when dropdown changes
+      fxSelect.addEventListener('change', () => {
+        const index = parseInt(fxSelect.value, 10);
+        if (!isNaN(index) && playlist[index]) {
+          currentTrackIndex = index;
+          audio.src = playlist[currentTrackIndex].url;
+          audio.load();
+          // If currently playing, continue with new effect
+          if (isPlaying) {
+            audio.play().catch(e => console.warn('Play after effect change failed:', e));
+          }
+        }
+      });
+
+      // Play/pause toggle
+      toggleBtn.addEventListener('click', () => {
+        if (isPlaying) {
+          audio.pause();
+          toggleBtn.innerHTML = '<span>🔇</span> <span>Arcade FX</span>';
+          isPlaying = false;
+        } else {
+          audio.play()
+            .then(() => {
+              toggleBtn.innerHTML = '<span>🔊</span> <span>Arcade FX</span>';
+              isPlaying = true;
+            })
+            .catch(e => {
+              console.warn('Arcade FX play failed:', e);
+              toggleBtn.style.display = 'none'; // hide if completely broken
+            });
+        }
+      });
+
+      // When a sound ends, play the next one automatically (since loop is set, this will only happen if loop is removed)
+      audio.addEventListener('ended', () => {
+        if (playlist.length > 1) {
+          currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+          audio.src = playlist[currentTrackIndex].url;
+          audio.load();
+          if (isPlaying) {
+            audio.play().catch(e => console.warn('Auto-play next effect failed:', e));
+          }
+          fxSelect.value = currentTrackIndex;
+        } else {
+          isPlaying = false;
+          toggleBtn.innerHTML = '<span>🔇</span> <span>Arcade FX</span>';
+        }
+      });
+
+      // If audio errors, move to next or disable
+      audio.addEventListener('error', () => {
+        console.warn('Arcade FX audio error, trying next...');
+        if (playlist.length > 1) {
+          currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+          audio.src = playlist[currentTrackIndex].url;
+          audio.load();
+          if (isPlaying) {
+            audio.play().catch(e => console.warn('Play after error failed:', e));
+          }
+          fxSelect.value = currentTrackIndex;
         } else {
           toggleBtn.style.display = 'none';
         }
