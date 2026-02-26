@@ -613,7 +613,7 @@
     <source src="Videos/bg.mp4" type="video/mp4">
   </video>
 
-  <!-- Audio elements (raw sources, will be connected to Web Audio) -->
+  
   <audio id="lobby-music" loop preload="auto" crossorigin="anonymous"></audio>
   <audio id="arcade-fx" loop preload="auto" crossorigin="anonymous"></audio>
   <audio id="funny-sounds" loop preload="auto" crossorigin="anonymous"></audio>
@@ -621,465 +621,678 @@
 
   <div class="container">
     
-    <!-- ===== ULTRA ADVANCED AUDIO MIXER PANEL ===== -->
+    
     <div class="mixer-panel" id="mixerPanel">
-      <!-- Channels will be dynamically generated in JS -->
+      
     </div>
 
-    <!-- ========== FULL CARDS DATA ARRAY ========== -->
+    
     <script>
       const cardsData = [
-        {
-          icon: "🌌",
-          title: "Nebula Drifter",
-          description: "Pilot your ship through living starscapes. Collect cosmic energy and avoid black holes.",
-          features: ["Open world", "Space", "Atmospheric"],
-          link: "imagine/nebula-drifter.html",
-          category: "games",
-          highlight: true
-        },
-        {
-          icon: "🏯",
-          title: "Echoes of the Samurai",
-          description: "Step into feudal Japan. Every decision reshapes the timeline.",
-          features: ["RPG", "Historical", "Branching story"],
-          link: "imagine/echoes-samurai.html",
-          category: "interactive",
-          highlight: false
-        },
-        {
-          icon: "🧩",
-          title: "Quantum Puzzles",
-          description: "Manipulate particles to solve physics‑defying puzzles. 50+ levels.",
-          features: ["Brain teaser", "Minimalist", "Quantum"],
-          link: "imagine/quantum-puzzles.html",
-          category: "puzzle",
-          highlight: false
-        },
-        {
-          icon: "🏝️",
-          title: "Luma Island VR",
-          description: "Relax on a glowing tropical island. Build, fish, and discover ancient secrets.",
-          features: ["VR supported", "Relaxing", "Crafting"],
-          link: "imagine/luma-island.html",
-          category: "experience",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "2048",
-          description: "Join the numbers and get to the 2048 tile!…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/2048.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "8ballclassic HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/8ballclassic.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "CDN Game Editor & Explore",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/CDN.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "PackCDN · CDN Pack Maker",
-          description: "Your custom message here.…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/CDN_InstantCreator/PACK_QRCODE.htm",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "PackCDN · Pack Details",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/CDN_InstantCreator/pack-info.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "capybaraclicker HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/CapyBaraClicker/capybaraclicker.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "FSX Language Editor – External Runtime",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/FSX/FSX_EDITOR_.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "FOX · apex predator",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/Fox/Custom/Fox.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "GameImpossible – The Ultimate Maze",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/GameImpossible-Private/index.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "HSX Advanced Editor",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/HSX/hsx-editor.htm",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Pack Studio · Advanced File Editor",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/Pack/Custom-Lange/Editor.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "PARCORE · maze rush · fly & upgrade",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/ParCoreSim.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Pack Popup Creator · Manifest Generator",
-          description: "This pack adds epic levels and items. Check it out!…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/PopUpManger/Popup-creator.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "ROAD CHASE · just run them down",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/RoadChase.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "run HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/Run/Runner/run.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "🚀 SPACE SHOOTERS · upgrade & blast",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/SpaceShooters.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "◀ SPACE SHOOTERS ▶ · ANALOG HORROR · CRT-3000",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/SpaceShooters2/index.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "SpaceShooters – Menu",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/SpaceShooters2/main.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "SPACESHOOTERS · ARCADE MENU",
-          description: "→ ARROWS or WASD : move ship…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/SpaceShooters2/menu.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "SpaceShooters – Options",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/SpaceShooters2/options.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "crossyroad HTM",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/TinyFishing/Games/ETC/crossyroad.htm",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "ducklife HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/TinyFishing/Games/ETC/ducklife.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "tinyfishing HTML",
-          description: "Your browser doesn't support HTML5 canvas.…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/TinyFishing/Games/ETC/tinyfishing.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "ageofwar HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/ageofwar.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "amongus HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/amongus.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "angrybirds HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/angrybirds.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "basketbros HTML",
-          description: "Loading...…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/basketbros.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "bitlife HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/bitlife.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "bloonsTD HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/bloonsTD.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "brick breaker HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/brick-breaker.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "cookieclicker HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/cookieclicker.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "PackCDN · PURE THREE.JS GAME · CONTROLS WORK",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/deepseek_html_20260216_42dccb.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Flappy Bird",
-          description: "…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/flappybird.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "fnaf HTML",
-          description: "…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/fnaf.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Ghost Clicker 3D - Immersive Spectral Hunting",
-          description: "Enter a spectral dimension where ghosts drift in 3D space. Use your cursor to banish them in this immersive haunting experience!…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/ghost.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "JavaMods",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/index (1).html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Subway Surfers",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/index (2).html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "장기",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/janggi.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "일정관리",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/kanban.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "maze HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/maze.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Gomoku",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/omok.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "stack HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/stack.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Tetris",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/tetris.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "zombierush HTML",
-          description: "Explore this immersive experience.",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/zombierush.html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Pacman",
-          description: "Your name:…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/PackMan/index (13).html",
-          category: "demos",
-          highlight: false
-        },
-        {
-          icon: "📄",
-          title: "Pacman",
-          description: "Your name:…",
-          features: ["Immersive experience", "New dimension", "Interactive content"],
-          link: "imagine/PackMan/index.html",
-          category: "demos",
-          highlight: false
-        }
-      ];
+  {
+    icon: "🌌",
+    title: "Nebula Drifter",
+    description: "Pilot your ship through living starscapes. Collect cosmic energy and avoid black holes.",
+    features: [
+      "Open world",
+      "Space",
+      "Atmospheric"
+    ],
+    link: "imagine/nebula-drifter.html",
+    category: "games",
+    highlight: true
+  },
+  {
+    icon: "🏯",
+    title: "Echoes of the Samurai",
+    description: "Step into feudal Japan. Every decision reshapes the timeline.",
+    features: [
+      "RPG",
+      "Historical",
+      "Branching story"
+    ],
+    link: "imagine/echoes-samurai.html",
+    category: "interactive",
+    highlight: false
+  },
+  {
+    icon: "🧩",
+    title: "Quantum Puzzles",
+    description: "Manipulate particles to solve physics‑defying puzzles. 50+ levels.",
+    features: [
+      "Brain teaser",
+      "Minimalist",
+      "Quantum"
+    ],
+    link: "imagine/quantum-puzzles.html",
+    category: "puzzle",
+    highlight: false
+  },
+  {
+    icon: "🏝️",
+    title: "Luma Island VR",
+    description: "Relax on a glowing tropical island. Build, fish, and discover ancient secrets.",
+    features: [
+      "VR supported",
+      "Relaxing",
+      "Crafting"
+    ],
+    link: "imagine/luma-island.html",
+    category: "experience",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "2048",
+    description: "Join the numbers and get to the 2048 tile!…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/2048.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "8ballclassic HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/8ballclassic.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "CDN Game Editor & Explore",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/CDN.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "PackCDN · CDN Pack Maker",
+    description: "Your custom message here.…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/CDN_InstantCreator/PACK_QRCODE.htm",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "PackCDN · Pack Details",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/CDN_InstantCreator/pack-info.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "capybaraclicker HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/CapyBaraClicker/capybaraclicker.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "FSX Language Editor – External Runtime",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/FSX/FSX_EDITOR_.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "FOX · apex predator",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/Fox/Custom/Fox.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "GameImpossible – The Ultimate Maze",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/GameImpossible-Private/index.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "HSX Advanced Editor",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/HSX/hsx-editor.htm",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Pack Studio · Advanced File Editor",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/Pack/Custom-Lange/Editor.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "PARCORE · maze rush · fly & upgrade",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/ParCoreSim.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Pack Popup Creator · Manifest Generator",
+    description: "This pack adds epic levels and items. Check it out!…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/PopUpManger/Popup-creator.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "ROAD CHASE · just run them down",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/RoadChase.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "run HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/Run/Runner/run.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "🚀 SPACE SHOOTERS · upgrade & blast",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/SpaceShooters.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "◀ SPACE SHOOTERS ▶ · ANALOG HORROR · CRT-3000",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/SpaceShooters2/index.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "SpaceShooters – Menu",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/SpaceShooters2/main.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "SPACESHOOTERS · ARCADE MENU",
+    description: "→ ARROWS or WASD : move ship…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/SpaceShooters2/menu.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "SpaceShooters – Options",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/SpaceShooters2/options.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "crossyroad HTM",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/TinyFishing/Games/ETC/crossyroad.htm",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "ducklife HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/TinyFishing/Games/ETC/ducklife.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "tinyfishing HTML",
+    description: "Your browser doesn't support HTML5 canvas.…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/TinyFishing/Games/ETC/tinyfishing.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "ageofwar HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/ageofwar.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "amongus HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/amongus.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "angrybirds HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/angrybirds.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "basketbros HTML",
+    description: "Loading...…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/basketbros.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "bitlife HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/bitlife.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "bloonsTD HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/bloonsTD.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "brick breaker HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/brick-breaker.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "cookieclicker HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/cookieclicker.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "PackCDN · PURE THREE.JS GAME · CONTROLS WORK",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/deepseek_html_20260216_42dccb.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Flappy Bird",
+    description: "…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/flappybird.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "fnaf HTML",
+    description: "…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/fnaf.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Ghost Clicker 3D - Immersive Spectral Hunting",
+    description: "Enter a spectral dimension where ghosts drift in 3D space. Use your cursor to banish them in this immersive haunting experience!…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/ghost.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "JavaMods",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/index (1).html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Subway Surfers",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/index (2).html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "장기",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/janggi.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "일정관리",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/kanban.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "maze HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/maze.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Gomoku",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/omok.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "stack HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/stack.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Tetris",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/tetris.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "zombierush HTML",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/zombierush.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Pacman",
+    description: "Your name:…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/PackMan/index (13).html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Pacman",
+    description: "Your name:…",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/PackMan/index.html",
+    category: "demos",
+    highlight: false
+  },
+  {
+    icon: "📄",
+    title: "Geometry Dash",
+    description: "Explore this immersive experience.",
+    features: [
+      "Immersive experience",
+      "New dimension",
+      "Interactive content"
+    ],
+    link: "imagine/GeoMentry_Dash/index.html",
+    category: "demos",
+    highlight: false
+  }
+];
     </script>
 
     <div class="filter-bar" id="filterBar">
@@ -1089,22 +1302,22 @@
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
 
-  <!-- Human Sounds controls (top left) -->
+  
   <div class="human-controls">
     <button id="human-toggle" class="muted" title="Toggle human sound"><span>🔇</span> <span>Human</span></button>
     <select id="human-select" title="Select a human sound"><option value="">Loading...</option></select>
   </div>
-  <!-- Funny Sounds controls (middle left) -->
+  
   <div class="funny-controls">
     <button id="funny-toggle" class="muted" title="Toggle funny sound"><span>🔇</span> <span>Funny</span></button>
     <select id="funny-select" title="Select a funny sound"><option value="">Loading...</option></select>
   </div>
-  <!-- Music controls (bottom left) -->
+  
   <div class="music-controls">
     <button id="music-toggle" class="muted" title="Toggle lobby music"><span>🔇</span> <span>Music</span></button>
     <select id="song-select" title="Select a song"><option value="">Loading...</option></select>
   </div>
-  <!-- Arcade FX controls (right side) -->
+  
   <div class="fx-controls">
     <button id="fx-toggle" class="muted" title="Toggle arcade sound effect"><span>🔇</span> <span>Arcade FX</span></button>
     <select id="fx-select" title="Select an effect"><option value="">Loading...</option></select>
