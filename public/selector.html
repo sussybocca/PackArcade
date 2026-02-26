@@ -82,19 +82,21 @@
     }
 
     /* ----- ULTRA ADVANCED AUDIO MIXER PANEL ----- */
-    .mixer-panel {
-      background: rgba(15, 20, 35, 0.9);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
-    }
+   .mixer-panel {
+  background: rgba(15, 20, 35, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 40px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: auto;            /* ← new */
+  max-height: 600px;           /* ← new */
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
 
     .mixer-channel {
       min-width: 200px;
