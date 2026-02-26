@@ -277,7 +277,7 @@
       color: #a8b2e0;
     }
 
-    /* ----- MUSIC CONTROLS (left side) ----- */
+    /* ----- MUSIC CONTROLS (left side, bottom) ----- */
     .music-controls {
       position: fixed;
       bottom: 20px;
@@ -341,6 +341,84 @@
     #song-select option {
       background: #1a1f33;
       color: white;
+    }
+
+    /* ----- FUNNY SOUNDS CONTROLS (left side, above music) ----- */
+    .funny-controls {
+      position: fixed;
+      bottom: 100px;  /* Positioned above music controls */
+      left: 20px;
+      z-index: 100;
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    #funny-toggle {
+      background: rgba(20, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.7rem 1.2rem;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      line-height: 1;
+    }
+
+    #funny-toggle:hover {
+      background: rgba(50, 55, 80, 0.9);
+      border-color: rgba(180, 130, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    #funny-toggle span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* ----- HUMAN SOUNDS CONTROLS (left side, above funny) ----- */
+    .human-controls {
+      position: fixed;
+      bottom: 180px;  /* Positioned above funny controls */
+      left: 20px;
+      z-index: 100;
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    #human-toggle {
+      background: rgba(20, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.7rem 1.2rem;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      line-height: 1;
+    }
+
+    #human-toggle:hover {
+      background: rgba(50, 55, 80, 0.9);
+      border-color: rgba(180, 130, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    #human-toggle span {
+      font-size: 0.9rem;
+      font-weight: 500;
     }
 
     /* ----- ARCADE FX CONTROLS (right side) ----- */
@@ -413,12 +491,15 @@
       .container { padding: 0.3rem; }
       .filter-bar { padding: 0.6rem 1rem; }
       .cards-grid { gap: 0.8rem; }
-      .music-controls, .fx-controls { 
+      .music-controls, .funny-controls, .human-controls, .fx-controls { 
         flex-direction: column; 
         align-items: flex-start; 
         gap: 0.5rem; 
       }
-      #song-select, #fx-select { max-width: 180px; }
+      .music-controls { bottom: 20px; }
+      .funny-controls { bottom: 120px; }
+      .human-controls { bottom: 220px; }
+      #song-select, #fx-select { max-width: 150px; }
     }
   </style>
 </head>
@@ -430,7 +511,9 @@
 
   <!-- Audio elements -->
   <audio id="lobby-music" loop preload="auto"></audio>
-  <audio id="arcade-fx" loop preload="auto"></audio> <!-- New FX element with loop -->
+  <audio id="arcade-fx" loop preload="auto"></audio>
+  <audio id="funny-sounds" preload="auto"></audio>   <!-- random playback -->
+  <audio id="human-sounds" preload="auto"></audio>   <!-- random playback -->
 
   <div class="container">
     
@@ -897,7 +980,21 @@
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
 
-  <!-- Music controls (left) -->
+  <!-- Human Sounds controls (top of left stack) -->
+  <div class="human-controls">
+    <button id="human-toggle" class="muted" title="Toggle human sounds (random 1-10 min)">
+      <span>🔇</span> <span>Human Sounds</span>
+    </button>
+  </div>
+
+  <!-- Funny Sounds controls (middle of left stack) -->
+  <div class="funny-controls">
+    <button id="funny-toggle" class="muted" title="Toggle funny sounds (random 1-10 min)">
+      <span>🔇</span> <span>Funny Sounds</span>
+    </button>
+  </div>
+
+  <!-- Music controls (bottom of left stack) -->
   <div class="music-controls">
     <button id="music-toggle" class="muted" title="Toggle lobby music">
       <span>🔇</span> <span>Music</span>
@@ -907,7 +1004,7 @@
     </select>
   </div>
 
-  <!-- Arcade FX controls (right) -->
+  <!-- Arcade FX controls (right side) -->
   <div class="fx-controls">
     <button id="fx-toggle" class="muted" title="Toggle arcade sound effect">
       <span>🔇</span> <span>Arcade FX</span>
@@ -974,7 +1071,7 @@
       renderCards('all');
     })();
 
-    // ----- DYNAMIC MUSIC PLAYER WITH GITHUB API (unchanged) -----
+    // ----- DYNAMIC MUSIC PLAYER WITH GITHUB API -----
     (function() {
       const audio = document.getElementById('lobby-music');
       const toggleBtn = document.getElementById('music-toggle');
@@ -1088,7 +1185,7 @@
       loadPlaylist();
     })();
 
-    // ----- DYNAMIC ARCADE FX PLAYER (NEW) -----
+    // ----- DYNAMIC ARCADE FX PLAYER -----
     (function() {
       const audio = document.getElementById('arcade-fx');
       const toggleBtn = document.getElementById('fx-toggle');
@@ -1098,7 +1195,6 @@
       let playlist = [];
       let currentTrackIndex = 0;
 
-      // GitHub API endpoint for the Arcade_FX folder
       const apiUrl = 'https://api.github.com/repos/sussybocca/PackArcade/contents/public/Arcade_FX';
 
       async function loadPlaylist() {
@@ -1107,18 +1203,15 @@
           if (!response.ok) throw new Error('GitHub API error');
           const data = await response.json();
           
-          // Filter for .mp3 files
           const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
           
           if (mp3Files.length === 0) throw new Error('No MP3 files found in Arcade_FX');
 
-          // Build playlist with raw GitHub URLs
           playlist = mp3Files.map(file => ({
             name: file.name.replace(/\.mp3$/i, ''),
             url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/Arcade_FX/${encodeURIComponent(file.name)}`
           }));
 
-          // Populate dropdown
           fxSelect.innerHTML = '';
           playlist.forEach((fx, index) => {
             const option = document.createElement('option');
@@ -1127,18 +1220,15 @@
             fxSelect.appendChild(option);
           });
 
-          // Set first effect as default
           currentTrackIndex = 0;
           audio.src = playlist[0].url;
           audio.load();
 
-          // Enable controls
           toggleBtn.disabled = false;
           fxSelect.disabled = false;
 
         } catch (error) {
-          console.warn('Failed to load Arcade FX playlist from GitHub:', error);
-          // Fallback to a default local file (if it exists)
+          console.warn('Failed to load Arcade FX playlist:', error);
           playlist = [{ name: 'DefaultFX', url: 'Arcade_FX/default.mp3' }];
           fxSelect.innerHTML = '<option value="0">DefaultFX (fallback)</option>';
           audio.src = playlist[0].url;
@@ -1146,21 +1236,18 @@
         }
       }
 
-      // Change effect when dropdown changes
       fxSelect.addEventListener('change', () => {
         const index = parseInt(fxSelect.value, 10);
         if (!isNaN(index) && playlist[index]) {
           currentTrackIndex = index;
           audio.src = playlist[currentTrackIndex].url;
           audio.load();
-          // If currently playing, continue with new effect
           if (isPlaying) {
             audio.play().catch(e => console.warn('Play after effect change failed:', e));
           }
         }
       });
 
-      // Play/pause toggle
       toggleBtn.addEventListener('click', () => {
         if (isPlaying) {
           audio.pause();
@@ -1174,12 +1261,11 @@
             })
             .catch(e => {
               console.warn('Arcade FX play failed:', e);
-              toggleBtn.style.display = 'none'; // hide if completely broken
+              toggleBtn.style.display = 'none';
             });
         }
       });
 
-      // When a sound ends, play the next one automatically (since loop is set, this will only happen if loop is removed)
       audio.addEventListener('ended', () => {
         if (playlist.length > 1) {
           currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -1195,7 +1281,6 @@
         }
       });
 
-      // If audio errors, move to next or disable
       audio.addEventListener('error', () => {
         console.warn('Arcade FX audio error, trying next...');
         if (playlist.length > 1) {
@@ -1211,7 +1296,176 @@
         }
       });
 
-      // Start loading playlist
+      loadPlaylist();
+    })();
+
+    // ----- FUNNY SOUNDS RANDOM PLAYER -----
+    (function() {
+      const audio = document.getElementById('funny-sounds');
+      const toggleBtn = document.getElementById('funny-toggle');
+      
+      let isEnabled = false;
+      let playlist = [];
+      let timeoutId = null;
+
+      const apiUrl = 'https://api.github.com/repos/sussybocca/PackArcade/contents/public/Funny_Sound_Effects';
+
+      async function loadPlaylist() {
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error('GitHub API error');
+          const data = await response.json();
+          
+          const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
+          
+          if (mp3Files.length === 0) throw new Error('No MP3 files found in Funny_Sound_Effects');
+
+          playlist = mp3Files.map(file => ({
+            name: file.name.replace(/\.mp3$/i, ''),
+            url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/Funny_Sound_Effects/${encodeURIComponent(file.name)}`
+          }));
+
+          toggleBtn.disabled = false;
+
+        } catch (error) {
+          console.warn('Failed to load Funny Sounds playlist:', error);
+          toggleBtn.style.display = 'none';
+        }
+      }
+
+      function getRandomInterval() {
+        // Random between 1 and 10 minutes (60000 - 600000 ms)
+        return Math.floor(Math.random() * (600000 - 60000 + 1)) + 60000;
+      }
+
+      function scheduleNext() {
+        if (!isEnabled || playlist.length === 0) return;
+        
+        const interval = getRandomInterval();
+        timeoutId = setTimeout(() => {
+          playRandomSound();
+        }, interval);
+      }
+
+      function playRandomSound() {
+        if (!isEnabled || playlist.length === 0) return;
+        
+        const randomIndex = Math.floor(Math.random() * playlist.length);
+        audio.src = playlist[randomIndex].url;
+        audio.play()
+          .then(() => {
+            // Schedule next after this one ends
+            audio.onended = () => {
+              scheduleNext();
+            };
+          })
+          .catch(e => {
+            console.warn('Funny sound play failed:', e);
+            scheduleNext(); // Try again later even if this one failed
+          });
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        if (isEnabled) {
+          // Turn off
+          isEnabled = false;
+          audio.pause();
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          toggleBtn.innerHTML = '<span>🔇</span> <span>Funny Sounds</span>';
+        } else {
+          // Turn on
+          isEnabled = true;
+          toggleBtn.innerHTML = '<span>🔊</span> <span>Funny Sounds</span>';
+          scheduleNext(); // Start the cycle
+        }
+      });
+
+      loadPlaylist();
+    })();
+
+    // ----- HUMAN SOUNDS RANDOM PLAYER -----
+    (function() {
+      const audio = document.getElementById('human-sounds');
+      const toggleBtn = document.getElementById('human-toggle');
+      
+      let isEnabled = false;
+      let playlist = [];
+      let timeoutId = null;
+
+      const apiUrl = 'https://api.github.com/repos/sussybocca/PackArcade/contents/public/Human_Sounds';
+
+      async function loadPlaylist() {
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error('GitHub API error');
+          const data = await response.json();
+          
+          const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
+          
+          if (mp3Files.length === 0) throw new Error('No MP3 files found in Human_Sounds');
+
+          playlist = mp3Files.map(file => ({
+            name: file.name.replace(/\.mp3$/i, ''),
+            url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/Human_Sounds/${encodeURIComponent(file.name)}`
+          }));
+
+          toggleBtn.disabled = false;
+
+        } catch (error) {
+          console.warn('Failed to load Human Sounds playlist:', error);
+          toggleBtn.style.display = 'none';
+        }
+      }
+
+      function getRandomInterval() {
+        return Math.floor(Math.random() * (600000 - 60000 + 1)) + 60000;
+      }
+
+      function scheduleNext() {
+        if (!isEnabled || playlist.length === 0) return;
+        
+        const interval = getRandomInterval();
+        timeoutId = setTimeout(() => {
+          playRandomSound();
+        }, interval);
+      }
+
+      function playRandomSound() {
+        if (!isEnabled || playlist.length === 0) return;
+        
+        const randomIndex = Math.floor(Math.random() * playlist.length);
+        audio.src = playlist[randomIndex].url;
+        audio.play()
+          .then(() => {
+            audio.onended = () => {
+              scheduleNext();
+            };
+          })
+          .catch(e => {
+            console.warn('Human sound play failed:', e);
+            scheduleNext();
+          });
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        if (isEnabled) {
+          isEnabled = false;
+          audio.pause();
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          toggleBtn.innerHTML = '<span>🔇</span> <span>Human Sounds</span>';
+        } else {
+          isEnabled = true;
+          toggleBtn.innerHTML = '<span>🔊</span> <span>Human Sounds</span>';
+          scheduleNext();
+        }
+      });
+
       loadPlaylist();
     })();
   </script>
