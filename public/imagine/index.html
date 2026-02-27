@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drugs.sim — experience the truth</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="ui-container"></div>
+    <div id="message-box" class="hidden"></div>
+    <div id="loading-screen">Loading assets... <span id="loading-progress">0%</span></div>
+    
+    <!-- Three.js and required libraries -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <!-- Main game module (type="module" for ES6) -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
