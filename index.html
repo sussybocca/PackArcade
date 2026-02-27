@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Immersive Game Hub – PackArcade</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/publicmanifest.json">
   <!-- Default favicon (will be changed by user selection) -->
-  <link id="dynamic-favicon" rel="icon" type="image/png" href="assets/images/Arcade1.png">
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="/public/assets/images/Arcade1.png">
   <style>
     /* Reset everything */
     * {
@@ -267,7 +267,7 @@
       // Register service worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
+          navigator.serviceWorker.register('/public/service-worker.js')
             .then(reg => console.log('Service Worker registered', reg))
             .catch(err => console.log('Service Worker registration failed', err));
         });
