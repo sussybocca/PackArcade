@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceShooters 3 - Immersive 3D Open World</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Three.js canvas will be appended here -->
+        <div id="ui-overlay">
+            <div id="stats">
+                <div>Health: <span id="health-value">200</span>%</div>
+                <div>Score: <span id="score-value">0</span></div>
+                <div>Wave: <span id="wave-value">1</span></div>
+            </div>
+            <div id="minimap"></div>
+            <div id="controls-hint">
+                <p>WASD: Move | Mouse: Aim | Click: Shoot</p>
+            </div>
+        </div>
+        <div id="game-over-screen" class="hidden">
+            <video id="gameover-video" src="assets/video/game-over.mp4" autoplay loop muted playsinline></video>
+            <div class="gameover-content">
+                <h1>GAME OVER</h1>
+                <p>Final Score: <span id="final-score">0</span></p>
+                <button id="restart-btn">RESTART MISSION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video elements for textures (preloaded) -->
+    <div style="display: none;">
+        <video id="player-video" src="assets/video/player.mp4" autoplay loop muted playsinline crossorigin="anonymous"></video>
+        <video id="enemy1-video" src="assets/video/enemy1.mp4" autoplay loop muted playsinline crossorigin="anonymous"></video>
+        <video id="enemy2-video" src="assets/video/enemy2.mp4" autoplay loop muted playsinline crossorigin="anonymous"></video>
+        <audio id="audio-bg" src="assets/audio/background-music.mp3" preload="auto" loop></audio>
+        <audio id="audio-laser" src="assets/audio/laser.mp3" preload="auto"></audio>
+        <audio id="audio-explosion" src="assets/audio/explosion.mp3" preload="auto"></audio>
+        <audio id="audio-gameover" src="assets/audio/game-over.mp3" preload="auto"></audio>
+    </div>
+
+    <!-- Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Game scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/video.js"></script>
+    <script src="js/bullet.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/enemy.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/world.js"></script>  <!-- New Three.js world manager -->
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    cursor: none;
+}
+
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    color: #0ff;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+    z-index: 10;
+}
+
+#stats {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px 25px;
+    border-radius: 8px;
+    border: 1px solid #0ff;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+#stats div {
+    margin: 5px 0;
+    letter-spacing: 1px;
+}
+
+#stats span {
+    color: #fff;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+#minimap {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 200px;
+    background: rgba(0, 20, 40, 0.7);
+    border: 2px solid #0ff;
+    border-radius: 50%;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+    backdrop-filter: blur(4px);
+    overflow: hidden;
+}
+
+#controls-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    font-size: 14px;
+    color: #afa;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #afa;
+    letter-spacing: 1px;
+}
+
+#game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    color: #fff;
+    backdrop-filter: blur(8px);
+}
+
+#game-over-screen h1 {
+    font-size: 72px;
+    color: #f44;
+    text-shadow: 0 0 30px #f00;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite;
+}
+
+#game-over-screen p {
+    font-size: 32px;
+    color: #ff0;
+    margin-bottom: 40px;
+}
+
+#restart-btn {
+    padding: 15px 40px;
+    font-size: 24px;
+    background: #0af;
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px #0af;
+}
+
+#restart-btn:hover {
+    background: #0ff;
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #0ff;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; text-shadow: 0 0 50px #f00; }
+    100% { opacity: 0.8; }
+}
+
+/* Mini-map internal style (canvas will draw on it) */
+#minimap canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
