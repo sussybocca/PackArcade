@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameImpossible – Maze of Fear</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'CreepyFont', 'Courier New', monospace;
+            user-select: none;
+        }
+        @font-face {
+            font-family: 'CreepyFont';
+            src: url('./assets/fonts/creepy.otf') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            font-size: 2em;
+            text-shadow: 0 0 10px red;
+            transition: opacity 1s;
+        }
+        #progress-bar {
+            width: 300px;
+            height: 20px;
+            border: 2px solid red;
+            margin-top: 20px;
+            background: #222;
+        }
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: red;
+            transition: width 0.2s;
+            box-shadow: 0 0 20px red;
+        }
+        #cutscene-overlay {
+            position: absolute;
+            bottom: 20%;
+            left: 10%;
+            right: 10%;
+            background: rgba(0,0,0,0.8);
+            border: 2px solid red;
+            color: white;
+            padding: 20px;
+            font-family: 'CreepyFont', monospace;
+            font-size: 1.5em;
+            text-align: center;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            box-shadow: 0 0 30px red;
+        }
+        #instruction {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: rgba(255,255,255,0.5);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 40;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div>GAMEIMPOSSIBLE</div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <div style="font-size: 0.5em; margin-top: 20px;">PREPARE FOR NIGHTMARES</div>
+    </div>
+
+    <div id="cutscene-overlay">CUTSCENE TEXT</div>
+    <div id="instruction">WASD to move · Mouse to look · ESC to unlock cursor</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
