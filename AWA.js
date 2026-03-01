@@ -1,121 +1,332 @@
-// AWA.js – Arcade Web App Enhancer
+// AWA.js – Arcade Web App Enhancer (Advanced Edition)
+// This script enhances your PWA with a custom immersive UI, smarter installation flow,
+// and performance optimizations. It runs on every page.
 
 (function() {
-  // Store the install prompt event
-  let deferredPrompt;
+  'use strict';
 
-  // 1. Capture the beforeinstallprompt event
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();          // Prevent the mini-infobar from appearing
-    deferredPrompt = e;           // Save it for later use
+  // ==================== CONFIGURATION ====================
+  const CONFIG = {
+    appName: 'Arcade Web App',
+    headerColor: '#1a1f33',
+    headerTextColor: '#ffffff',
+    settingsPanelColor: '#f0f0f0',
+    enableLazyLoading: true,
+    enablePreload: true,
+    installButtonSelector: '#installButton',      // Button on launcher.html
+    installContainerSelector: '#installContainer', // Container on launcher.html
+    statusMessageSelector: '#statusMessage'       // Status message element
+  };
 
-    // Show your custom install button (if on launcher.html)
-    const installContainer = document.getElementById('installContainer');
-    if (installContainer) {
-      installContainer.style.display = 'block';
-    }
-  });
+  // ==================== STATE ====================
+  let deferredPrompt;                // Stores the beforeinstallprompt event
+  let isStandalone = false;          // Whether app runs in standalone mode
+  let settingsVisible = false;       // Tracks settings panel visibility
 
-  // 2. Handle the custom install button click
-  document.addEventListener('click', async (event) => {
-    if (event.target.id === 'installButton' && deferredPrompt) {
-      deferredPrompt.prompt();    // Show the browser's install dialog
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to install: ${outcome}`);
-      deferredPrompt = null;       // We can only use it once
-    }
-  });
-
-  // 3. Detect standalone mode (app is installed)
-  function isStandalone() {
+  // ==================== UTILITY FUNCTIONS ====================
+  function isStandaloneMode() {
     return window.matchMedia('(display-mode: standalone)').matches ||
            window.navigator.standalone === true; // iOS Safari
   }
 
-  // 4. Enhance the app when running standalone
-  if (isStandalone()) {
-    // Add a custom title bar with buttons
+  // Safely get element by ID
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  // ==================== INSTALLATION FLOW ====================
+  // 1. Capture the beforeinstallprompt event
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();                 // Prevent the default mini-infobar
+    deferredPrompt = e;                  // Save for later
+
+    // Show a custom install button on launcher.html if it exists
+    const installContainer = $(CONFIG.installContainerSelector);
+    if (installContainer) {
+      installContainer.style.display = 'block';
+    }
+
+    // Also, if we're on any page and not installed, we could show a floating install button
+    if (!isStandaloneMode()) {
+      showFloatingInstallButton();
+    }
+  });
+
+  // 2. Handle clicks on the custom install button (works on launcher.html and floating button)
+  document.addEventListener('click', async (event) => {
+    const isInstallButton = event.target.matches('#installButton, .awa-floating-install');
+    if (isInstallButton && deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`[AWA] User install choice: ${outcome}`);
+      deferredPrompt = null;  // Can only be used once
+
+      // Hide the floating button after install
+      const floatingBtn = document.querySelector('.awa-floating-install');
+      if (floatingBtn) floatingBtn.remove();
+    }
+  });
+
+  // 3. Listen for successful installation
+  window.addEventListener('appinstalled', (evt) => {
+    console.log('[AWA] App was installed.');
+    // If we're on launcher.html, redirect to main app
+    if (window.location.pathname.includes('launcher.html')) {
+      window.location.href = '/';
+    }
+  });
+
+  // 4. Show a floating install button on any page if the app is not installed
+  function showFloatingInstallButton() {
+    // Avoid duplicates
+    if (document.querySelector('.awa-floating-install')) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'awa-floating-install';
+    btn.textContent = '⬇️ Install Arcade Web App';
+    btn.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10000;
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      border: 1px solid rgba(255,255,255,0.2);
+    `;
+    btn.addEventListener('mouseenter', () => { btn.style.transform = 'scale(1.05)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.transform = 'scale(1)'; });
+    btn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+      } else {
+        alert('To install, use the browser menu (Add to Home Screen).');
+      }
+    });
+    document.body.appendChild(btn);
+  }
+
+  // ==================== STANDALONE ENHANCEMENTS ====================
+  if (isStandaloneMode()) {
+    console.log('[AWA] Running in standalone mode – applying immersive UI.');
+    isStandalone = true;
+
+    // 1. Create custom title bar
     const header = document.createElement('header');
     header.id = 'awa-header';
     header.style.cssText = `
-      background: #333; color: white; padding: 8px 16px;
-      display: flex; justify-content: space-between; align-items: center;
-      position: sticky; top: 0; z-index: 1000;
+      background: ${CONFIG.headerColor};
+      color: ${CONFIG.headerTextColor};
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10000;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      user-select: none;
     `;
     header.innerHTML = `
-      <span>Arcade Web App</span>
-      <div>
-        <button id="awa-settings">⚙️ Settings</button>
-        <button id="awa-minimize">🗕</button>
-        <button id="awa-close">🗙</button>
+      <span style="font-weight: 600; font-size: 1.2rem;">⚡ ${CONFIG.appName}</span>
+      <div style="display: flex; gap: 8px;">
+        <button id="awa-settings" class="awa-header-btn" title="Settings">⚙️</button>
+        <button id="awa-minimize" class="awa-header-btn" title="Minimize">🗕</button>
+        <button id="awa-close" class="awa-header-btn" title="Close">🗙</button>
       </div>
     `;
+    // Add a small style for header buttons
+    const style = document.createElement('style');
+    style.textContent = `
+      .awa-header-btn {
+        background: transparent;
+        border: none;
+        color: ${CONFIG.headerTextColor};
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+      .awa-header-btn:hover {
+        background: rgba(255,255,255,0.2);
+      }
+    `;
+    document.head.appendChild(style);
     document.body.prepend(header);
 
-    // Settings panel (hidden by default)
+    // 2. Settings panel (hidden initially)
     const settingsPanel = document.createElement('div');
     settingsPanel.id = 'awa-settings-panel';
     settingsPanel.style.cssText = `
-      display: none; background: #f0f0f0; padding: 16px;
-      border: 1px solid #ccc; margin: 8px;
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      width: 300px;
+      background: ${CONFIG.settingsPanelColor};
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      padding: 20px;
+      z-index: 10001;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.95);
     `;
     settingsPanel.innerHTML = `
-      <h3>AWA Settings</h3>
-      <p>Welcome to the Arcade Web App!</p>
-      <p><strong>Instructions:</strong> This app runs in its own window. Use the buttons above to navigate.</p>
-      <button id="awa-close-settings">Close</button>
+      <h3 style="margin-top:0; display: flex; justify-content: space-between; align-items: center;">
+        ⚙️ AWA Settings
+        <button id="awa-close-settings" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">✖</button>
+      </h3>
+      <p><strong>Welcome to the Arcade Web App!</strong></p>
+      <p>This app runs in its own custom window. Use the header buttons to control the window.</p>
+      <hr>
+      <label>
+        <input type="checkbox" id="awa-theme-toggle"> Dark Theme (experimental)
+      </label>
+      <hr>
+      <p><strong>Instructions:</strong></p>
+      <ul style="padding-left:20px;">
+        <li><strong>Settings</strong> – opens this panel</li>
+        <li><strong>Minimize</strong> – hides the content (click the AWA icon in taskbar to restore)</li>
+        <li><strong>Close</strong> – closes the app (if supported)</li>
+      </ul>
+      <p style="font-size:0.9rem; color:#666;">Version 2.0 | Made with ⚡</p>
     `;
     document.body.appendChild(settingsPanel);
 
-    // Event listeners for custom controls
-    document.getElementById('awa-settings').addEventListener('click', () => {
-      settingsPanel.style.display = 'block';
-    });
-    document.getElementById('awa-close-settings').addEventListener('click', () => {
-      settingsPanel.style.display = 'none';
-    });
-    document.getElementById('awa-minimize').addEventListener('click', () => {
-      // Minimize is not possible via web APIs – you can only hide the window content
-      alert('Minimize is handled by the OS (click the window title bar)');
-    });
-    document.getElementById('awa-close').addEventListener('click', () => {
-      window.close(); // May not work in all browsers; otherwise just suggest closing.
+    // 3. Event listeners for header buttons (using delegation to avoid missing elements)
+    document.addEventListener('click', (e) => {
+      // Settings button
+      if (e.target.id === 'awa-settings' || e.target.closest('#awa-settings')) {
+        e.preventDefault();
+        settingsVisible = !settingsVisible;
+        settingsPanel.style.display = settingsVisible ? 'block' : 'none';
+      }
+      // Close settings button
+      if (e.target.id === 'awa-close-settings' || e.target.closest('#awa-close-settings')) {
+        settingsVisible = false;
+        settingsPanel.style.display = 'none';
+      }
+      // Minimize button – we can't truly minimize, but we can hide the main content
+      if (e.target.id === 'awa-minimize' || e.target.closest('#awa-minimize')) {
+        e.preventDefault();
+        // Toggle visibility of everything except the header and settings panel
+        const allChildren = document.body.children;
+        for (let child of allChildren) {
+          if (child.id !== 'awa-header' && child.id !== 'awa-settings-panel') {
+            child.style.display = child.style.display === 'none' ? '' : 'none';
+          }
+        }
+        // Show a message that content is hidden
+        alert('Content minimized. Click the AWA icon in your taskbar to restore the window.');
+      }
+      // Close button – attempt to close window
+      if (e.target.id === 'awa-close' || e.target.closest('#awa-close')) {
+        e.preventDefault();
+        if (confirm('Close Arcade Web App?')) {
+          window.close(); // May not work in all browsers
+        }
+      }
     });
 
-    // 5. Performance improvements (example: lazy loading images)
-    const lazyImages = document.querySelectorAll('img[data-src]');
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            observer.unobserve(img);
-          }
-        });
+    // 4. Theme toggle (example of persistent setting)
+    const themeToggle = document.getElementById('awa-theme-toggle');
+    if (themeToggle) {
+      // Load saved preference
+      const savedTheme = localStorage.getItem('awa-dark-theme');
+      if (savedTheme === 'true') {
+        document.body.classList.add('awa-dark-theme');
+        themeToggle.checked = true;
+      }
+      themeToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          document.body.classList.add('awa-dark-theme');
+          localStorage.setItem('awa-dark-theme', 'true');
+        } else {
+          document.body.classList.remove('awa-dark-theme');
+          localStorage.setItem('awa-dark-theme', 'false');
+        }
       });
-      lazyImages.forEach(img => observer.observe(img));
-    } else {
-      // Fallback
-      lazyImages.forEach(img => img.src = img.dataset.src);
     }
 
-    // 6. Preload critical resources (optional)
-    // You can add <link rel="preload"> tags dynamically.
+    // 5. Performance improvements
+    if (CONFIG.enableLazyLoading) {
+      // Lazy load images with data-src
+      const lazyImages = document.querySelectorAll('img[data-src]');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              img.src = img.dataset.src;
+              observer.unobserve(img);
+            }
+          });
+        });
+        lazyImages.forEach(img => observer.observe(img));
+      } else {
+        lazyImages.forEach(img => img.src = img.dataset.src);
+      }
+    }
+
+    if (CONFIG.enablePreload) {
+      // Preload critical resources (example: if you have a known next page)
+      // You can add <link rel="preload"> dynamically based on user behavior.
+      // For now, we preload the manifest and any large hero images.
+      const preloadLinks = [
+        { rel: 'preload', as: 'image', href: '/icons/favicon.png' }
+      ];
+      preloadLinks.forEach(link => {
+        const l = document.createElement('link');
+        l.rel = link.rel;
+        l.as = link.as;
+        l.href = link.href;
+        document.head.appendChild(l);
+      });
+    }
+
+    // 6. Add a custom CSS class to body for AWA-specific styling
+    document.body.classList.add('awa-enhanced');
   } else {
-    // Not installed – maybe show a message on launcher.html
-    const status = document.getElementById('statusMessage');
-    if (status) {
-      status.textContent = 'Click "Install AWA" to add this app to your device.';
+    // Not installed – show message on launcher.html if needed
+    const statusMsg = $(CONFIG.statusMessageSelector);
+    if (statusMsg) {
+      statusMsg.textContent = 'Click "Install AWA" to add this app to your device.';
     }
   }
 
-  // 7. Listen for the app being successfully installed
-  window.addEventListener('appinstalled', (evt) => {
-    console.log('AWA was installed.');
-    // Optionally redirect to the main app
-    if (window.location.pathname.includes('launcher.html')) {
-      window.location.href = '/';   // Go to the main site
+  // ==================== ADDITIONAL FEATURES ====================
+  // Detect if the app was launched from the home screen (useful for analytics)
+  if (document.referrer === '' && isStandalone) {
+    console.log('[AWA] Launched from home screen.');
+  }
+
+  // Handle visibility change to maybe pause/resume games
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      console.log('[AWA] App hidden – you could pause game logic here.');
+    } else {
+      console.log('[AWA] App visible again.');
     }
   });
+
+  // Expose API for other scripts (optional)
+  window.AWA = {
+    isStandalone: () => isStandalone,
+    showSettings: () => { if (settingsPanel) settingsPanel.style.display = 'block'; },
+    hideSettings: () => { if (settingsPanel) settingsPanel.style.display = 'none'; },
+    config: CONFIG
+  };
+
+  console.log('[AWA] Enhancer initialized.');
 })();
