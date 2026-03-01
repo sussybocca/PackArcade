@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Immersive Game Hub</title>
 
-  <!-- PWA manifest (must be inside head) -->
+  <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
 
-  <!-- Favicon for browser tab -->
+  <!-- Favicon -->
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
-  <!-- Load the AWA enhancer (includes custom install logic & immersive UI) -->
+  <!-- AWA enhancer (your custom immersive UI) -->
   <script src="/AWA.js" defer></script>
 
   <style>
@@ -34,7 +34,7 @@
       position: relative;
     }
 
-    /* Header – slim, floating, no extra space */
+    /* Header – slim, floating */
     .header {
       position: absolute;
       top: 0;
@@ -49,7 +49,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      pointer-events: none;       /* allow clicks to pass through to iframe */
+      pointer-events: none;       /* allow clicks through to iframe */
     }
 
     .header h1 {
@@ -67,7 +67,7 @@
       font-size: 0.85rem;
     }
 
-    /* Make the install link visible and clickable */
+    /* Your existing "Install Arcade Web App" link */
     .install-link {
       position: absolute;
       top: 0.8rem;
@@ -81,10 +81,40 @@
       font-size: 0.9rem;
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255,255,255,0.2);
-      pointer-events: auto;       /* make sure it's clickable */
+      pointer-events: auto;
     }
     .install-link:hover {
       background: rgba(255,255,255,0.25);
+    }
+
+    /* Chromebook badge container – hidden by default */
+    #chromebook-badge-container {
+      position: absolute;
+      top: 4rem;            /* below the header and install link */
+      right: 1.5rem;
+      z-index: 20;
+      display: none;         /* will be shown by JavaScript on ChromeOS */
+      pointer-events: auto;
+      background: transparent;
+    }
+
+    #chromebook-badge-container a {
+      display: inline-block;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    #chromebook-badge-container a:hover {
+      transform: scale(1.02);
+    }
+
+    #chromebook-badge-container picture img {
+      display: block;
+      width: 150px;
+      height: auto;
+      border: 0;
     }
 
     /* iframe container – fills entire viewport */
@@ -103,7 +133,7 @@
       background: #0e121f;
     }
 
-    /* Footer – tiny overlay at bottom */
+    /* Footer overlay */
     .footer {
       position: absolute;
       bottom: 0.5rem;
@@ -121,14 +151,31 @@
     @media (max-width: 600px) {
       .header h1 { font-size: 1.2rem; }
       .header p { font-size: 0.75rem; }
+      #chromebook-badge-container {
+        top: 5rem;
+        right: 0.5rem;
+      }
+      #chromebook-badge-container picture img {
+        width: 120px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Install link – now styled and clickable -->
+  <!-- Your existing install link (points to your custom installer) -->
   <a href="/launcher.html" class="install-link">⬇️ Install Arcade Web App</a>
 
-  <!-- Minimal header – does not take layout space -->
+  <!-- Chromebook badge – hidden by default, will be shown via JS -->
+  <div id="chromebook-badge-container">
+    <a href="/launcher.html?utm_source=Arcade&utm_campaign=Games" id="add-to-chromebook-link">
+      <picture>
+        <source srcset="https://chromeos.dev/badges/en/dark.svg" media="(prefers-color-scheme: dark)">
+        <img src="https://chromeos.dev/badges/en/primary.svg" alt="Add to Chromebook">
+      </picture>
+    </a>
+  </div>
+
+  <!-- Minimal header -->
   <header class="header">
     <h1>⚡ DIMENSION SELECTOR</h1>
     <p>choose your immersive experience</p>
@@ -139,11 +186,30 @@
     <iframe src="public/selector.html" title="Game Selector" loading="lazy"></iframe>
   </div>
 
-  <!-- Tiny footer overlay -->
+  <!-- Footer overlay -->
   <div class="footer">
     <span>✦ auto‑linked from <code>public/imagine/</code> ✦</span>
   </div>
 
-  <!-- Optionally, you could also include a fallback message if AWA.js fails to load -->
+  <!-- Advanced detection script: show badge only on ChromeOS when not installed -->
+  <script>
+    (function() {
+      // Detect ChromeOS
+      const isChromeOS = navigator.userAgentData?.platform === 'ChromeOS' || 
+                         navigator.userAgent.includes('CrOS');
+      
+      // Check if app is already installed (standalone mode)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                           window.navigator.standalone === true;
+      
+      // Show the badge only if on ChromeOS AND not already installed
+      if (isChromeOS && !isStandalone) {
+        const badgeContainer = document.getElementById('chromebook-badge-container');
+        if (badgeContainer) {
+          badgeContainer.style.display = 'block';
+        }
+      }
+    })();
+  </script>
 </body>
 </html>
