@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Immersive Game Hub – PackArcade</title>
-  <link rel="manifest" href="/public/manifest.json">
-  <!-- Default favicon (will be changed by user selection) -->
-  <link id="dynamic-favicon" rel="icon" type="image/png" href="/public/assets/images/Arcade1.png">
+  <title>Immersive Game Hub</title>
   <style>
     /* Reset everything */
     * {
@@ -27,7 +24,7 @@
       position: relative;
     }
 
-    /* Header – slim, floating, now with toolbar elements */
+    /* Header – slim, floating, no extra space */
     .header {
       position: absolute;
       top: 0;
@@ -42,7 +39,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      pointer-events: auto;       /* allow clicks on header elements */
+      pointer-events: none;       /* allow clicks to pass through to iframe */
     }
 
     .header h1 {
@@ -58,75 +55,6 @@
     .header p {
       color: #a0a8c0;
       font-size: 0.85rem;
-    }
-
-    /* Right side toolbar (favicon selector + install) */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .favicon-selector {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .favicon-selector span {
-      color: #a0a8c0;
-      font-size: 0.85rem;
-    }
-
-    .favicon-option {
-      width: 28px;
-      height: 28px;
-      border-radius: 4px;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border 0.2s;
-      background-size: cover;
-      background-position: center;
-    }
-
-    .favicon-option:hover {
-      border-color: #ffaa00;
-    }
-
-    .favicon-option.selected {
-      border-color: #ff4444;
-    }
-
-    .install-btn {
-      background: #44aa44;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.85rem;
-      transition: background 0.2s;
-    }
-
-    .install-btn:hover {
-      background: #66cc66;
-    }
-
-    #reset-favicon {
-      background: transparent;
-      color: #a0a8c0;
-      border: 1px solid #3a4055;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-    }
-
-    #reset-favicon:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: #ff4444;
     }
 
     /* iframe container – fills entire viewport */
@@ -164,34 +92,14 @@
     @media (max-width: 600px) {
       .header h1 { font-size: 1.2rem; }
       .header p { font-size: 0.75rem; }
-      .toolbar { gap: 10px; }
-      .favicon-option { width: 24px; height: 24px; }
-      .install-btn { padding: 4px 8px; font-size: 0.75rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Header with integrated PWA toolbar -->
+  <!-- Minimal header – does not take layout space -->
   <header class="header">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-      <h1>⚡ DIMENSION SELECTOR</h1>
-      <p>choose your immersive experience</p>
-    </div>
-    <div class="toolbar">
-      <div class="favicon-selector">
-        <span>Favicon:</span>
-        <div class="favicon-option selected" data-icon="Arcade1.png" style="background-image: url('assets/images/Arcade1.png');"></div>
-        <div class="favicon-option" data-icon="PackArcade1.png" style="background-image: url('assets/images/PackArcade1.png');"></div>
-        <div class="favicon-option" data-icon="Arcade2.png" style="background-image: url('assets/images/Arcade2.png');"></div>
-        <div class="favicon-option" data-icon="PackArcade2.png" style="background-image: url('assets/images/PackArcade2.png');"></div>
-        <div class="favicon-option" data-icon="Arcade3.png" style="background-image: url('assets/images/Arcade3.png');"></div>
-        <div class="favicon-option" data-icon="PackArcade3.png" style="background-image: url('assets/images/PackArcade3.png');"></div>
-        <div class="favicon-option" data-icon="Arcade4.png" style="background-image: url('assets/images/Arcade4.png');"></div>
-        <div class="favicon-option" data-icon="PackArcade4.png" style="background-image: url('assets/images/PackArcade4.png');"></div>
-      </div>
-      <button class="install-btn" id="install-pwa">Install App</button>
-      <button id="reset-favicon">Reset</button>
-    </div>
+    <h1>⚡ DIMENSION SELECTOR</h1>
+    <p>choose your immersive experience</p>
   </header>
 
   <!-- iframe fills the whole window -->
@@ -203,76 +111,5 @@
   <div class="footer">
     <span>✦ auto‑linked from <code>public/imagine/</code> ✦</span>
   </div>
-
-  <!-- Favicon switcher and PWA install script -->
-  <script>
-    (function() {
-      // Favicon switching
-      const faviconLink = document.getElementById('dynamic-favicon');
-      const options = document.querySelectorAll('.favicon-option');
-      let currentIcon = 'Arcade1.png';
-
-      function setFavicon(iconFile) {
-        faviconLink.href = 'assets/images/' + iconFile;
-        currentIcon = iconFile;
-        options.forEach(opt => {
-          if (opt.dataset.icon === iconFile) {
-            opt.classList.add('selected');
-          } else {
-            opt.classList.remove('selected');
-          }
-        });
-        localStorage.setItem('packarcade-favicon', iconFile);
-      }
-
-      options.forEach(opt => {
-        opt.addEventListener('click', () => {
-          setFavicon(opt.dataset.icon);
-        });
-      });
-
-      document.getElementById('reset-favicon').addEventListener('click', () => {
-        setFavicon('Arcade1.png');
-      });
-
-      const saved = localStorage.getItem('packarcade-favicon');
-      if (saved) {
-        setFavicon(saved);
-      }
-
-      // PWA install prompt
-      let deferredPrompt;
-      const installBtn = document.getElementById('install-pwa');
-
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBtn.style.display = 'inline-block';
-      });
-
-      installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to install: ${outcome}`);
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-      });
-
-      window.addEventListener('appinstalled', () => {
-        installBtn.style.display = 'none';
-        console.log('PWA installed');
-      });
-
-      // Register service worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/public/service-worker.js')
-            .then(reg => console.log('Service Worker registered', reg))
-            .catch(err => console.log('Service Worker registration failed', err));
-        });
-      }
-    })();
-  </script>
 </body>
 </html>
