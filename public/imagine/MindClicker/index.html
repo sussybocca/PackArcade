@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindClicker · production</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header with points and rebirth info -->
+        <header class="stats-bar">
+            <div class="stat">
+                <span class="stat-label">🧠 Mind Energy</span>
+                <span class="stat-value" id="mindEnergy">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">⚡ Energy per click</span>
+                <span class="stat-value" id="epc">1</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">🌀 Rebirth count</span>
+                <span class="stat-value" id="rebirthCount">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">👤 Character</span>
+                <span class="stat-value" id="characterName">Seeker</span>
+            </div>
+        </header>
+
+        <!-- Clickable mind area (video) -->
+        <div class="mind-area" id="mindClickArea">
+            <video id="mindVideo" loop muted playsinline>
+                <source src="assets/video/mind.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="click-overlay">CLICK THE MIND</div>
+        </div>
+
+        <!-- Upgrade shop -->
+        <div class="upgrades-panel">
+            <h2>🌀 UPGRADES</h2>
+            <div class="upgrade-list" id="upgradeList"></div>
+        </div>
+
+        <!-- Rebirth & reset controls -->
+        <div class="action-bar">
+            <button class="rebirth-btn" id="rebirthBtn">🌟 REBIRTH (requires 10k Mind Energy)</button>
+            <button class="reset-btn" id="hardResetBtn">🔄 Hard Reset</button>
+        </div>
+
+        <!-- Save indicator -->
+        <div class="save-info" id="saveStatus">💾 Auto‑saved</div>
+    </div>
+
+    <!-- Scripts (order matters) -->
+    <script src="js/game.js"></script>
+    <script src="js/upgrades.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/save.js"></script>
+</body>
+</html>
