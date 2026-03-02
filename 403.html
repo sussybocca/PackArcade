@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 – PackArcade</title>
+    <style>
+        @font-face {
+            font-family: 'ArcadeFont';
+            src: url('/fonts/ArcadeFont.woff2') format('woff2'),
+                 url('/fonts/ArcadeFont.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'ArcadeFont', 'Courier New', monospace;
+            background: #0a0c0f;
+            color: #fff;
+            overflow: hidden;
+            line-height: 1.6;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            background: rgba(10, 12, 15, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 2rem;
+            border-left: 4px solid #ff3b3b;
+            border-right: 4px solid #ff3b3b;
+            box-shadow: 0 0 40px #ff0000aa;
+            margin: 0 10%;
+            border-radius: 20px;
+        }
+
+        h1 {
+            font-size: 8rem;
+            margin: 0;
+            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff6666;
+            animation: glitch 1.5s infinite;
+            line-height: 1;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: skew(0deg, 0deg); opacity: 1; text-shadow: 0 0 20px red; }
+            95% { transform: skew(8deg, -3deg); opacity: 0.8; text-shadow: -5px 0 cyan, 5px 0 yellow; }
+            96% { transform: skew(-8deg, 3deg); opacity: 0.9; text-shadow: 5px 0 cyan, -5px 0 yellow; }
+            97% { transform: skew(5deg, -2deg); }
+        }
+
+        p {
+            font-size: 1.8rem;
+            max-width: 700px;
+            margin: 30px 0;
+            color: #ffb3b3;
+            text-shadow: 0 0 5px darkred;
+            background: rgba(0,0,0,0.6);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #ff3b3b;
+        }
+
+        a {
+            display: inline-block;
+            padding: 15px 40px;
+            border: 3px solid #ff3b3b;
+            color: #ffb3b3;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.4rem;
+            border-radius: 50px;
+            transition: 0.3s;
+            background: rgba(0,0,0,0.3);
+        }
+
+        a:hover {
+            background: #ff3b3b;
+            color: #0a0c0f;
+            box-shadow: 0 0 30px #ff3b3b;
+            transform: scale(1.05);
+        }
+
+        .lock-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px red);
+            animation: shake 2s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            2% { transform: rotate(5deg); }
+            4% { transform: rotate(-5deg); }
+            6% { transform: rotate(3deg); }
+            8% { transform: rotate(-3deg); }
+            10% { transform: rotate(0deg); }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 5rem; }
+            p { font-size: 1.3rem; }
+            .content { margin: 0 5%; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="deniedCanvas"></canvas>
+    <div class="content">
+        <div class="lock-icon">🔒⛔</div>
+        <h1>403</h1>
+        <p>ACCESS DENIED. You don't have the key to this door. This area is restricted to authorized personnel only.</p>
+        <a href="/">↳ BACK TO MAIN HALL</a>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('deniedCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            // Red particles with occasional glitch lines
+            const particles = [];
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 2.5,
+                    vy: (Math.random() - 0.5) * 2.5,
+                    size: Math.random() * 3 + 1,
+                    color: `hsl(${Math.random() * 10 + 340}, 100%, 60%)` // red hues
+                });
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(10, 12, 15, 0.15)';
+                ctx.fillRect(0, 0, width, height);
+
+                // Particles
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                });
+
+                // Glitch lines
+                if (Math.random() < 0.07) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.fillRect(0, Math.random() * height, width, Math.random() * 30 + 5);
+                }
+                if (Math.random() < 0.03) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.fillRect(0, Math.random() * height, width, Math.random() * 10 + 2);
+                }
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
+</body>
+</html>
