@@ -60,20 +60,28 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
       letter-spacing: 0.5px;
+      pointer-events: none;        /* text shouldn't block clicks */
     }
 
     .header p {
       color: #a0a8c0;
       font-size: 0.85rem;
+      pointer-events: none;
     }
 
-    /* Your existing "Install Arcade Web App" link */
-    .install-link {
-      position: absolute;
-      top: 0.8rem;
-      right: 1.5rem;
-      z-index: 20;
-      color: #fff;
+    /* Header actions container – all links live here */
+    .header-actions {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      pointer-events: auto;        /* make links clickable */
+      flex-wrap: wrap;             /* allow wrapping on very small screens */
+      justify-content: flex-end;
+    }
+
+    /* Shared link style for all buttons */
+    .header-link {
+      color: white;
       background: rgba(255,255,255,0.15);
       padding: 0.4rem 1rem;
       border-radius: 30px;
@@ -81,19 +89,30 @@
       font-size: 0.9rem;
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255,255,255,0.2);
-      pointer-events: auto;
+      transition: background 0.2s;
+      white-space: nowrap;
     }
-    .install-link:hover {
+    .header-link:hover {
       background: rgba(255,255,255,0.25);
     }
 
-    /* Chromebook badge container – hidden by default */
+    /* Install link specific (kept for any potential external references) */
+    .install-link {
+      /* inherits from .header-link */
+    }
+
+    /* Studio link specific */
+    .studio-link {
+      /* inherits from .header-link */
+    }
+
+    /* Chromebook badge container – positioned below header */
     #chromebook-badge-container {
       position: absolute;
-      top: 4rem;            /* below the header and install link */
+      top: 4.5rem;            /* below header (adjust as needed) */
       right: 1.5rem;
       z-index: 20;
-      display: none;         /* will be shown by JavaScript on ChromeOS */
+      display: none;           /* will be shown by JavaScript on ChromeOS */
       pointer-events: auto;
       background: transparent;
     }
@@ -148,24 +167,6 @@
       pointer-events: none;
     }
 
-    /* New studio button – placed inside header, so it uses header's pointer-events: none but we override on the link itself */
-    .studio-link {
-      color: white;
-      background: rgba(255,255,255,0.15);
-      padding: 0.4rem 1rem;
-      border-radius: 30px;
-      text-decoration: none;
-      font-size: 0.9rem;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.2);
-      pointer-events: auto;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-    .studio-link:hover {
-      background: rgba(255,255,255,0.25);
-    }
-
     @media (max-width: 600px) {
       .header h1 { font-size: 1.2rem; }
       .header p { font-size: 0.75rem; }
@@ -176,18 +177,18 @@
       #chromebook-badge-container picture img {
         width: 120px;
       }
-      /* On small screens, studio link might wrap – we give it a smaller padding */
-      .studio-link {
+      .header-link {
         padding: 0.3rem 0.8rem;
         font-size: 0.8rem;
+      }
+      /* Allow wrapping on small screens */
+      .header-actions {
+        gap: 0.5rem;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Your existing install link (points to your custom installer) -->
-  <a href="/launcher.html" class="install-link">⬇️ Install Arcade Web App</a>
-
   <!-- Chromebook badge – hidden by default, will be shown via JS -->
   <div id="chromebook-badge-container">
     <a href="/launcher.html?utm_source=Arcade&utm_campaign=Games" id="add-to-chromebook-link">
@@ -198,13 +199,17 @@
     </a>
   </div>
 
-  <!-- Minimal header – now with integrated studio button -->
+  <!-- Minimal header – now with all four links inside header-actions -->
   <header class="header">
-    <div style="display: flex; align-items: center; width: 100%;">
-      <h1>⚡ DIMENSION SELECTOR</h1>
-      <span style="flex:1"></span>
-      <p style="margin-right: 1rem;">choose your immersive experience</p>
-      <a href="Pack-Studio.html" class="studio-link">🎮 Studio</a>
+    <h1>⚡ DIMENSION SELECTOR</h1>
+    <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; justify-content: flex-end;">
+      <p>choose your immersive experience</p>
+      <div class="header-actions">
+        <a href="/launcher.html" class="header-link install-link">⬇️ Install Arcade Web App</a>
+        <a href="Pack-Studio.html" class="header-link studio-link">🎮 Studio</a>
+        <a href="Packpo.html" class="header-link">📦 Repo</a>
+        <a href="netlify-dash.html" class="header-link">📡 Netlify</a>
+      </div>
     </div>
   </header>
 
