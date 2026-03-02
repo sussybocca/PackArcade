@@ -148,6 +148,24 @@
       pointer-events: none;
     }
 
+    /* New studio button – placed inside header, so it uses header's pointer-events: none but we override on the link itself */
+    .studio-link {
+      color: white;
+      background: rgba(255,255,255,0.15);
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,0.2);
+      pointer-events: auto;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .studio-link:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
     @media (max-width: 600px) {
       .header h1 { font-size: 1.2rem; }
       .header p { font-size: 0.75rem; }
@@ -157,6 +175,11 @@
       }
       #chromebook-badge-container picture img {
         width: 120px;
+      }
+      /* On small screens, studio link might wrap – we give it a smaller padding */
+      .studio-link {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
       }
     }
   </style>
@@ -175,10 +198,14 @@
     </a>
   </div>
 
-  <!-- Minimal header -->
+  <!-- Minimal header – now with integrated studio button -->
   <header class="header">
-    <h1>⚡ DIMENSION SELECTOR</h1>
-    <p>choose your immersive experience</p>
+    <div style="display: flex; align-items: center; width: 100%;">
+      <h1>⚡ DIMENSION SELECTOR</h1>
+      <span style="flex:1"></span>
+      <p style="margin-right: 1rem;">choose your immersive experience</p>
+      <a href="Pack-Studio.html" class="studio-link">🎮 Studio</a>
+    </div>
   </header>
 
   <!-- iframe fills the whole window -->
