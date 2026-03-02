@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PackArcade · Netlify Emulator</title>
+    <title>PackArcade · Netlify Emulator (Full)</title>
     <style>
-        /* (keep your existing CSS – unchanged) */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -45,6 +44,7 @@
             margin-bottom: 20px;
             border-bottom: 2px solid #4a4e69;
             padding-bottom: 10px;
+            flex-wrap: wrap;
         }
         .tab {
             padding: 8px 16px;
@@ -54,6 +54,7 @@
             cursor: pointer;
             transition: all 0.2s;
             color: #c0c0ff;
+            white-space: nowrap;
         }
         .tab.active {
             background: #4a4e69;
@@ -146,18 +147,61 @@
             color: #6c6f85;
             font-size: 0.9rem;
         }
+        .custom-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .custom-input input {
+            flex: 1;
+            padding: 10px;
+            background: #1e1e30;
+            border: 1px solid #4a4e69;
+            border-radius: 6px;
+            color: white;
+            font-family: inherit;
+        }
+        .custom-input button {
+            padding: 10px 20px;
+            background: #2a2a3a;
+            border: 1px solid #a8d8ff;
+            border-radius: 6px;
+            color: #a8d8ff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .custom-input button:hover {
+            background: #a8d8ff;
+            color: #1e1e2e;
+        }
+        pre {
+            background: #0d0d1a;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            color: #f0f0f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📡 Netlify Emulator (Read‑Only)</h1>
-        <div class="subtitle">View‑only mirror of your Netlify site – secrets hidden</div>
+        <h1>📡 Netlify Emulator (Full Access)</h1>
+        <div class="subtitle">View‑only – all settings, secrets masked</div>
 
         <div class="tabs">
             <div class="tab active" data-tab="overview">Overview</div>
             <div class="tab" data-tab="deploys">Deploys</div>
-            <div class="tab" data-tab="env">Environment Variables</div>
+            <div class="tab" data-tab="env">Environment</div>
             <div class="tab" data-tab="functions">Functions</div>
+            <div class="tab" data-tab="forms">Forms</div>
+            <div class="tab" data-tab="snippets">Snippets</div>
+            <div class="tab" data-tab="build_hooks">Build Hooks</div>
+            <div class="tab" data-tab="split_testing">Split Testing</div>
+            <div class="tab" data-tab="full_site">Site Info (Full)</div>
+            <div class="tab" data-tab="custom">Custom</div>
         </div>
 
         <!-- Overview Panel -->
@@ -178,6 +222,40 @@
         <!-- Functions Panel -->
         <div id="functions" class="panel">
             <div id="functions-content" class="loading">Loading functions...</div>
+        </div>
+
+        <!-- Forms Panel -->
+        <div id="forms" class="panel">
+            <div id="forms-content" class="loading">Loading forms...</div>
+        </div>
+
+        <!-- Snippets Panel -->
+        <div id="snippets" class="panel">
+            <div id="snippets-content" class="loading">Loading snippets...</div>
+        </div>
+
+        <!-- Build Hooks Panel -->
+        <div id="build_hooks" class="panel">
+            <div id="build_hooks-content" class="loading">Loading build hooks...</div>
+        </div>
+
+        <!-- Split Testing Panel -->
+        <div id="split_testing" class="panel">
+            <div id="split_testing-content" class="loading">Loading split tests...</div>
+        </div>
+
+        <!-- Full Site Info Panel -->
+        <div id="full_site" class="panel">
+            <div id="full_site-content" class="loading">Loading full site info...</div>
+        </div>
+
+        <!-- Custom Panel -->
+        <div id="custom" class="panel">
+            <div class="custom-input">
+                <input type="text" id="customPath" placeholder="e.g., accounts, sites/YOUR_ID/forms, /sites" value="sites/{site_id}">
+                <button onclick="loadCustomResource()">Fetch</button>
+            </div>
+            <div id="custom-content">Enter a resource path and click Fetch.</div>
         </div>
 
         <div class="footer">
@@ -239,6 +317,12 @@
             else if (tab === 'deploys') loadDeploys();
             else if (tab === 'env') loadEnvVars();
             else if (tab === 'functions') loadFunctions();
+            else if (tab === 'forms') loadForms();
+            else if (tab === 'snippets') loadSnippets();
+            else if (tab === 'build_hooks') loadBuildHooks();
+            else if (tab === 'split_testing') loadSplitTesting();
+            else if (tab === 'full_site') loadFullSite();
+            // custom tab is loaded manually
         }
 
         // Fetch helper – uses the globally stored SITE_ID
@@ -252,7 +336,7 @@
             return response.json();
         }
 
-        // Overview
+        // ---------- Existing tabs ----------
         async function loadOverview() {
             const container = document.getElementById('overview-content');
             container.innerHTML = '<div class="loading">Loading site overview...</div>';
@@ -276,7 +360,6 @@
             }
         }
 
-        // Deploys
         async function loadDeploys() {
             const container = document.getElementById('deploys-content');
             container.innerHTML = '<div class="loading">Loading deploys...</div>';
@@ -303,7 +386,6 @@
             }
         }
 
-        // Environment Variables
         async function loadEnvVars() {
             const container = document.getElementById('env-content');
             container.innerHTML = '<div class="loading">Loading environment variables...</div>';
@@ -322,14 +404,12 @@
                 let html = '<table><tr><th>Key</th><th>Value</th><th>Contexts</th></tr>';
                 keys.forEach(key => {
                     const varData = env[key];
-                    // Safely access nested values
                     let value = '••••••••';
                     let contexts = 'all';
                     if (varData && Array.isArray(varData.values) && varData.values.length > 0) {
                         value = varData.values[0].value || '••••••••';
                         contexts = varData.values.map(v => v.context).join(', ');
                     } else if (varData && varData.value) {
-                        // Fallback for different API format
                         value = varData.value;
                         contexts = varData.contexts || 'all';
                     }
@@ -346,7 +426,6 @@
             }
         }
 
-        // Functions
         async function loadFunctions() {
             const container = document.getElementById('functions-content');
             container.innerHTML = '<div class="loading">Loading functions...</div>';
@@ -370,6 +449,143 @@
                 container.innerHTML = `<div class="error">Error loading functions: ${err.message}</div>`;
             }
         }
+
+        // ---------- New tabs ----------
+        async function loadForms() {
+            const container = document.getElementById('forms-content');
+            container.innerHTML = '<div class="loading">Loading forms...</div>';
+            try {
+                const forms = await fetchResource('sites/{site_id}/forms');
+                if (!Array.isArray(forms) || forms.length === 0) {
+                    container.innerHTML = '<div class="card">No forms found.</div>';
+                    return;
+                }
+                let html = '<table><tr><th>Name</th><th>Submissions</th><th>Created</th></tr>';
+                forms.forEach(f => {
+                    html += `<tr>
+                        <td>${f.name || 'N/A'}</td>
+                        <td>${f.submission_count || 0}</td>
+                        <td>${f.created_at ? new Date(f.created_at).toLocaleString() : 'N/A'}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading forms: ${err.message}</div>`;
+            }
+        }
+
+        async function loadSnippets() {
+            const container = document.getElementById('snippets-content');
+            container.innerHTML = '<div class="loading">Loading snippets...</div>';
+            try {
+                const snippets = await fetchResource('sites/{site_id}/snippets');
+                if (!Array.isArray(snippets) || snippets.length === 0) {
+                    container.innerHTML = '<div class="card">No snippets found.</div>';
+                    return;
+                }
+                let html = '<table><tr><th>Title</th><th>General</th></tr>';
+                snippets.forEach(s => {
+                    html += `<tr>
+                        <td>${s.title || 'N/A'}</td>
+                        <td>${s.general ? 'Yes' : 'No'}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading snippets: ${err.message}</div>`;
+            }
+        }
+
+        async function loadBuildHooks() {
+            const container = document.getElementById('build_hooks-content');
+            container.innerHTML = '<div class="loading">Loading build hooks...</div>';
+            try {
+                const hooks = await fetchResource('sites/{site_id}/build_hooks');
+                if (!Array.isArray(hooks) || hooks.length === 0) {
+                    container.innerHTML = '<div class="card">No build hooks found.</div>';
+                    return;
+                }
+                let html = '<table><tr><th>Title</th><th>Branch</th><th>URL</th></tr>';
+                hooks.forEach(h => {
+                    html += `<tr>
+                        <td>${h.title || 'N/A'}</td>
+                        <td>${h.branch || 'N/A'}</td>
+                        <td><a href="${h.url || '#'}" target="_blank" style="color:#a8d8ff;">trigger</a></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading build hooks: ${err.message}</div>`;
+            }
+        }
+
+        async function loadSplitTesting() {
+            const container = document.getElementById('split_testing-content');
+            container.innerHTML = '<div class="loading">Loading split tests...</div>';
+            try {
+                const tests = await fetchResource('sites/{site_id}/split_testing');
+                // The response might be an object or array – adjust as needed
+                if (!tests || (Array.isArray(tests) && tests.length === 0)) {
+                    container.innerHTML = '<div class="card">No split tests active.</div>';
+                    return;
+                }
+                // If it's an object, pretty print
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(tests, null, 2);
+                container.innerHTML = '';
+                container.appendChild(pre);
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading split tests: ${err.message}</div>`;
+            }
+        }
+
+        async function loadFullSite() {
+            const container = document.getElementById('full_site-content');
+            container.innerHTML = '<div class="loading">Loading full site info...</div>';
+            try {
+                const site = await fetchResource('sites/{site_id}');
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(site, null, 2);
+                container.innerHTML = '';
+                container.appendChild(pre);
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading site info: ${err.message}</div>`;
+            }
+        }
+
+        // Custom tab – load any resource
+        async function loadCustomResource() {
+            const input = document.getElementById('customPath');
+            let path = input.value.trim();
+            if (!path) {
+                alert('Please enter a resource path');
+                return;
+            }
+            // Replace {site_id} placeholder if present
+            if (SITE_ID) {
+                path = path.replace('{site_id}', SITE_ID);
+            }
+            const container = document.getElementById('custom-content');
+            container.innerHTML = '<div class="loading">Fetching...</div>';
+            try {
+                // Use fetchResource but without appending siteId again? fetchResource already appends siteId.
+                // For paths that don't need siteId, it's fine. But if path already includes site ID, we should avoid double siteId.
+                // To keep it simple, we'll use fetchResource which always adds siteId param – harmless.
+                const data = await fetchResource(path);
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(data, null, 2);
+                container.innerHTML = '';
+                container.appendChild(pre);
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+            }
+        }
+
+        // Expose loadCustomResource globally for the button
+        window.loadCustomResource = loadCustomResource;
 
         // Start by fetching the site ID
         initSiteId();
