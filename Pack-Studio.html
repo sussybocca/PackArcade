@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackGames · studio (locked)</title>
+    <!-- Ace editor (complex code editor) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/ace.js"></script>
+    <!-- Fonts & icons (simple) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #1e1e2f;
+            height: 100vh;
+            overflow: hidden;
+            color: #ddd;
+        }
+        /* password modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(8, 8, 20, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+        .modal-card {
+            background: #2a2a3c;
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            width: 350px;
+            text-align: center;
+            border: 1px solid #4a4a6a;
+        }
+        .modal-card h2 {
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            color: #b0b0d0;
+        }
+        .modal-card input {
+            width: 100%;
+            padding: 1rem;
+            background: #1a1a2a;
+            border: 1px solid #3e3e5a;
+            color: white;
+            border-radius: 3rem;
+            font-size: 1rem;
+            outline: none;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .modal-card button {
+            background: #6c5ce7;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            border-radius: 3rem;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #8a7cf0;
+        }
+        .modal-card button:hover {
+            background: #8170f0;
+        }
+        .error-msg {
+            color: #ff7b7b;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        /* main studio (hidden until unlock) */
+        #studio {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #studio.visible {
+            display: flex;
+            opacity: 1;
+        }
+        .toolbar {
+            background: #161625;
+            padding: 0.5rem 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .toolbar button {
+            background: #2d2d44;
+            border: none;
+            color: #ccc;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid #40405c;
+            transition: 0.1s;
+        }
+        .toolbar button:hover {
+            background: #3d3d60;
+            color: white;
+        }
+        .toolbar .spacer {
+            flex: 1;
+        }
+        .toolbar .push-btn {
+            background: #2d4a3b;
+            border-color: #2e8b57;
+            color: #b0ffd0;
+        }
+        .main-panel {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .file-tree {
+            width: 320px;
+            background: #1c1c2e;
+            border-right: 2px solid #2a2a42;
+            padding: 1rem 0.5rem 1rem 1rem;
+            overflow-y: auto;
+            user-select: none;
+            font-size: 0.95rem;
+        }
+        .tree-root {
+            list-style: none;
+            padding-left: 0.5rem;
+        }
+        .tree-node {
+            list-style: none;
+            margin: 2px 0;
+            white-space: nowrap;
+        }
+        .tree-node .item-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px 4px 4px;
+            border-radius: 8px;
+            cursor: default;
+            background: #252538;
+            margin: 2px 0;
+            border: 1px solid transparent;
+            transition: background 0.1s;
+            position: relative;
+        }
+        .tree-node .item-row:hover {
+            background: #2f2f4a;
+            border-color: #4f4f7a;
+        }
+        .tree-node .item-row.selected {
+            background: #3e3e64;
+            border-left: 4px solid #7f6aee;
+        }
+        .item-row.dragover {
+            background: #4a4a7a !important;
+            border: 1px dashed #b8a9ff;
+        }
+        .item-row i {
+            width: 20px;
+            color: #b0b0da;
+        }
+        .item-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .folder-children {
+            list-style: none;
+            padding-left: 24px;
+            margin-left: 8px;
+            border-left: 1px dotted #3a3a5a;
+        }
+        .empty-folder {
+            color: #6a6a8a;
+            font-style: italic;
+            padding-left: 28px;
+            font-size: 0.85rem;
+        }
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e2a;
+        }
+        #editor {
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+        }
+        .status-bar {
+            background: #161625;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.85rem;
+            color: #8a8aaa;
+            border-top: 1px solid #2d2d44;
+        }
+        /* drag ghost */
+        .dragging-ghost {
+            background: #4c3c8c;
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 8px 16px black;
+        }
+        i.fa-folder { color: #7a95e0; }
+        i.fa-file { color: #b0b0d0; }
+    </style>
+</head>
+<body>
+
+<!-- password modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-card">
+        <h2><i class="fas fa-lock" style="margin-right: 8px;"></i>PackGames studio</h2>
+        <input type="password" id="passwordInput" placeholder="admin password" autofocus>
+        <button id="unlockBtn"><i class="fas fa-key"></i> unlock studio</button>
+        <div id="passwordError" class="error-msg"></div>
+    </div>
+</div>
+
+<!-- main studio -->
+<div id="studio">
+    <div class="toolbar">
+        <button id="newFileBtn"><i class="fas fa-file"></i> new file</button>
+        <button id="newFolderBtn"><i class="fas fa-folder-plus"></i> new folder</button>
+        <button id="deleteBtn"><i class="fas fa-trash-alt"></i> delete</button>
+        <span class="spacer"></span>
+        <button id="saveBtn"><i class="fas fa-save"></i> save</button>
+        <button id="pushBtn" class="push-btn"><i class="fab fa-github"></i> push to imagine</button>
+    </div>
+    <div class="main-panel">
+        <div class="file-tree" id="fileTreeContainer">
+            <!-- dynamic tree injected -->
+        </div>
+        <div class="editor-pane">
+            <div id="editor"></div>
+            <div class="status-bar" id="status">🔒 locked · select a file</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ---------- DATA STORE (virtual filesystem) ----------
+        // all items under root "imagine". Root folder has id 'root', name 'imagine'
+        let items = [
+            { id: 'root', name: 'imagine', type: 'folder', parent: null, content: null },
+            { id: 'f1', name: 'index.html', type: 'file', parent: 'root', content: '<!DOCTYPE html>\n<title>my game</title>\n<h1>hello</h1>' },
+            { id: 'f2', name: 'style.css', type: 'file', parent: 'root', content: 'body { background: #1a1a2e; color: white; }' },
+            { id: 'd1', name: 'levels', type: 'folder', parent: 'root', content: null },
+            { id: 'f3', name: 'level1.js', type: 'file', parent: 'd1', content: '// level 1\nexport const scene = {};' },
+            { id: 'f4', name: 'readme.md', type: 'file', parent: 'root', content: '# PackGames studio\n\nEdit your game files here.' }
+        ];
+
+        // helper: generate short id
+        function genId() { return Date.now() + '-' + Math.random().toString(36).substring(2, 9); }
+
+        // get children of a folder
+        function getChildren(parentId) {
+            return items.filter(it => it.parent === parentId).sort((a,b) => a.name.localeCompare(b.name));
+        }
+
+        // get item by id
+        function getItem(id) { return items.find(it => it.id === id); }
+
+        // check if descendant (for drag safety)
+        function isDescendant(descendantId, ancestorId) {
+            if (descendantId === ancestorId) return true;
+            let item = getItem(descendantId);
+            while (item && item.parent) {
+                if (item.parent === ancestorId) return true;
+                item = getItem(item.parent);
+            }
+            return false;
+        }
+
+        // current selected file id (for editor)
+        let selectedFileId = null;
+        let aceEditor = null;
+
+        // ---------- RENDER TREE ----------
+        function renderTree() {
+            const container = document.getElementById('fileTreeContainer');
+            container.innerHTML = ''; 
+            const rootFolder = getItem('root');
+            if (!rootFolder) return;
+            const rootUl = document.createElement('ul');
+            rootUl.className = 'tree-root';
+            renderNode('root', rootUl, 0);
+            container.appendChild(rootUl);
+            // re-attach drag listeners after render
+            attachDragDropListeners();
+        }
+
+        function renderNode(parentId, parentUl, depth) {
+            const children = getChildren(parentId);
+            if (children.length === 0) {
+                // show empty indicator if depth >0? only under folder, but we'll handle inside folder later
+                return;
+            }
+            for (let child of children) {
+                const li = document.createElement('li');
+                li.className = 'tree-node';
+                li.dataset.id = child.id;
+                li.dataset.type = child.type;
+                li.setAttribute('draggable', child.type === 'file' || child.type === 'folder');
+                
+                // item row (draggable area)
+                const row = document.createElement('div');
+                row.className = `item-row ${selectedFileId === child.id ? 'selected' : ''}`;
+                row.dataset.id = child.id;
+                
+                // icon
+                const icon = document.createElement('i');
+                icon.className = child.type === 'folder' ? 'fas fa-folder' : 'fas fa-file-code';
+                row.appendChild(icon);
+                
+                // name
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'item-name';
+                nameSpan.textContent = child.name;
+                row.appendChild(nameSpan);
+                
+                li.appendChild(row);
+                
+                // if folder, render children inside a nested UL
+                if (child.type === 'folder') {
+                    const childContainer = document.createElement('ul');
+                    childContainer.className = 'folder-children';
+                    renderNode(child.id, childContainer, depth+1);
+                    // if no children, show empty placeholder
+                    if (getChildren(child.id).length === 0) {
+                        const emptyLi = document.createElement('li');
+                        emptyLi.className = 'empty-folder';
+                        emptyLi.textContent = '⌀ empty';
+                        childContainer.appendChild(emptyLi);
+                    }
+                    li.appendChild(childContainer);
+                }
+                
+                parentUl.appendChild(li);
+            }
+        }
+
+        // ---------- DRAG AND DROP (native, complex) ----------
+        let draggedId = null;
+
+        function attachDragDropListeners() {
+            const allRows = document.querySelectorAll('.item-row');
+            allRows.forEach(row => {
+                const li = row.closest('.tree-node');
+                if (!li) return;
+                const id = li.dataset.id;
+                const type = li.dataset.type;
+                
+                // drag start
+                row.setAttribute('draggable', type === 'file' || type === 'folder');
+                row.ondragstart = (e) => {
+                    if (type !== 'file' && type !== 'folder') {
+                        e.preventDefault();
+                        return;
+                    }
+                    draggedId = id;
+                    e.dataTransfer.setData('text/plain', id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    // style ghost
+                    const ghost = document.createElement('span');
+                    ghost.className = 'dragging-ghost';
+                    ghost.textContent = getItem(id)?.name || 'item';
+                    document.body.appendChild(ghost);
+                    e.dataTransfer.setDragImage(ghost, 20, 10);
+                    setTimeout(() => document.body.removeChild(ghost), 0);
+                };
+                row.ondragend = () => { draggedId = null; };
+                
+                // dragover / drop for folders (and also root container)
+                if (type === 'folder') {
+                    row.ondragover = (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        row.classList.add('dragover');
+                    };
+                    row.ondragleave = () => row.classList.remove('dragover');
+                    row.ondrop = (e) => {
+                        e.preventDefault();
+                        row.classList.remove('dragover');
+                        const targetId = id;
+                        const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                        if (!dragged) return;
+                        // Prevent dropping onto itself or descendant
+                        if (dragged === targetId || isDescendant(targetId, dragged)) {
+                            alert('Cannot move a folder into itself or its subfolder.');
+                            return;
+                        }
+                        const draggedItem = getItem(dragged);
+                        const targetItem = getItem(targetId);
+                        if (!draggedItem || !targetItem || targetItem.type !== 'folder') return;
+                        
+                        // update parent
+                        draggedItem.parent = targetId;
+                        renderTree();
+                        // keep selection if file still exists
+                    };
+                }
+            });
+            
+            // root container drop (for moving to root)
+            const treeContainer = document.getElementById('fileTreeContainer');
+            treeContainer.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
+            treeContainer.ondrop = (e) => {
+                e.preventDefault();
+                const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                if (!dragged) return;
+                const draggedItem = getItem(dragged);
+                if (!draggedItem || draggedItem.id === 'root') return;
+                // move to root (parent = 'root')
+                draggedItem.parent = 'root';
+                renderTree();
+            };
+        }
+
+        // ---------- ACE EDITOR ----------
+        function initAce() {
+            aceEditor = ace.edit('editor');
+            aceEditor.setTheme('ace/theme/tomorrow_night');
+            aceEditor.session.setMode('ace/mode/html');
+            aceEditor.setOptions({
+                fontSize: '14px',
+                showPrintMargin: false,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true
+            });
+            aceEditor.setReadOnly(false);
+            aceEditor.session.setValue('// select or create a file');
+        }
+
+        // select file (sets editor content)
+        function selectFile(id) {
+            const file = getItem(id);
+            if (!file || file.type !== 'file') return;
+            selectedFileId = id;
+            aceEditor.session.setValue(file.content || '');
+            // set syntax mode based on extension
+            const ext = file.name.split('.').pop();
+            let mode = 'ace/mode/text';
+            if (ext === 'html' || ext === 'htm') mode = 'ace/mode/html';
+            else if (ext === 'css') mode = 'ace/mode/css';
+            else if (ext === 'js') mode = 'ace/mode/javascript';
+            else if (ext === 'json') mode = 'ace/mode/json';
+            else if (ext === 'md') mode = 'ace/mode/markdown';
+            aceEditor.session.setMode(mode);
+            document.getElementById('status').innerHTML = `📄 editing ${file.name}`;
+            renderTree(); // re-render to update selected style
+        }
+
+        // save current file
+        function saveCurrentFile() {
+            if (!selectedFileId) { alert('No file selected'); return; }
+            const file = getItem(selectedFileId);
+            if (file && file.type === 'file') {
+                file.content = aceEditor.session.getValue();
+                document.getElementById('status').innerHTML = `💾 saved ${file.name}`;
+                renderTree(); 
+            }
+        }
+
+        // new file
+        function newFile() {
+            let parentId = 'root';
+            if (selectedFileId) {
+                const sel = getItem(selectedFileId);
+                if (sel.type === 'folder') parentId = sel.id;
+                else parentId = sel.parent;
+            }
+            const name = prompt('Enter file name (with extension):', 'newfile.js');
+            if (!name) return;
+            const newId = genId();
+            items.push({
+                id: newId,
+                name: name,
+                type: 'file',
+                parent: parentId,
+                content: '// new game file\n'
+            });
+            renderTree();
+            selectFile(newId);
+        }
+
+        function newFolder() {
+            let parentId = 'root';
+            if (selectedFileId) {
+                const sel = getItem(selectedFileId);
+                if (sel.type === 'folder') parentId = sel.id;
+                else parentId = sel.parent;
+            }
+            const name = prompt('Folder name:', 'new folder');
+            if (!name) return;
+            items.push({
+                id: genId(),
+                name: name,
+                type: 'folder',
+                parent: parentId,
+                content: null
+            });
+            renderTree();
+        }
+
+        function deleteSelected() {
+            if (!selectedFileId) { alert('select a file/folder to delete'); return; }
+            if (selectedFileId === 'root') { alert('cannot delete root'); return; }
+            if (!confirm('Permanently delete? This will also delete all children.')) return;
+            // recursive remove
+            const idsToDelete = new Set();
+            function collect(id) {
+                idsToDelete.add(id);
+                getChildren(id).forEach(child => collect(child.id));
+            }
+            collect(selectedFileId);
+            items = items.filter(it => !idsToDelete.has(it.id));
+            selectedFileId = null;
+            aceEditor.session.setValue('// item deleted');
+            renderTree();
+        }
+
+        // ---------- PUSH TO GITHUB VIA NETLIFY FUNCTION ----------
+        async function pushImagine() {
+            // collect all files under imagine (root)
+            const files = items.filter(it => it.type === 'file' && it.id !== 'root');
+            const payload = {};
+            function buildPath(itemId) {
+                const item = getItem(itemId);
+                if (!item) return '';
+                const pathParts = [];
+                let cur = item;
+                while (cur && cur.id !== 'root') {
+                    pathParts.unshift(cur.name);
+                    cur = getItem(cur.parent);
+                }
+                return pathParts.join('/');
+            }
+            const fileMap = {};
+            files.forEach(f => {
+                const path = buildPath(f.id);
+                fileMap[path] = f.content || '';
+            });
+            // send to netlify function
+            document.getElementById('status').innerHTML = '⏳ pushing to imagine...';
+            try {
+                const response = await fetch('/.netlify/functions/push-to-github', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: fileMap })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('status').innerHTML = '✅ push successful! GitHub action will update selector.';
+                } else {
+                    document.getElementById('status').innerHTML = '❌ push error: ' + (result.error || 'unknown');
+                }
+            } catch (err) {
+                document.getElementById('status').innerHTML = '❌ network error: ' + err.message;
+            }
+        }
+
+        // ---------- PASSWORD UNLOCK (netlify function) ----------
+        async function checkPassword(pwd) {
+            try {
+                const res = await fetch('/.netlify/functions/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                const data = await res.json();
+                return { ok: res.ok, allowed: data.allowed };
+            } catch (e) {
+                return { ok: false, allowed: false };
+            }
+        }
+
+        // UI initialization after unlock
+        function unlockStudio() {
+            document.getElementById('passwordModal').style.display = 'none';
+            const studio = document.getElementById('studio');
+            studio.classList.add('visible');
+            initAce();
+            renderTree();
+            // select first file by default (if any)
+            const firstFile = items.find(it => it.type === 'file');
+            if (firstFile) selectFile(firstFile.id);
+            // attach listeners
+            document.getElementById('newFileBtn').onclick = newFile;
+            document.getElementById('newFolderBtn').onclick = newFolder;
+            document.getElementById('deleteBtn').onclick = deleteSelected;
+            document.getElementById('saveBtn').onclick = saveCurrentFile;
+            document.getElementById('pushBtn').onclick = pushImagine;
+            // click on file to select
+            document.addEventListener('click', (e) => {
+                const row = e.target.closest('.item-row');
+                if (!row) return;
+                const li = row.closest('.tree-node');
+                if (li) {
+                    const id = li.dataset.id;
+                    const item = getItem(id);
+                    if (item && item.type === 'file') selectFile(id);
+                }
+            });
+        }
+
+        // unlock button event
+        document.getElementById('unlockBtn').addEventListener('click', async () => {
+            const pwd = document.getElementById('passwordInput').value;
+            if (!pwd) return;
+            const result = await checkPassword(pwd);
+            if (result.allowed) {
+                unlockStudio();
+            } else {
+                document.getElementById('passwordError').innerText = '❌ invalid password';
+            }
+        });
+        // enter key
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('unlockBtn').click();
+        });
+
+        // for demo, if netlify functions not present, use fallback: password "packdev"
+        window.fallbackUnlock = () => {
+            if (document.getElementById('passwordInput').value === 'packdev') {
+                unlockStudio();
+            } else {
+                document.getElementById('passwordError').innerText = '❌ try "packdev" (dev fallback)';
+            }
+        };
+        // try netlify first, but if fails, we attach fallback to same button
+        const originalClick = document.getElementById('unlockBtn').onclick;
+        document.getElementById('unlockBtn').onclick = async (e) => {
+            e.preventDefault();
+            const pwd = document.getElementById('passwordInput').value;
+            try {
+                const res = await fetch('/.netlify/functions/verify-password', { method: 'POST', body: JSON.stringify({ password: pwd }) });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.allowed) unlockStudio();
+                    else document.getElementById('passwordError').innerText = '❌ wrong password';
+                } else {
+                    // fallback to local dev password
+                    window.fallbackUnlock();
+                }
+            } catch {
+                window.fallbackUnlock();
+            }
+        };
+    })();
+</script>
+
+<!-- ========== NETLIFY FUNCTIONS (must be deployed separately) ========== 
+     Place these two files under /netlify/functions/ 
+
+     1. verify-password.js 
+     ----------------------------------------------
+     exports.handler = async (event) => {
+       const { password } = JSON.parse(event.body);
+       const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; // set in Netlify dashboard
+       return {
+         statusCode: 200,
+         headers: { 'Access-Control-Allow-Origin': '*' },
+         body: JSON.stringify({ allowed: password === ADMIN_PASSWORD })
+       };
+     };
+
+     2. push-to-github.js 
+     ----------------------------------------------
+     const { Octokit } = require('@octokit/rest');
+     exports.handler = async (event) => {
+       const { files } = JSON.parse(event.body);  // files: { 'path/file.js': 'content', ... }
+       const token = process.env.GITHUB_TOKEN;     // fine‑grained token with repo access
+       const owner = process.env.GITHUB_OWNER;     // e.g., 'yourname'
+       const repo = process.env.GITHUB_REPO;       // e.g., 'packgames'
+       const branch = 'main';
+       const octokit = new Octokit({ auth: token });
+       try {
+         // get current head
+         const { data: refData } = await octokit.git.getRef({ owner, repo, ref: `heads/${branch}` });
+         const latestSha = refData.object.sha;
+         const { data: commitData } = await octokit.git.getCommit({ owner, repo, commit_sha: latestSha });
+         const treeSha = commitData.tree.sha;
+
+         // create blobs and build tree
+         const tree = await Promise.all(Object.entries(files).map(async ([path, content]) => {
+           const { data } = await octokit.git.createBlob({ owner, repo, content, encoding: 'utf-8' });
+           return { path: `public/imagine/${path}`, mode: '100644', type: 'blob', sha: data.sha };
+         }));
+
+         const { data: newTree } = await octokit.git.createTree({ owner, repo, base_tree: treeSha, tree });
+         const { data: newCommit } = await octokit.git.createCommit({
+           owner, repo,
+           message: 'Auto‑push from PackGames studio [skip ci]',
+           tree: newTree.sha,
+           parents: [latestSha]
+         });
+         await octokit.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: newCommit.sha, force: false });
+         return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+       } catch (e) {
+         return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+       }
+     };
+     (add @octokit/rest to your Netlify functions dependencies)
+-->
+
+<!-- hidden explanation: 
+     This studio implements a fully functional code editor with drag‑and‑drop tree,
+     Ace editor, and push integration. Password uses Netlify environment variable.
+     The file system is virtual – adapt to real GitHub by extending the push function.
+-->
+</body>
+</html>
