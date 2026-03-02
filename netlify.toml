@@ -1,0 +1,30 @@
+[build]
+  command = "echo 'No build step needed – static site'"
+  publish = "."
+
+# Headers for caching fonts and other assets
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# Optional: define error pages here as well (overrides _redirects if both exist)
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+[[redirects]]
+  from = "/403"
+  to = "/403.html"
+  status = 403
+
+[[redirects]]
+  from = "/500"
+  to = "/500.html"
+  status = 500
