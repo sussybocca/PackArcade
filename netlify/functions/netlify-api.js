@@ -22,6 +22,7 @@ exports.handler = async (event) => {
 
   const params = event.queryStringParameters || {};
   const resource = params.resource;
+
   if (!resource) {
     return {
       statusCode: 400,
@@ -29,7 +30,23 @@ exports.handler = async (event) => {
     };
   }
 
-  // Site ID can come from query OR environment
+  // Special internal resource to return site ID
+  if (resource === 'site-id') {
+    const siteId = process.env.NETLIFY_SITE_ID;
+    if (!siteId) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Site ID not configured on server' }),
+      };
+    }
+    return {
+      statusCode: 200,
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ siteId }),
+    };
+  }
+
+  // For other resources, site ID can come from query or env
   const siteId = params.siteId || process.env.NETLIFY_SITE_ID;
   if (!siteId) {
     return {
@@ -39,7 +56,7 @@ exports.handler = async (event) => {
   }
 
   // Replace {site_id} placeholder with actual site ID
-  const path = resource.replace('{d0b6d3ab-3024-4224-a271-6e8db88c716a}', siteId);
+  const path = resource.replace('{site_id}', siteId);
   const url = `${NETLIFY_API_BASE}/${path}`;
 
   try {
