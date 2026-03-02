@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackArcade · Repo Browser</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0a0c0f;
+            font-family: 'Courier New', monospace;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e1e2e;
+            border: 2px solid #4a4e69;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 20px #4a4e69aa;
+        }
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #a8d8ff;
+            text-shadow: 0 0 5px #00aaff;
+            border-bottom: 2px dashed #4a4e69;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+        .browser-panel {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .tree {
+            flex: 1 1 300px;
+            background: #151522;
+            border-radius: 6px;
+            padding: 10px;
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid #4a4e69;
+        }
+        .tree ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        .tree li {
+            margin: 4px 0;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .tree li:hover {
+            background: #2a2a3a;
+        }
+        .tree li.file {
+            color: #c0e0ff;
+        }
+        .tree li.file::before {
+            content: '📄 ';
+        }
+        .tree li.folder {
+            color: #ffd966;
+            font-weight: bold;
+        }
+        .tree li.folder::before {
+            content: '📁 ';
+        }
+        .tree li.folder.open::before {
+            content: '📂 ';
+        }
+        .tree .folder-contents {
+            display: none;
+        }
+        .tree .folder.open > .folder-contents {
+            display: block;
+        }
+        .preview {
+            flex: 2 1 600px;
+            background: #151522;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #4a4e69;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .preview h3 {
+            color: #a8d8ff;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #4a4e69;
+            padding-bottom: 5px;
+        }
+        .preview pre {
+            background: #0d0d1a;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+            color: #f0f0f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .loading {
+            color: #ffaa00;
+            font-style: italic;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #6c6f85;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Pack-Studio Repo</h1>
+        <div class="subtitle">Full repository mirror – no GitHub required</div>
+        <div class="browser-panel">
+            <div class="tree" id="tree-container">
+                <div class="loading">Loading repository tree...</div>
+            </div>
+            <div class="preview" id="preview-container">
+                <h3>File Preview</h3>
+                <div id="file-content">Select a file to view its contents.</div>
+            </div>
+        </div>
+        <div class="footer">
+            <span>🔒 Powered by PackArcade Netlify Functions</span>
+        </div>
+    </div>
+
+    <script>
+        // Helper to build folder tree from flat list
+        function buildTree(items) {
+            const root = { name: '', path: '', type: 'folder', children: [] };
+            items.sort((a, b) => a.path.localeCompare(b.path)).forEach(item => {
+                const parts = item.path.split('/');
+                let current = root;
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    const isLast = (i === parts.length - 1);
+                    let child = current.children.find(c => c.name === part);
+                    if (!child) {
+                        child = {
+                            name: part,
+                            path: parts.slice(0, i+1).join('/'),
+                            type: isLast ? item.type : 'folder',
+                            children: isLast ? [] : []
+                        };
+                        current.children.push(child);
+                    }
+                    current = child;
+                }
+            });
+            return root.children;
+        }
+
+        // Render tree recursively
+        function renderTree(children, parentUl) {
+            children.forEach(child => {
+                const li = document.createElement('li');
+                li.textContent = child.name;
+                li.className = child.type === 'tree' ? 'folder' : 'file';
+                li.dataset.path = child.path;
+                li.dataset.type = child.type;
+
+                if (child.type === 'tree') {
+                    li.classList.add('folder');
+                    const toggle = () => {
+                        li.classList.toggle('open');
+                    };
+                    li.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggle();
+                    });
+
+                    if (child.children && child.children.length > 0) {
+                        const childUl = document.createElement('ul');
+                        childUl.className = 'folder-contents';
+                        renderTree(child.children, childUl);
+                        li.appendChild(childUl);
+                    }
+                } else {
+                    li.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        loadFile(child.path);
+                    });
+                }
+                parentUl.appendChild(li);
+            });
+        }
+
+        // Load file content from our function
+        async function loadFile(path) {
+            const contentDiv = document.getElementById('file-content');
+            contentDiv.innerHTML = '<span class="loading">Loading file...</span>';
+            try {
+                // CORRECTED URL: use /.netlify/functions/repo-file
+                const response = await fetch(`/.netlify/functions/repo-file?path=${encodeURIComponent(path)}`);
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Failed to load file');
+                }
+                const text = await response.text();
+                contentDiv.innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+            } catch (err) {
+                contentDiv.innerHTML = `<span class="error">Error: ${err.message}</span>`;
+            }
+        }
+
+        // Simple escape for HTML
+        function escapeHtml(unsafe) {
+            return unsafe.replace(/[&<>"']/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                if(m === '"') return '&quot;';
+                if(m === "'") return '&#039;';
+                return m;
+            });
+        }
+
+        // Fetch tree and build UI
+        async function initTree() {
+            const treeContainer = document.getElementById('tree-container');
+            try {
+                // CORRECTED URL: use /.netlify/functions/repo-tree
+                const response = await fetch('/.netlify/functions/repo-tree');
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Failed to load tree');
+                }
+                const items = await response.json();
+                treeContainer.innerHTML = ''; // clear loading
+                const rootChildren = buildTree(items);
+                const rootUl = document.createElement('ul');
+                renderTree(rootChildren, rootUl);
+                treeContainer.appendChild(rootUl);
+            } catch (err) {
+                treeContainer.innerHTML = `<span class="error">Error loading repository: ${err.message}</span>`;
+            }
+        }
+
+        initTree();
+    </script>
+</body>
+</html>
