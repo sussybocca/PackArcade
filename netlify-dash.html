@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackArcade · Netlify Emulator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0a0c0f;
+            font-family: 'Courier New', monospace;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #1e1e2e;
+            border: 2px solid #4a4e69;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 20px #4a4e69aa;
+        }
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            color: #a8d8ff;
+            text-shadow: 0 0 5px #00aaff;
+            border-bottom: 2px dashed #4a4e69;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            color: #b0b0b0;
+            margin-bottom: 30px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4a4e69;
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #2a2a3a;
+            border: 1px solid #4a4e69;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #c0c0ff;
+        }
+        .tab.active {
+            background: #4a4e69;
+            color: white;
+            border-color: #a8d8ff;
+        }
+        .tab:hover {
+            background: #3a3a4a;
+        }
+        .panel {
+            display: none;
+            background: #151522;
+            border-radius: 6px;
+            padding: 20px;
+            border: 1px solid #4a4e69;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .panel.active {
+            display: block;
+        }
+        .card {
+            background: #1e1e30;
+            border: 1px solid #4a4e69;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .card h3 {
+            color: #a8d8ff;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #4a4e69;
+            padding-bottom: 5px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .info-item {
+            background: #151522;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .info-label {
+            color: #a0a0c0;
+            font-size: 0.9rem;
+        }
+        .info-value {
+            color: #ffffff;
+            font-weight: bold;
+            word-break: break-word;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #4a4e69;
+        }
+        th {
+            color: #a8d8ff;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .status-ready { background: #2e7d32; color: white; }
+        .status-building { background: #ed6c02; color: white; }
+        .status-error { background: #d32f2f; color: white; }
+        .loading {
+            color: #ffaa00;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+        }
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 40px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #6c6f85;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 Netlify Emulator (Read‑Only)</h1>
+        <div class="subtitle">View‑only mirror of your Netlify site – secrets hidden</div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="deploys">Deploys</div>
+            <div class="tab" data-tab="env">Environment Variables</div>
+            <div class="tab" data-tab="functions">Functions</div>
+        </div>
+
+        <!-- Overview Panel -->
+        <div id="overview" class="panel active">
+            <div id="overview-content" class="loading">Loading site overview...</div>
+        </div>
+
+        <!-- Deploys Panel -->
+        <div id="deploys" class="panel">
+            <div id="deploys-content" class="loading">Loading deploys...</div>
+        </div>
+
+        <!-- Environment Variables Panel -->
+        <div id="env" class="panel">
+            <div id="env-content" class="loading">Loading environment variables...</div>
+        </div>
+
+        <!-- Functions Panel -->
+        <div id="functions" class="panel">
+            <div id="functions-content" class="loading">Loading functions...</div>
+        </div>
+
+        <div class="footer">
+            <span>🔒 Powered by Netlify API (view‑only, secrets masked)</span>
+        </div>
+    </div>
+
+    <script>
+        // Base URL for our proxy function
+        const API_BASE = '/.netlify/functions/netlify-api';
+
+        // Global variable to hold the site ID after fetching
+        let SITE_ID = null;
+
+        // Fetch the site ID from the function before doing anything else
+        async function initSiteId() {
+            try {
+                const response = await fetch(`${API_BASE}?resource=site-id`);
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Failed to fetch site ID');
+                }
+                const data = await response.json();
+                SITE_ID = data.siteId;
+                console.log('Site ID loaded:', SITE_ID);
+                // Now that we have the site ID, load the initial tab
+                loadTabData('overview');
+            } catch (err) {
+                // Show error in all panels
+                document.querySelectorAll('.panel .loading').forEach(el => {
+                    el.innerHTML = `<span class="error">Failed to initialize: ${err.message}</span>`;
+                });
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const target = tab.dataset.tab;
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
+
+                // Load data for the selected tab if site ID is ready
+                if (SITE_ID) {
+                    loadTabData(target);
+                } else {
+                    // If site ID not loaded yet, show loading in that panel
+                    const panelContent = document.getElementById(target).querySelector('.loading, #' + target + '-content');
+                    if (panelContent) panelContent.innerHTML = '<div class="loading">Waiting for site ID...</div>';
+                }
+            });
+        });
+
+        // Load data based on active tab
+        function loadTabData(tab) {
+            if (!SITE_ID) return;
+            if (tab === 'overview') loadOverview();
+            else if (tab === 'deploys') loadDeploys();
+            else if (tab === 'env') loadEnvVars();
+            else if (tab === 'functions') loadFunctions();
+        }
+
+        // Fetch helper – now uses the globally stored SITE_ID
+        async function fetchResource(resource) {
+            const url = `${API_BASE}?resource=${encodeURIComponent(resource)}&siteId=${encodeURIComponent(SITE_ID)}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to fetch');
+            }
+            return response.json();
+        }
+
+        // Overview
+        async function loadOverview() {
+            const container = document.getElementById('overview-content');
+            container.innerHTML = '<div class="loading">Loading site overview...</div>';
+            try {
+                const site = await fetchResource('sites/{site_id}');
+                container.innerHTML = `
+                    <div class="card">
+                        <h3>Site Details</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span class="info-label">Name:</span> <span class="info-value">${site.name}</span></div>
+                            <div class="info-item"><span class="info-label">Custom Domain:</span> <span class="info-value">${site.custom_domain || 'none'}</span></div>
+                            <div class="info-item"><span class="info-label">URL:</span> <span class="info-value"><a href="${site.ssl_url || site.url}" target="_blank" style="color:#a8d8ff;">${site.ssl_url || site.url}</a></span></div>
+                            <div class="info-item"><span class="info-label">Repository:</span> <span class="info-value">${site.build_settings?.repo_url || 'not linked'}</span></div>
+                            <div class="info-item"><span class="info-label">Created:</span> <span class="info-value">${new Date(site.created_at).toLocaleString()}</span></div>
+                            <div class="info-item"><span class="info-label">Last Published:</span> <span class="info-value">${site.published_deploy?.published_at ? new Date(site.published_deploy.published_at).toLocaleString() : 'never'}</span></div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading overview: ${err.message}</div>`;
+            }
+        }
+
+        // Deploys
+        async function loadDeploys() {
+            const container = document.getElementById('deploys-content');
+            container.innerHTML = '<div class="loading">Loading deploys...</div>';
+            try {
+                const deploys = await fetchResource('sites/{site_id}/deploys');
+                if (deploys.length === 0) {
+                    container.innerHTML = '<div class="card">No deploys found.</div>';
+                    return;
+                }
+                let html = '<table><tr><th>Date</th><th>Commit</th><th>Status</th><th>Preview</th></tr>';
+                deploys.slice(0, 20).forEach(d => {
+                    const statusClass = d.state === 'ready' ? 'status-ready' : (d.state === 'building' ? 'status-building' : 'status-error');
+                    html += `<tr>
+                        <td>${new Date(d.created_at).toLocaleString()}</td>
+                        <td>${d.commit_ref ? d.commit_ref.substring(0,7) : '—'}</td>
+                        <td><span class="status-badge ${statusClass}">${d.state}</span></td>
+                        <td><a href="${d.deploy_ssl_url || d.deploy_url}" target="_blank" style="color:#a8d8ff;">view</a></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading deploys: ${err.message}</div>`;
+            }
+        }
+
+        // Environment Variables
+        async function loadEnvVars() {
+            const container = document.getElementById('env-content');
+            container.innerHTML = '<div class="loading">Loading environment variables...</div>';
+            try {
+                const env = await fetchResource('sites/{site_id}/env');
+                const keys = Object.keys(env).sort();
+                if (keys.length === 0) {
+                    container.innerHTML = '<div class="card">No environment variables set.</div>';
+                    return;
+                }
+                let html = '<table><tr><th>Key</th><th>Value</th><th>Contexts</th></tr>';
+                keys.forEach(key => {
+                    const varData = env[key];
+                    const value = varData.values && varData.values[0] ? varData.values[0].value : '••••••••';
+                    const contexts = varData.values ? varData.values.map(v => v.context).join(', ') : 'all';
+                    html += `<tr>
+                        <td><strong>${key}</strong></td>
+                        <td>${value}</td>
+                        <td>${contexts}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading env vars: ${err.message}</div>`;
+            }
+        }
+
+        // Functions
+        async function loadFunctions() {
+            const container = document.getElementById('functions-content');
+            container.innerHTML = '<div class="loading">Loading functions...</div>';
+            try {
+                const functions = await fetchResource('sites/{site_id}/functions');
+                if (functions.length === 0) {
+                    container.innerHTML = '<div class="card">No functions deployed.</div>';
+                    return;
+                }
+                let html = '<table><tr><th>Name</th><th>Runtime</th><th>URL</th></tr>';
+                functions.forEach(f => {
+                    html += `<tr>
+                        <td>${f.name}</td>
+                        <td>${f.runtime}</td>
+                        <td><a href="${f.url}" target="_blank" style="color:#a8d8ff;">invoke</a></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Error loading functions: ${err.message}</div>`;
+            }
+        }
+
+        // Start by fetching the site ID
+        initSiteId();
+    </script>
+</body>
+</html>
