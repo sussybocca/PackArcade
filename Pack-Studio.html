@@ -362,6 +362,19 @@
 
         // ---------- DRAG AND DROP (native, complex) ----------
         let draggedId = null;
+        let currentDragoverFolderRow = null; // track which folder row is currently highlighted
+
+        // Helper: given an element, find the closest ancestor li.tree-node that is a folder
+        function findFolderNode(element) {
+            let current = element.closest('.tree-node');
+            while (current) {
+                if (current.dataset.type === 'folder') {
+                    return current;
+                }
+                current = current.parentElement?.closest('.tree-node');
+            }
+            return null;
+        }
 
         function attachDragDropListeners() {
             const allRows = document.querySelectorAll('.item-row');
@@ -389,31 +402,57 @@
                     e.dataTransfer.setDragImage(ghost, 20, 10);
                     setTimeout(() => document.body.removeChild(ghost), 0);
                 };
-                row.ondragend = () => { draggedId = null; };
-                
-                // dragover / drop for any row, but only act if it's a folder
-                row.ondragover = (e) => {
-                    const targetLi = e.currentTarget.closest('.tree-node');
-                    if (!targetLi) return;
-                    const targetId = targetLi.dataset.id;
-                    const targetItem = getItem(targetId);
-                    // only allow drop on folders
-                    if (targetItem && targetItem.type === 'folder') {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                        row.classList.add('dragover');
+                row.ondragend = () => { 
+                    draggedId = null; 
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
                     }
                 };
-                row.ondragleave = () => {
-                    row.classList.remove('dragover');
+                
+                // dragover / drop: we need to find the nearest folder ancestor as target
+                row.ondragover = (e) => {
+                    const folderNode = findFolderNode(e.target);
+                    if (!folderNode) return; // not hovering over any folder
+                    
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    
+                    // highlight the folder's row
+                    const folderRow = folderNode.querySelector('.item-row');
+                    if (folderRow && folderRow !== currentDragoverFolderRow) {
+                        if (currentDragoverFolderRow) {
+                            currentDragoverFolderRow.classList.remove('dragover');
+                        }
+                        folderRow.classList.add('dragover');
+                        currentDragoverFolderRow = folderRow;
+                    }
+                };
+                row.ondragleave = (e) => {
+                    // If we leave the row, we might still be inside another folder? We'll handle in global leave?
+                    // But simpler: we can clear the highlight if we leave the folder row itself
+                    const folderNode = findFolderNode(e.target);
+                    if (folderNode) {
+                        const folderRow = folderNode.querySelector('.item-row');
+                        if (folderRow === currentDragoverFolderRow) {
+                            folderRow.classList.remove('dragover');
+                            currentDragoverFolderRow = null;
+                        }
+                    }
                 };
                 row.ondrop = (e) => {
-                    row.classList.remove('dragover');
-                    const targetLi = e.currentTarget.closest('.tree-node');
-                    if (!targetLi) return;
-                    const targetId = targetLi.dataset.id;
+                    e.preventDefault();
+                    // clear highlight
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
+                    }
+                    
+                    const folderNode = findFolderNode(e.target);
+                    if (!folderNode) return;
+                    const targetId = folderNode.dataset.id;
                     const targetItem = getItem(targetId);
-                    if (!targetItem || targetItem.type !== 'folder') return; // only drop on folders
+                    if (!targetItem || targetItem.type !== 'folder') return;
                     
                     const dragged = draggedId || e.dataTransfer.getData('text/plain');
                     if (!dragged) return;
@@ -428,7 +467,6 @@
                     // update parent
                     draggedItem.parent = targetId;
                     renderTree();
-                    // keep selection if file still exists
                 };
             });
             
@@ -437,6 +475,10 @@
             treeContainer.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
             treeContainer.ondrop = (e) => {
                 e.preventDefault();
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
                 const dragged = draggedId || e.dataTransfer.getData('text/plain');
                 if (!dragged) return;
                 const draggedItem = getItem(dragged);
@@ -681,6 +723,63 @@
 </script>
 
 <!-- ========== NETLIFY FUNCTIONS (must be deployed separately) ========== 
-     (the comments remain exactly as you had them) -->
+     Place these two files under /netlify/functions/ 
+
+     1. verify-password.js 
+     ----------------------------------------------
+     exports.handler = async (event) => {
+       const { password } = JSON.parse(event.body);
+       const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; // set in Netlify dashboard
+       return {
+         statusCode: 200,
+         headers: { 'Access-Control-Allow-Origin': '*' },
+         body: JSON.stringify({ allowed: password === ADMIN_PASSWORD })
+       };
+     };
+
+     2. push-to-github.js 
+     ----------------------------------------------
+     const { Octokit } = require('@octokit/rest');
+     exports.handler = async (event) => {
+       const { files } = JSON.parse(event.body);  // files: { 'path/file.js': 'content', ... }
+       const token = process.env.GITHUB_TOKEN;     // fine‑grained token with repo access
+       const owner = process.env.GITHUB_OWNER;     // e.g., 'yourname'
+       const repo = process.env.GITHUB_REPO;       // e.g., 'packgames'
+       const branch = 'main';
+       const octokit = new Octokit({ auth: token });
+       try {
+         // get current head
+         const { data: refData } = await octokit.git.getRef({ owner, repo, ref: `heads/${branch}` });
+         const latestSha = refData.object.sha;
+         const { data: commitData } = await octokit.git.getCommit({ owner, repo, commit_sha: latestSha });
+         const treeSha = commitData.tree.sha;
+
+         // create blobs and build tree
+         const tree = await Promise.all(Object.entries(files).map(async ([path, content]) => {
+           const { data } = await octokit.git.createBlob({ owner, repo, content, encoding: 'utf-8' });
+           return { path: `public/imagine/${path}`, mode: '100644', type: 'blob', sha: data.sha };
+         }));
+
+         const { data: newTree } = await octokit.git.createTree({ owner, repo, base_tree: treeSha, tree });
+         const { data: newCommit } = await octokit.git.createCommit({
+           owner, repo,
+           message: 'Auto‑push from PackGames studio [skip ci]',
+           tree: newTree.sha,
+           parents: [latestSha]
+         });
+         await octokit.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: newCommit.sha, force: false });
+         return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+       } catch (e) {
+         return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+       }
+     };
+     (add @octokit/rest to your Netlify functions dependencies)
+-->
+
+<!-- hidden explanation: 
+     This studio implements a fully functional code editor with drag‑and‑drop tree,
+     Ace editor, and push integration. Password uses Netlify environment variable.
+     The file system is virtual – adapt to real GitHub by extending the push function.
+-->
 </body>
 </html>
