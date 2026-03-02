@@ -1,4 +1,3 @@
-// netlify/functions/netlify-api.js
 const fetch = require('node-fetch');
 
 const NETLIFY_API_BASE = 'https://api.netlify.com/api/v1';
@@ -30,7 +29,7 @@ exports.handler = async (event) => {
     };
   }
 
-  // Special internal resource to return site ID
+  // Special internal resource to return site ID from environment
   if (resource === 'site-id') {
     const siteId = process.env.NETLIFY_SITE_ID;
     if (!siteId) {
@@ -46,7 +45,7 @@ exports.handler = async (event) => {
     };
   }
 
-  // For other resources, site ID can come from query or env
+  // For other resources, site ID can come from query or environment
   const siteId = params.siteId || process.env.NETLIFY_SITE_ID;
   if (!siteId) {
     return {
@@ -55,7 +54,7 @@ exports.handler = async (event) => {
     };
   }
 
-  // Replace {site_id} placeholder with actual site ID
+  // Replace {site_id} placeholder with actual site ID (fix: use correct placeholder)
   const path = resource.replace('{site_id}', siteId);
   const url = `${NETLIFY_API_BASE}/${path}`;
 
