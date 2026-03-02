@@ -377,6 +377,85 @@
         }
 
         function attachDragDropListeners() {
+            const treeContainer = document.getElementById('fileTreeContainer');
+            
+            // Use a single dragover handler on the container
+            treeContainer.ondragover = (e) => {
+                e.preventDefault(); // required to allow drop
+                e.dataTransfer.dropEffect = 'move';
+                
+                // Find the folder under the mouse
+                const folderNode = findFolderNode(e.target);
+                if (!folderNode) {
+                    // No folder under mouse, remove any highlight
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
+                    }
+                    return;
+                }
+                
+                const folderRow = folderNode.querySelector('.item-row');
+                if (folderRow && folderRow !== currentDragoverFolderRow) {
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                    }
+                    folderRow.classList.add('dragover');
+                    currentDragoverFolderRow = folderRow;
+                }
+            };
+            
+            treeContainer.ondragleave = (e) => {
+                // If we leave the container, remove highlight
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
+            };
+            
+            treeContainer.ondrop = (e) => {
+                e.preventDefault();
+                // Remove highlight
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
+                
+                // Find the folder under the drop point
+                const folderNode = findFolderNode(e.target);
+                if (!folderNode) {
+                    // If not over a folder, maybe drop to root? We'll handle root separately.
+                    // But root drop is already handled by the container's own drop? We'll do root here too.
+                    const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                    if (!dragged) return;
+                    const draggedItem = getItem(dragged);
+                    if (!draggedItem || draggedItem.id === 'root') return;
+                    // move to root (parent = 'root')
+                    draggedItem.parent = 'root';
+                    renderTree();
+                    return;
+                }
+                
+                const targetId = folderNode.dataset.id;
+                const targetItem = getItem(targetId);
+                if (!targetItem || targetItem.type !== 'folder') return;
+                
+                const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                if (!dragged) return;
+                // Prevent dropping onto itself or descendant
+                if (dragged === targetId || isDescendant(targetId, dragged)) {
+                    alert('Cannot move a folder into itself or its subfolder.');
+                    return;
+                }
+                const draggedItem = getItem(dragged);
+                if (!draggedItem) return;
+                
+                // update parent
+                draggedItem.parent = targetId;
+                renderTree();
+            };
+            
+            // Also need dragstart on each draggable row
             const allRows = document.querySelectorAll('.item-row');
             allRows.forEach(row => {
                 const li = row.closest('.tree-node');
@@ -384,7 +463,6 @@
                 const id = li.dataset.id;
                 const type = li.dataset.type;
                 
-                // drag start
                 row.setAttribute('draggable', type === 'file' || type === 'folder');
                 row.ondragstart = (e) => {
                     if (type !== 'file' && type !== 'folder') {
@@ -409,84 +487,7 @@
                         currentDragoverFolderRow = null;
                     }
                 };
-                
-                // dragover / drop: we need to find the nearest folder ancestor as target
-                row.ondragover = (e) => {
-                    const folderNode = findFolderNode(e.target);
-                    if (!folderNode) return; // not hovering over any folder
-                    
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    
-                    // highlight the folder's row
-                    const folderRow = folderNode.querySelector('.item-row');
-                    if (folderRow && folderRow !== currentDragoverFolderRow) {
-                        if (currentDragoverFolderRow) {
-                            currentDragoverFolderRow.classList.remove('dragover');
-                        }
-                        folderRow.classList.add('dragover');
-                        currentDragoverFolderRow = folderRow;
-                    }
-                };
-                row.ondragleave = (e) => {
-                    // If we leave the row, we might still be inside another folder? We'll handle in global leave?
-                    // But simpler: we can clear the highlight if we leave the folder row itself
-                    const folderNode = findFolderNode(e.target);
-                    if (folderNode) {
-                        const folderRow = folderNode.querySelector('.item-row');
-                        if (folderRow === currentDragoverFolderRow) {
-                            folderRow.classList.remove('dragover');
-                            currentDragoverFolderRow = null;
-                        }
-                    }
-                };
-                row.ondrop = (e) => {
-                    e.preventDefault();
-                    // clear highlight
-                    if (currentDragoverFolderRow) {
-                        currentDragoverFolderRow.classList.remove('dragover');
-                        currentDragoverFolderRow = null;
-                    }
-                    
-                    const folderNode = findFolderNode(e.target);
-                    if (!folderNode) return;
-                    const targetId = folderNode.dataset.id;
-                    const targetItem = getItem(targetId);
-                    if (!targetItem || targetItem.type !== 'folder') return;
-                    
-                    const dragged = draggedId || e.dataTransfer.getData('text/plain');
-                    if (!dragged) return;
-                    // Prevent dropping onto itself or descendant
-                    if (dragged === targetId || isDescendant(targetId, dragged)) {
-                        alert('Cannot move a folder into itself or its subfolder.');
-                        return;
-                    }
-                    const draggedItem = getItem(dragged);
-                    if (!draggedItem) return;
-                    
-                    // update parent
-                    draggedItem.parent = targetId;
-                    renderTree();
-                };
             });
-            
-            // root container drop (for moving to root)
-            const treeContainer = document.getElementById('fileTreeContainer');
-            treeContainer.ondragover = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
-            treeContainer.ondrop = (e) => {
-                e.preventDefault();
-                if (currentDragoverFolderRow) {
-                    currentDragoverFolderRow.classList.remove('dragover');
-                    currentDragoverFolderRow = null;
-                }
-                const dragged = draggedId || e.dataTransfer.getData('text/plain');
-                if (!dragged) return;
-                const draggedItem = getItem(dragged);
-                if (!draggedItem || draggedItem.id === 'root') return;
-                // move to root (parent = 'root')
-                draggedItem.parent = 'root';
-                renderTree();
-            };
         }
 
         // ---------- ACE EDITOR ----------
