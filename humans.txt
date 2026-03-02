@@ -1,0 +1,9 @@
+/* TEAM */
+Name: Your Name
+Role: Game Developer & Site Creator
+Site: https://packarcade.com
+Twitter: @yourhandle
+
+/* THANKS */
+Netlify for hosting
+Pack-Studio for inspiration
