@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PackArcade · Netlify Emulator</title>
     <style>
+        /* (keep your existing CSS – unchanged) */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -196,8 +197,8 @@
             try {
                 const response = await fetch(`${API_BASE}?resource=site-id`);
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || 'Failed to fetch site ID');
+                    const err = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(err.error || `HTTP ${response.status}`);
                 }
                 const data = await response.json();
                 SITE_ID = data.siteId;
@@ -225,7 +226,6 @@
                 if (SITE_ID) {
                     loadTabData(target);
                 } else {
-                    // If site ID not loaded yet, show loading in that panel
                     const panelContent = document.getElementById(target).querySelector('.loading, #' + target + '-content');
                     if (panelContent) panelContent.innerHTML = '<div class="loading">Waiting for site ID...</div>';
                 }
@@ -241,13 +241,13 @@
             else if (tab === 'functions') loadFunctions();
         }
 
-        // Fetch helper – now uses the globally stored SITE_ID
+        // Fetch helper – uses the globally stored SITE_ID
         async function fetchResource(resource) {
             const url = `${API_BASE}?resource=${encodeURIComponent(resource)}&siteId=${encodeURIComponent(SITE_ID)}`;
             const response = await fetch(url);
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Failed to fetch');
+                const err = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(err.error || `HTTP ${response.status}`);
             }
             return response.json();
         }
@@ -262,11 +262,11 @@
                     <div class="card">
                         <h3>Site Details</h3>
                         <div class="info-grid">
-                            <div class="info-item"><span class="info-label">Name:</span> <span class="info-value">${site.name}</span></div>
+                            <div class="info-item"><span class="info-label">Name:</span> <span class="info-value">${site.name || 'N/A'}</span></div>
                             <div class="info-item"><span class="info-label">Custom Domain:</span> <span class="info-value">${site.custom_domain || 'none'}</span></div>
-                            <div class="info-item"><span class="info-label">URL:</span> <span class="info-value"><a href="${site.ssl_url || site.url}" target="_blank" style="color:#a8d8ff;">${site.ssl_url || site.url}</a></span></div>
+                            <div class="info-item"><span class="info-label">URL:</span> <span class="info-value"><a href="${site.ssl_url || site.url || '#'}" target="_blank" style="color:#a8d8ff;">${site.ssl_url || site.url || 'N/A'}</a></span></div>
                             <div class="info-item"><span class="info-label">Repository:</span> <span class="info-value">${site.build_settings?.repo_url || 'not linked'}</span></div>
-                            <div class="info-item"><span class="info-label">Created:</span> <span class="info-value">${new Date(site.created_at).toLocaleString()}</span></div>
+                            <div class="info-item"><span class="info-label">Created:</span> <span class="info-value">${site.created_at ? new Date(site.created_at).toLocaleString() : 'N/A'}</span></div>
                             <div class="info-item"><span class="info-label">Last Published:</span> <span class="info-value">${site.published_deploy?.published_at ? new Date(site.published_deploy.published_at).toLocaleString() : 'never'}</span></div>
                         </div>
                     </div>
@@ -282,7 +282,7 @@
             container.innerHTML = '<div class="loading">Loading deploys...</div>';
             try {
                 const deploys = await fetchResource('sites/{site_id}/deploys');
-                if (deploys.length === 0) {
+                if (!Array.isArray(deploys) || deploys.length === 0) {
                     container.innerHTML = '<div class="card">No deploys found.</div>';
                     return;
                 }
@@ -290,10 +290,10 @@
                 deploys.slice(0, 20).forEach(d => {
                     const statusClass = d.state === 'ready' ? 'status-ready' : (d.state === 'building' ? 'status-building' : 'status-error');
                     html += `<tr>
-                        <td>${new Date(d.created_at).toLocaleString()}</td>
+                        <td>${d.created_at ? new Date(d.created_at).toLocaleString() : 'N/A'}</td>
                         <td>${d.commit_ref ? d.commit_ref.substring(0,7) : '—'}</td>
-                        <td><span class="status-badge ${statusClass}">${d.state}</span></td>
-                        <td><a href="${d.deploy_ssl_url || d.deploy_url}" target="_blank" style="color:#a8d8ff;">view</a></td>
+                        <td><span class="status-badge ${statusClass}">${d.state || 'unknown'}</span></td>
+                        <td><a href="${d.deploy_ssl_url || d.deploy_url || '#'}" target="_blank" style="color:#a8d8ff;">view</a></td>
                     </tr>`;
                 });
                 html += '</table>';
@@ -309,6 +309,11 @@
             container.innerHTML = '<div class="loading">Loading environment variables...</div>';
             try {
                 const env = await fetchResource('sites/{site_id}/env');
+                if (!env || typeof env !== 'object') {
+                    container.innerHTML = '<div class="card">No environment variables or unexpected response.</div>';
+                    console.warn('Unexpected env response:', env);
+                    return;
+                }
                 const keys = Object.keys(env).sort();
                 if (keys.length === 0) {
                     container.innerHTML = '<div class="card">No environment variables set.</div>';
@@ -317,8 +322,17 @@
                 let html = '<table><tr><th>Key</th><th>Value</th><th>Contexts</th></tr>';
                 keys.forEach(key => {
                     const varData = env[key];
-                    const value = varData.values && varData.values[0] ? varData.values[0].value : '••••••••';
-                    const contexts = varData.values ? varData.values.map(v => v.context).join(', ') : 'all';
+                    // Safely access nested values
+                    let value = '••••••••';
+                    let contexts = 'all';
+                    if (varData && Array.isArray(varData.values) && varData.values.length > 0) {
+                        value = varData.values[0].value || '••••••••';
+                        contexts = varData.values.map(v => v.context).join(', ');
+                    } else if (varData && varData.value) {
+                        // Fallback for different API format
+                        value = varData.value;
+                        contexts = varData.contexts || 'all';
+                    }
                     html += `<tr>
                         <td><strong>${key}</strong></td>
                         <td>${value}</td>
@@ -338,16 +352,16 @@
             container.innerHTML = '<div class="loading">Loading functions...</div>';
             try {
                 const functions = await fetchResource('sites/{site_id}/functions');
-                if (functions.length === 0) {
+                if (!Array.isArray(functions) || functions.length === 0) {
                     container.innerHTML = '<div class="card">No functions deployed.</div>';
                     return;
                 }
                 let html = '<table><tr><th>Name</th><th>Runtime</th><th>URL</th></tr>';
                 functions.forEach(f => {
                     html += `<tr>
-                        <td>${f.name}</td>
-                        <td>${f.runtime}</td>
-                        <td><a href="${f.url}" target="_blank" style="color:#a8d8ff;">invoke</a></td>
+                        <td>${f.name || 'N/A'}</td>
+                        <td>${f.runtime || 'N/A'}</td>
+                        <td><a href="${f.url || '#'}" target="_blank" style="color:#a8d8ff;">invoke</a></td>
                     </tr>`;
                 });
                 html += '</table>';
