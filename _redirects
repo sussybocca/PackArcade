@@ -1,0 +1,15 @@
+# Custom error pages – Netlify will serve these HTML files for the respective HTTP status codes
+/404.html   404
+/403.html   403
+/500.html   500
+
+# Language folders – serve content from the appropriate subdirectory
+/en/*        /en/:splat   200
+/es/*        /es/:splat   200
+/fr/*        /fr/:splat   200
+
+# Root – redirect to English version (you can change this to language detection later)
+/            /en/         302
+
+# Example: permanent redirects for old URLs
+# /old-blog/*  /news/:splat  301
