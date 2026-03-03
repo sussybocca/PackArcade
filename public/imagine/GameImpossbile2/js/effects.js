@@ -13,122 +13,182 @@ import {
     SMAAEffect,
     ShockWaveEffect,
     GlitchEffect,
-    GodRaysEffect      // from postprocessing (if available)
+    SSAOEffect,
+    PixelationEffect,
+    NoiseEffect,
+    GridEffect,
+    TiltShiftEffect,
+    TextureEffect
 } from 'postprocessing';
 import { Nebula, SpriteRenderer } from 'three-nebula';
+import GUI from 'lil-gui';
 
-// If GodRaysEffect is not exported by your version, you can create a custom one:
-// (Simplified version – replace with a proper implementation if needed)
-class GodRaysEffect extends Effect {
-    constructor(lightSource, options = {}) {
-        super('GodRays', `
-            uniform sampler2D tDiffuse;
-            uniform vec3 lightPosition;
-            uniform float exposure;
-            uniform float decay;
-            uniform float density;
-            uniform float weight;
-            uniform float clamp;
-            uniform int samples;
+// ----------------------------------------------------------------------
+// Custom GodRaysEffect – only define if postprocessing doesn't provide it
+// ----------------------------------------------------------------------
+let GodRaysEffect;
+try {
+    // Attempt to import from postprocessing (some versions include it)
+    GodRaysEffect = (await import('postprocessing')).GodRaysEffect;
+} catch {
+    // Fallback: define our own
+    GodRaysEffect = class extends Effect {
+        constructor(lightSource, options = {}) {
+            super('GodRays', `
+                uniform sampler2D tDiffuse;
+                uniform vec3 lightPosition;
+                uniform float exposure;
+                uniform float decay;
+                uniform float density;
+                uniform float weight;
+                uniform float clamp;
+                uniform int samples;
 
-            varying vec2 vUv;
+                varying vec2 vUv;
 
-            void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-                vec2 texCoord = uv;
-                vec2 deltaTexCoord = texCoord - lightPosition.xy;
-                deltaTexCoord *= 1.0 / float(samples) * density;
-                float illuminationDecay = 1.0;
-                vec4 color = texture2D(tDiffuse, texCoord);
-                for(int i = 0; i < 100; i++) {
-                    if(i >= samples) break;
-                    texCoord -= deltaTexCoord;
-                    vec4 sampleColor = texture2D(tDiffuse, texCoord);
-                    sampleColor *= illuminationDecay * weight;
-                    color += sampleColor;
-                    illuminationDecay *= decay;
+                void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+                    vec2 texCoord = uv;
+                    vec2 deltaTexCoord = texCoord - lightPosition.xy;
+                    deltaTexCoord *= 1.0 / float(samples) * density;
+                    float illuminationDecay = 1.0;
+                    vec4 color = texture2D(tDiffuse, texCoord);
+                    for(int i = 0; i < 100; i++) {
+                        if(i >= samples) break;
+                        texCoord -= deltaTexCoord;
+                        vec4 sampleColor = texture2D(tDiffuse, texCoord);
+                        sampleColor *= illuminationDecay * weight;
+                        color += sampleColor;
+                        illuminationDecay *= decay;
+                    }
+                    color *= exposure;
+                    outputColor = clamp(color, 0.0, clamp);
                 }
-                color *= exposure;
-                outputColor = clamp(color, 0.0, clamp);
-            }
-        `, {
-            uniforms: new Map([
-                ['lightPosition', new THREE.Uniform(lightSource.position.clone())],
-                ['exposure', new THREE.Uniform(options.exposure || 0.6)],
-                ['decay', new THREE.Uniform(options.decay || 0.93)],
-                ['density', new THREE.Uniform(options.density || 0.96)],
-                ['weight', new THREE.Uniform(options.weight || 0.4)],
-                ['clamp', new THREE.Uniform(options.clamp || 1.0)],
-                ['samples', new THREE.Uniform(options.samples || 100)]
-            ])
-        });
-        this.lightSource = lightSource;
-    }
+            `, {
+                uniforms: new Map([
+                    ['lightPosition', new THREE.Uniform(lightSource.position.clone())],
+                    ['exposure', new THREE.Uniform(options.exposure || 0.6)],
+                    ['decay', new THREE.Uniform(options.decay || 0.93)],
+                    ['density', new THREE.Uniform(options.density || 0.96)],
+                    ['weight', new THREE.Uniform(options.weight || 0.4)],
+                    ['clamp', new THREE.Uniform(options.clamp || 1.0)],
+                    ['samples', new THREE.Uniform(options.samples || 100)]
+                ])
+            });
+            this.lightSource = lightSource;
+        }
+    };
 }
 
+// ----------------------------------------------------------------------
+// Main Effects Manager
+// ----------------------------------------------------------------------
 export class EffectsManager {
-    constructor(renderer, camera, scene) {
+    constructor(renderer, camera, scene, options = {}) {
         this.camera = camera;
         this.scene = scene;
         this.renderer = renderer;
+        this.options = options;
 
-        // Store original camera position for shake effects
+        // Enable WebGL extensions for higher precision
+        const gl = renderer.getContext();
+        if (gl) {
+            this.hasFloatTextures = gl.getExtension('OES_texture_float') !== null;
+            this.hasHalfFloatTextures = gl.getExtension('OES_texture_half_float') !== null;
+        }
+
+        // Original camera position for shake
         this.originalCameraPos = camera.position.clone();
         this.shakeIntensity = 0;
         this.time = 0;
 
-        // Create a postprocessing EffectComposer
+        // Create composer
         this.composer = new EffectComposer(renderer);
         this.composer.addPass(new RenderPass(scene, camera));
 
-        // --- BLOOM (ethereal glow) ---
+        // ------------------------------------------------------------------
+        // EFFECTS – all configurable via GUI later
+        // ------------------------------------------------------------------
         this.bloomEffect = new BloomEffect({
-            intensity: 1.0,
+            intensity: 1.2,
             radius: 0.8,
             threshold: 0.1
         });
 
-        // --- DEPTH OF FIELD (cinematic focus) ---
         this.dofEffect = new DepthOfFieldEffect(camera, {
-            focusDistance: 10.0,   // distance from camera to focus plane
-            focalLength: 0.15,      // how narrow the focus is
-            bokehScale: 4.0         // blur intensity
+            focusDistance: 10.0,
+            focalLength: 0.15,
+            bokehScale: 4.0
         });
 
-        // --- MOTION BLUR (responsive to movement) ---
         this.motionBlurEffect = new MotionBlurEffect({
             intensity: 1.0,
             jitter: 0.1
         });
 
-        // --- CHROMATIC ABERRATION (realistic lens fringing) ---
         this.chromaticAberrationEffect = new ChromaticAberrationEffect({
             offset: new THREE.Vector2(0.001, 0.001)
         });
 
-        // --- VIGNETTE (darkened edges) ---
         this.vignetteEffect = new VignetteEffect({
             darkness: 0.6,
             offset: 0.3
         });
 
-        // --- COLOR GRADING (LUT-based) ---
-        // Create a neutral LUT (you can load a custom one)
+        // LUT for color grading (neutral)
         const lut = new THREE.DataTexture(new Uint8Array(32*32*32*4), 32, 32);
         lut.minFilter = THREE.LinearFilter;
         lut.magFilter = THREE.LinearFilter;
         this.colorGradingEffect = new ColorGradingEffect({ lut });
 
-        // --- TONE MAPPING (filmic) ---
         this.toneMappingEffect = new ToneMappingEffect({
             mode: ToneMappingEffect.MODE_REINHARD,
             resolution: 256
         });
 
-        // --- SMAA (anti-aliasing) ---
         this.smaaEffect = new SMAAEffect();
 
-        // --- GOD RAYS (volumetric light) ---
-        // Create a light source for god rays (e.g., a bright point)
+        // Ambient Occlusion
+        this.ssaoEffect = new SSAOEffect(camera, {
+            intensity: 1.0,
+            radius: 2.0,
+            bias: 0.1,
+            samples: 16
+        });
+
+        // Pixelation (for artistic style)
+        this.pixelationEffect = new PixelationEffect(2.0);
+        this.pixelationEffect.enabled = false; // off by default
+
+        // Subtle noise (film grain)
+        this.noiseEffect = new NoiseEffect({
+            intensity: 0.02
+        });
+        this.noiseEffect.enabled = false;
+
+        // Grid overlay (optional)
+        this.gridEffect = new GridEffect({
+            size: 0.5,
+            lineWidth: 0.01,
+            color: 0xffffff
+        });
+        this.gridEffect.enabled = false;
+
+        // Tilt‑shift (miniature effect)
+        this.tiltShiftEffect = new TiltShiftEffect({
+            focusArea: 0.5,
+            blurStrength: 0.5
+        });
+        this.tiltShiftEffect.enabled = false;
+
+        // Lens flare (custom texture)
+        const flareTexture = this.createFlareTexture();
+        this.lensFlareEffect = new TextureEffect({
+            texture: flareTexture,
+            blendFunction: BlendFunction.ADD
+        });
+        this.lensFlareEffect.enabled = false;
+
+        // God Rays
         this.godRayLight = new THREE.PointLight(0xffaa00, 2, 30);
         this.godRayLight.position.set(10, 10, 10);
         scene.add(this.godRayLight);
@@ -141,21 +201,25 @@ export class EffectsManager {
             exposure: 0.8
         });
 
-        // --- GLITCH (digital distortion) ---
+        // Glitch
         this.glitchEffect = new GlitchEffect({
             chromaticAberrationOffset: new THREE.Vector2(0.01, 0.01)
         });
+        this.glitchEffect.enabled = false;
 
-        // --- SHOCKWAVE (for jumpscares) ---
+        // Shockwave
         this.shockWaveEffect = new ShockWaveEffect(camera, {
             speed: 2.0,
             size: 0.5
         });
+        this.shockWaveEffect.enabled = false;
 
-        // --- Combine all effects into an EffectPass ---
-        // Note: order matters! Apply effects in logical order.
+        // ------------------------------------------------------------------
+        // Combine all effects into an EffectPass
+        // ------------------------------------------------------------------
         this.effects = [
-            this.smaaEffect,                     // AA first
+            this.smaaEffect,                     // anti‑aliasing first
+            this.ssaoEffect,                      // ambient occlusion
             this.bloomEffect,
             this.dofEffect,
             this.motionBlurEffect,
@@ -164,6 +228,11 @@ export class EffectsManager {
             this.colorGradingEffect,
             this.toneMappingEffect,
             this.godRaysEffect,
+            this.pixelationEffect,
+            this.noiseEffect,
+            this.gridEffect,
+            this.tiltShiftEffect,
+            this.lensFlareEffect,
             this.glitchEffect,
             this.shockWaveEffect
         ];
@@ -172,30 +241,94 @@ export class EffectsManager {
         this.effectPass.renderToScreen = true;
         this.composer.addPass(this.effectPass);
 
-        // Initially disable shockwave and glitch (they are triggered on demand)
-        this.shockWaveEffect.enabled = false;
-        this.glitchEffect.enabled = false;
+        // ------------------------------------------------------------------
+        // GUI for real‑time tweaking (optional)
+        // ------------------------------------------------------------------
+        if (options.gui !== false) {
+            this.gui = new GUI({ title: 'Effects Control' });
+            this.setupGUI();
+        }
 
-        // --- STATE VARIABLES ---
+        // ------------------------------------------------------------------
+        // Nebula particles
+        // ------------------------------------------------------------------
+        this.initParticles();
+
+        // State
         this.jumpscareActive = false;
         this.heartbeatIntensity = 0;
+    }
 
-        // --- ATMOSPHERIC PARTICLES (using three-nebula) ---
-        this.initParticles();
+    setupGUI() {
+        const bloomFolder = this.gui.addFolder('Bloom');
+        bloomFolder.add(this.bloomEffect, 'intensity', 0, 5).name('Intensity');
+        bloomFolder.add(this.bloomEffect, 'radius', 0, 2).name('Radius');
+        bloomFolder.add(this.bloomEffect, 'threshold', 0, 1).name('Threshold');
+        bloomFolder.open();
+
+        const dofFolder = this.gui.addFolder('Depth of Field');
+        dofFolder.add(this.dofEffect, 'focusDistance', 0, 20).name('Focus Distance');
+        dofFolder.add(this.dofEffect, 'focalLength', 0, 1).name('Focal Length');
+        dofFolder.add(this.dofEffect, 'bokehScale', 0, 10).name('Bokeh Scale');
+        dofFolder.open();
+
+        const motionFolder = this.gui.addFolder('Motion Blur');
+        motionFolder.add(this.motionBlurEffect, 'intensity', 0, 2).name('Intensity');
+        motionFolder.add(this.motionBlurEffect, 'jitter', 0, 0.5).name('Jitter');
+        motionFolder.open();
+
+        const chromaFolder = this.gui.addFolder('Chromatic Aberration');
+        chromaFolder.add(this.chromaticAberrationEffect.offset, 'x', 0, 0.02).name('Offset X');
+        chromaFolder.add(this.chromaticAberrationEffect.offset, 'y', 0, 0.02).name('Offset Y');
+        chromaFolder.open();
+
+        const vignetteFolder = this.gui.addFolder('Vignette');
+        vignetteFolder.add(this.vignetteEffect, 'darkness', 0, 1).name('Darkness');
+        vignetteFolder.add(this.vignetteEffect, 'offset', 0, 1).name('Offset');
+        vignetteFolder.open();
+
+        const ssaoFolder = this.gui.addFolder('SSAO');
+        ssaoFolder.add(this.ssaoEffect, 'intensity', 0, 5).name('Intensity');
+        ssaoFolder.add(this.ssaoEffect, 'radius', 0, 5).name('Radius');
+        ssaoFolder.add(this.ssaoEffect, 'bias', 0, 0.5).name('Bias');
+        ssaoFolder.open();
+
+        const extraFolder = this.gui.addFolder('Extra Effects');
+        extraFolder.add(this.pixelationEffect, 'enabled').name('Pixelation');
+        extraFolder.add(this.pixelationEffect, 'granularity', 1, 10).name('Pixel Size');
+        extraFolder.add(this.noiseEffect, 'enabled').name('Noise');
+        extraFolder.add(this.noiseEffect, 'intensity', 0, 0.5).name('Noise Intensity');
+        extraFolder.add(this.gridEffect, 'enabled').name('Grid');
+        extraFolder.add(this.tiltShiftEffect, 'enabled').name('Tilt‑Shift');
+        extraFolder.add(this.lensFlareEffect, 'enabled').name('Lens Flare');
+        extraFolder.open();
+    }
+
+    createFlareTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(255,255,255,0)';
+        ctx.fillRect(0, 0, 64, 64);
+        ctx.beginPath();
+        ctx.arc(32, 32, 16, 0, Math.PI * 2);
+        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 16);
+        gradient.addColorStop(0, 'rgba(255,255,200,1)');
+        gradient.addColorStop(0.5, 'rgba(255,200,100,0.5)');
+        gradient.addColorStop(1, 'rgba(255,100,50,0)');
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        return new THREE.CanvasTexture(canvas);
     }
 
     initParticles() {
-        // Create a Nebula instance
         this.nebula = new Nebula();
-
-        // Create a sprite renderer for glowing particles
         const spriteRenderer = new SpriteRenderer(this.scene, THREE);
-
-        // Define a particle emitter
         const emitter = new Nebula.Emitter()
             .setRate(new Nebula.Rate(
-                new Nebula.Span(10, 20),  // particles per second
-                new Nebula.Span(0.1, 0.25) // burst
+                new Nebula.Span(10, 20),
+                new Nebula.Span(0.1, 0.25)
             ))
             .addInitializers([
                 new Nebula.Position(new THREE.Vector3(0, 5, 0), 20, 5, 20),
@@ -210,7 +343,6 @@ export class EffectsManager {
                 new Nebula.Color(new THREE.Color(0xffaa00), new THREE.Color(0xff4400)),
                 new Nebula.Force(new THREE.Vector3(0, -0.5, 0))
             ]);
-
         this.nebula.addEmitter(emitter);
         this.nebula.renderers = [spriteRenderer];
     }
@@ -233,13 +365,11 @@ export class EffectsManager {
     triggerJumpscare() {
         this.jumpscareActive = true;
 
-        // --- INTENSE VISUAL EFFECTS ---
-
-        // Shockwave at camera position
+        // Shockwave
         this.shockWaveEffect.enabled = true;
         this.shockWaveEffect.explode();
 
-        // Glitch wild mode
+        // Glitch wild
         this.glitchEffect.enabled = true;
         this.glitchEffect.goWild = true;
 
@@ -253,26 +383,25 @@ export class EffectsManager {
         this.shakeIntensity = 0.8;
         this.originalCameraPos.copy(this.camera.position);
 
-        // Heartbeat effect
+        // Heartbeat
         this.heartbeatIntensity = 1.0;
 
-        // Create a flash mesh (simple)
-        const flashGeometry = new THREE.PlaneGeometry(50, 50);
-        const flashMaterial = new THREE.MeshBasicMaterial({
+        // Flash mesh
+        const flashGeo = new THREE.PlaneGeometry(50, 50);
+        const flashMat = new THREE.MeshBasicMaterial({
             color: 0xff0000,
             transparent: true,
             opacity: 0.7,
             side: THREE.DoubleSide
         });
-        const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+        const flash = new THREE.Mesh(flashGeo, flashMat);
         flash.position.copy(this.camera.position);
         flash.position.z -= 5;
         flash.rotation.copy(this.camera.rotation);
         this.scene.add(flash);
-
         setTimeout(() => this.scene.remove(flash), 100);
 
-        // Reset after duration
+        // Reset after 1s
         setTimeout(() => {
             this.glitchEffect.enabled = false;
             this.glitchEffect.goWild = false;
@@ -284,20 +413,20 @@ export class EffectsManager {
     }
 
     setIntensity(level) {
-        // Adjust effects based on game intensity (0-1)
         this.chromaticAberrationEffect.offset.set(0.001 + level * 0.005, 0.001 + level * 0.005);
         this.bloomEffect.intensity = 1.0 + level * 0.5;
         this.motionBlurEffect.intensity = level * 0.5;
         this.vignetteEffect.darkness = 0.6 + level * 0.3;
+        this.ssaoEffect.intensity = level * 2.0;
     }
 
     update(delta) {
         this.time += delta;
 
-        // Update particles
+        // Particles
         this.nebula.update(delta);
 
-        // Update god rays light position (optional animation)
+        // Animate god ray light
         this.godRayLight.position.x = 10 + Math.sin(this.time * 0.3) * 5;
         this.godRayLight.position.z = 10 + Math.cos(this.time * 0.5) * 5;
 
@@ -313,7 +442,7 @@ export class EffectsManager {
             }
         }
 
-        // Heartbeat FOV pulsing
+        // Heartbeat FOV
         if (this.heartbeatIntensity > 0) {
             const pulse = Math.sin(this.time * 20) * 0.1 * this.heartbeatIntensity;
             this.camera.fov = 75 + pulse;
@@ -333,17 +462,14 @@ export class EffectsManager {
         }
     }
 
-    // Render the composer (call this in your animation loop)
     render() {
         this.composer.render();
     }
 
-    // Clean up resources
     dispose() {
         this.nebula.destroy();
         this.composer.dispose();
-        // Remove custom objects from scene
         this.scene.remove(this.godRayLight);
-        // ... any other disposals
+        if (this.gui) this.gui.destroy();
     }
 }
