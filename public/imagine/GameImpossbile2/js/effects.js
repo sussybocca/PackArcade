@@ -18,65 +18,60 @@ import {
     NoiseEffect,
     GridEffect,
     TiltShiftEffect,
-    TextureEffect
+    TextureEffect,
+    Effect,               // needed for custom GodRaysEffect
+    BlendFunction         // needed for TextureEffect
 } from 'postprocessing';
 import { Nebula, SpriteRenderer } from 'three-nebula';
 import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------
-// Custom GodRaysEffect – only define if postprocessing doesn't provide it
+// Custom GodRaysEffect – defined once, no dynamic import issues
 // ----------------------------------------------------------------------
-let GodRaysEffect;
-try {
-    // Attempt to import from postprocessing (some versions include it)
-    GodRaysEffect = (await import('postprocessing')).GodRaysEffect;
-} catch {
-    // Fallback: define our own
-    GodRaysEffect = class extends Effect {
-        constructor(lightSource, options = {}) {
-            super('GodRays', `
-                uniform sampler2D tDiffuse;
-                uniform vec3 lightPosition;
-                uniform float exposure;
-                uniform float decay;
-                uniform float density;
-                uniform float weight;
-                uniform float clamp;
-                uniform int samples;
+class GodRaysEffect extends Effect {
+    constructor(lightSource, options = {}) {
+        super('GodRays', `
+            uniform sampler2D tDiffuse;
+            uniform vec3 lightPosition;
+            uniform float exposure;
+            uniform float decay;
+            uniform float density;
+            uniform float weight;
+            uniform float clamp;
+            uniform int samples;
 
-                varying vec2 vUv;
+            varying vec2 vUv;
 
-                void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-                    vec2 texCoord = uv;
-                    vec2 deltaTexCoord = texCoord - lightPosition.xy;
-                    deltaTexCoord *= 1.0 / float(samples) * density;
-                    float illuminationDecay = 1.0;
-                    vec4 color = texture2D(tDiffuse, texCoord);
-                    for(int i = 0; i < 100; i++) {
-                        if(i >= samples) break;
-                        texCoord -= deltaTexCoord;
-                        vec4 sampleColor = texture2D(tDiffuse, texCoord);
-                        sampleColor *= illuminationDecay * weight;
-                        color += sampleColor;
-                        illuminationDecay *= decay;
-                    }
-                    color *= exposure;
-                    outputColor = clamp(color, 0.0, clamp);
+            void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+                vec2 texCoord = uv;
+                vec2 deltaTexCoord = texCoord - lightPosition.xy;
+                deltaTexCoord *= 1.0 / float(samples) * density;
+                float illuminationDecay = 1.0;
+                vec4 color = texture2D(tDiffuse, texCoord);
+                for(int i = 0; i < 100; i++) {
+                    if(i >= samples) break;
+                    texCoord -= deltaTexCoord;
+                    vec4 sampleColor = texture2D(tDiffuse, texCoord);
+                    sampleColor *= illuminationDecay * weight;
+                    color += sampleColor;
+                    illuminationDecay *= decay;
                 }
-            `, {
-                uniforms: new Map([
-                    ['lightPosition', new THREE.Uniform(lightSource.position.clone())],
-                    ['exposure', new THREE.Uniform(options.exposure || 0.6)],
-                    ['decay', new THREE.Uniform(options.decay || 0.93)],
-                    ['density', new THREE.Uniform(options.density || 0.96)],
-                    ['weight', new THREE.Uniform(options.weight || 0.4)],
-                    ['clamp', new THREE.Uniform(options.clamp || 1.0)],
-                    ['samples', new THREE.Uniform(options.samples || 100)]
-                ])
-            });
-            this.lightSource = lightSource;
-        }
-    };
+                color *= exposure;
+                outputColor = clamp(color, 0.0, clamp);
+            }
+        `, {
+            uniforms: new Map([
+                ['lightPosition', new THREE.Uniform(lightSource.position.clone())],
+                ['exposure', new THREE.Uniform(options.exposure || 0.6)],
+                ['decay', new THREE.Uniform(options.decay || 0.93)],
+                ['density', new THREE.Uniform(options.density || 0.96)],
+                ['weight', new THREE.Uniform(options.weight || 0.4)],
+                ['clamp', new THREE.Uniform(options.clamp || 1.0)],
+                ['samples', new THREE.Uniform(options.samples || 100)]
+            ])
+        });
+        this.lightSource = lightSource;
+    }
 }
 
 // ----------------------------------------------------------------------
