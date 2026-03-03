@@ -8,7 +8,7 @@ import {
     MotionBlurEffect,
     ChromaticAberrationEffect,
     VignetteEffect,
-    ColorGradingEffect,
+    LUTEffect,
     ToneMappingEffect,
     SMAAEffect,
     ShockWaveEffect,
@@ -19,14 +19,14 @@ import {
     GridEffect,
     TiltShiftEffect,
     TextureEffect,
-    Effect,               // needed for custom GodRaysEffect
-    BlendFunction         // needed for TextureEffect
+    Effect,
+    BlendFunction
 } from 'postprocessing';
 import { Nebula, SpriteRenderer } from 'three-nebula';
 import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------
-// Custom GodRaysEffect – defined once, no dynamic import issues
+// Custom GodRaysEffect – uses the imported Effect base class
 // ----------------------------------------------------------------------
 class GodRaysEffect extends Effect {
     constructor(lightSource, options = {}) {
@@ -84,25 +84,20 @@ export class EffectsManager {
         this.renderer = renderer;
         this.options = options;
 
-        // Enable WebGL extensions for higher precision
         const gl = renderer.getContext();
         if (gl) {
             this.hasFloatTextures = gl.getExtension('OES_texture_float') !== null;
             this.hasHalfFloatTextures = gl.getExtension('OES_texture_half_float') !== null;
         }
 
-        // Original camera position for shake
         this.originalCameraPos = camera.position.clone();
         this.shakeIntensity = 0;
         this.time = 0;
 
-        // Create composer
         this.composer = new EffectComposer(renderer);
         this.composer.addPass(new RenderPass(scene, camera));
 
-        // ------------------------------------------------------------------
-        // EFFECTS – all configurable via GUI later
-        // ------------------------------------------------------------------
+        // --- Effects ---
         this.bloomEffect = new BloomEffect({
             intensity: 1.2,
             radius: 0.8,
@@ -133,7 +128,7 @@ export class EffectsManager {
         const lut = new THREE.DataTexture(new Uint8Array(32*32*32*4), 32, 32);
         lut.minFilter = THREE.LinearFilter;
         lut.magFilter = THREE.LinearFilter;
-        this.colorGradingEffect = new ColorGradingEffect({ lut });
+        this.lutEffect = new LUTEffect({ lut });
 
         this.toneMappingEffect = new ToneMappingEffect({
             mode: ToneMappingEffect.MODE_REINHARD,
@@ -142,7 +137,6 @@ export class EffectsManager {
 
         this.smaaEffect = new SMAAEffect();
 
-        // Ambient Occlusion
         this.ssaoEffect = new SSAOEffect(camera, {
             intensity: 1.0,
             radius: 2.0,
@@ -150,17 +144,12 @@ export class EffectsManager {
             samples: 16
         });
 
-        // Pixelation (for artistic style)
         this.pixelationEffect = new PixelationEffect(2.0);
-        this.pixelationEffect.enabled = false; // off by default
+        this.pixelationEffect.enabled = false;
 
-        // Subtle noise (film grain)
-        this.noiseEffect = new NoiseEffect({
-            intensity: 0.02
-        });
+        this.noiseEffect = new NoiseEffect({ intensity: 0.02 });
         this.noiseEffect.enabled = false;
 
-        // Grid overlay (optional)
         this.gridEffect = new GridEffect({
             size: 0.5,
             lineWidth: 0.01,
@@ -168,14 +157,12 @@ export class EffectsManager {
         });
         this.gridEffect.enabled = false;
 
-        // Tilt‑shift (miniature effect)
         this.tiltShiftEffect = new TiltShiftEffect({
             focusArea: 0.5,
             blurStrength: 0.5
         });
         this.tiltShiftEffect.enabled = false;
 
-        // Lens flare (custom texture)
         const flareTexture = this.createFlareTexture();
         this.lensFlareEffect = new TextureEffect({
             texture: flareTexture,
@@ -196,31 +183,27 @@ export class EffectsManager {
             exposure: 0.8
         });
 
-        // Glitch
         this.glitchEffect = new GlitchEffect({
             chromaticAberrationOffset: new THREE.Vector2(0.01, 0.01)
         });
         this.glitchEffect.enabled = false;
 
-        // Shockwave
         this.shockWaveEffect = new ShockWaveEffect(camera, {
             speed: 2.0,
             size: 0.5
         });
         this.shockWaveEffect.enabled = false;
 
-        // ------------------------------------------------------------------
-        // Combine all effects into an EffectPass
-        // ------------------------------------------------------------------
+        // Combine all effects
         this.effects = [
-            this.smaaEffect,                     // anti‑aliasing first
-            this.ssaoEffect,                      // ambient occlusion
+            this.smaaEffect,
+            this.ssaoEffect,
             this.bloomEffect,
             this.dofEffect,
             this.motionBlurEffect,
             this.chromaticAberrationEffect,
             this.vignetteEffect,
-            this.colorGradingEffect,
+            this.lutEffect,
             this.toneMappingEffect,
             this.godRaysEffect,
             this.pixelationEffect,
@@ -236,20 +219,13 @@ export class EffectsManager {
         this.effectPass.renderToScreen = true;
         this.composer.addPass(this.effectPass);
 
-        // ------------------------------------------------------------------
-        // GUI for real‑time tweaking (optional)
-        // ------------------------------------------------------------------
         if (options.gui !== false) {
             this.gui = new GUI({ title: 'Effects Control' });
             this.setupGUI();
         }
 
-        // ------------------------------------------------------------------
-        // Nebula particles
-        // ------------------------------------------------------------------
         this.initParticles();
 
-        // State
         this.jumpscareActive = false;
         this.heartbeatIntensity = 0;
     }
