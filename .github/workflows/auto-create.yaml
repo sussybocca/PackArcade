@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'public/imagine/**'          # triggers for any change inside imagine/
-      - 'public/simple-games/**'     # also watch the simple-games folder
+      - 'public/imagine/SimpleGames/**'     # also watch the simple-games folder
   workflow_dispatch:
 
 permissions:
