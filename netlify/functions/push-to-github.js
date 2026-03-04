@@ -9,11 +9,14 @@ exports.handler = async (event) => {
     };
   }
 
-  const { files } = JSON.parse(event.body); // files = { 'path/to/file.js': 'content', ... }
+  const { files, subdir = '' } = JSON.parse(event.body);
+  // files = { 'path/to/file.simple': 'content', ... }
+  // subdir = e.g. 'SimpleGames' (will be appended to public/imagine/)
+
   const token = process.env.GITHUB_TOKEN;
   const owner = process.env.GITHUB_OWNER;
   const repo = process.env.GITHUB_REPO;
-  const branch = 'main'; // or your default branch name
+  const branch = 'main';
 
   if (!token || !owner || !repo) {
     return {
@@ -25,7 +28,7 @@ exports.handler = async (event) => {
   const octokit = new Octokit({ auth: token });
 
   try {
-    // 1. Get the reference of the branch
+    // 1. Get branch reference
     const { data: refData } = await octokit.git.getRef({
       owner,
       repo,
@@ -33,7 +36,7 @@ exports.handler = async (event) => {
     });
     const latestCommitSha = refData.object.sha;
 
-    // 2. Get the current commit and its tree
+    // 2. Get current commit tree
     const { data: commitData } = await octokit.git.getCommit({
       owner,
       repo,
@@ -41,7 +44,11 @@ exports.handler = async (event) => {
     });
     const baseTreeSha = commitData.tree.sha;
 
-    // 3. Create blobs for each file and build a new tree
+    // 3. Create blobs and build tree
+    const basePath = subdir
+      ? `public/imagine/${subdir}/`
+      : 'public/imagine/';
+
     const tree = await Promise.all(
       Object.entries(files).map(async ([filePath, content]) => {
         const { data: blob } = await octokit.git.createBlob({
@@ -51,7 +58,7 @@ exports.handler = async (event) => {
           encoding: 'utf-8',
         });
         return {
-          path: `public/imagine/${filePath}`, // all files go under public/imagine/
+          path: `${basePath}${filePath}`,
           mode: '100644',
           type: 'blob',
           sha: blob.sha,
@@ -59,7 +66,7 @@ exports.handler = async (event) => {
       })
     );
 
-    // 4. Create a new tree based on the current one + our new blobs
+    // 4. Create new tree
     const { data: newTree } = await octokit.git.createTree({
       owner,
       repo,
@@ -67,16 +74,16 @@ exports.handler = async (event) => {
       tree,
     });
 
-    // 5. Create a commit
+    // 5. Create commit
     const { data: newCommit } = await octokit.git.createCommit({
       owner,
       repo,
-      message: 'Auto‑push from PackGames studio [skip ci]',
+      message: `Auto‑push from ${subdir || 'PackGames'} studio [skip ci]`,
       tree: newTree.sha,
       parents: [latestCommitSha],
     });
 
-    // 6. Update the branch reference to point to the new commit
+    // 6. Update branch
     await octokit.git.updateRef({
       owner,
       repo,
