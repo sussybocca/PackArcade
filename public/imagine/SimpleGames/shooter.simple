@@ -1,0 +1,36 @@
+// Spaceship Shooter
+Player: @pos=(100,300)@ $speed=5 $fireRate=0.5
+Enemy: @pos=(700,200)@ $speed=2 $move=sin
+
+Level_1:
+  @width=20@ @height=12@
+  tiles:
+    11111111111111111111
+    10000000000000000001
+    100P0000000000000001
+    100000000000E0000001
+    11111111111111111111
+
+Physics:
+  gravity = @0@
+  friction = @0.05@
+  max_speed = @8@
+
+OnCollision: @Player,Bullet,Enemy@ $score+=10 $playSound=explode.wav
+OnCollision: @Player,Enemy@ $lives-=1 $resetPos
+
+Sprites:
+  player = "ship.png"
+  enemy = "enemy.png"
+  bullet = "laser.png"
+
+Anim_Explosion:
+  frames: @1,2,3,4,5@ $fps=24 $loop=false
+
+If Debug_ENAbLE -True:
+  $showHitboxes
+  $logCollisions
+
+Music: "bgm.ogg" $volume=50 $loop
+WinCondition: @score>=100@
+LoseCondition: @lives==0@

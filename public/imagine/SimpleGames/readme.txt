@@ -1,0 +1,1 @@
+Use .simple files. Syntax: @...@, $..., sections, and cheat codes.
