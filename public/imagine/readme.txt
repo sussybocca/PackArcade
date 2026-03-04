@@ -1,0 +1,1 @@
+Use .simple files for games. Syntax: @...@, $..., Debug_ENAbLE, etc.

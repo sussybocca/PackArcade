@@ -1,0 +1,8 @@
+// My first SimpleGame
+// Movement and drawing example
+Move: @Pos*1@ $FPS 20*Graphics=High
+@Pos*1 $Draw Sq
+// Secret cheat mode (optional)
+Debug_ENAbLE -True
+cUsToM dRaWiNg pHySiCs -True
+// You can also write plain text – the validator will check for the special patterns.
