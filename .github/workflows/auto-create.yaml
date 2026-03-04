@@ -1,9 +1,10 @@
-name: Auto‑link Imagine Files
+name: Auto‑link Imagine & SimpleGames Files
 
 on:
   push:
     paths:
       - 'public/imagine/**'          # triggers for any change inside imagine/
+      - 'public/simple-games/**'     # also watch the simple-games folder
   workflow_dispatch:
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
       - name: Install HTML parser
         run: npm install --no-save --no-package-lock node-html-parser
 
-      - name: Update selector.html with new imagine files
+      - name: Update selector.html with new imagine and simple files
         uses: actions/github-script@v7
         with:
           script: |
@@ -37,6 +38,7 @@ jobs:
 
             const selectorPath = 'public/selector.html';
             const imagineDir = 'public/imagine';
+            const simpleDir = 'public/simple-games';
 
             // 1. Read the main selector page
             const selectorHtml = fs.readFileSync(selectorPath, 'utf8');
@@ -57,7 +59,7 @@ jobs:
               return;
             }
 
-            // 3. Parse the existing cardsData array (simple but works for this structure)
+            // 3. Parse the existing cardsData array
             const scriptContent = cardsDataScript.textContent;
             const match = scriptContent.match(/const cardsData = (\[[\s\S]*?\]);/);
             if (!match) {
@@ -67,16 +69,72 @@ jobs:
             const cardsDataStr = match[1];
             let cardsData;
             try {
-              // Use eval carefully – we trust the content
               cardsData = eval('(' + cardsDataStr + ')');
             } catch (e) {
               core.setFailed('Error parsing cardsData: ' + e.message);
               return;
             }
 
-            // 4. Recursively get all HTML/HTM files inside imagine/
+            // ---------- Helper: extract metadata from .simple files ----------
+            function extractSimpleMetadata(filePath) {
+              try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const lines = content.split('\n');
+                let title = null;
+                let description = null;
+                let category = 'demos';
+                for (const line of lines) {
+                  if (line.startsWith('//')) {
+                    const lower = line.toLowerCase();
+                    if (lower.includes('title:')) {
+                      title = line.replace(/\/\/\s*title:\s*/i, '').trim();
+                    } else if (lower.includes('description:')) {
+                      description = line.replace(/\/\/\s*description:\s*/i, '').trim();
+                    } else if (lower.includes('category:')) {
+                      category = line.replace(/\/\/\s*category:\s*/i, '').trim().toLowerCase();
+                    }
+                  }
+                  // stop after first few lines if we have all
+                  if (title && description && category) break;
+                }
+                if (!title) title = path.basename(filePath, '.simple').replace(/[-_]/g, ' ') + ' Simple Game';
+                if (!description) description = 'A game built with the SimpleGames custom syntax.';
+                return { title, description, category };
+              } catch {
+                return null;
+              }
+            }
+
+            // ---------- Helper: extract metadata from HTML files (existing) ----------
+            function extractHtmlMetadata(filePath) {
+              try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const doc = parse(content);
+                const titleTag = doc.querySelector('title');
+                const title = titleTag ? titleTag.text.trim() : null;
+                const metaDesc = doc.querySelector('meta[name="description"]');
+                let description = metaDesc ? metaDesc.getAttribute('content') || '' : '';
+                if (!description) {
+                  const firstP = doc.querySelector('p');
+                  if (firstP) description = firstP.text.trim().substring(0, 150) + '…';
+                }
+                const metaCat = doc.querySelector('meta[name="category"]');
+                const category = metaCat ? metaCat.getAttribute('content') || 'demos' : 'demos';
+                return { title, description, category };
+              } catch {
+                return null;
+              }
+            }
+
+            // ---------- Helper: check if a card already exists ----------
+            function cardExists(link) {
+              return cardsData.some(card => card.link === link);
+            }
+
+            // ---------- Scan imagine/ for HTML files ----------
             function getAllHtmlFiles(dir, baseDir = dir) {
               let results = [];
+              if (!fs.existsSync(dir)) return results;
               const list = fs.readdirSync(dir);
               for (const item of list) {
                 const fullPath = path.join(dir, item);
@@ -85,96 +143,78 @@ jobs:
                   results = results.concat(getAllHtmlFiles(fullPath, baseDir));
                 } else if (item.endsWith('.html') || item.endsWith('.htm')) {
                   const relativePath = path.relative(baseDir, fullPath);
-                  results.push({ fullPath, relativePath });
+                  results.push({ fullPath, relativePath, type: 'html' });
                 }
               }
               return results;
             }
 
-            if (!fs.existsSync(imagineDir)) {
-              console.log('⚠️  imagine/ folder not found – nothing to do.');
-              return;
-            }
-
-            const files = getAllHtmlFiles(imagineDir);
-            if (files.length === 0) {
-              console.log('No HTML files found in imagine/ – nothing to do.');
-              return;
-            }
-
-            // Helper: extract title
-            function extractTitle(filePath) {
-              try {
-                const content = fs.readFileSync(filePath, 'utf8');
-                const doc = parse(content);
-                const titleTag = doc.querySelector('title');
-                return titleTag ? titleTag.text.trim() : null;
-              } catch {
-                return null;
+            // ---------- Scan simple-games/ for .simple files ----------
+            function getAllSimpleFiles(dir, baseDir = dir) {
+              let results = [];
+              if (!fs.existsSync(dir)) return results;
+              const list = fs.readdirSync(dir);
+              for (const item of list) {
+                const fullPath = path.join(dir, item);
+                const stat = fs.statSync(fullPath);
+                if (stat.isDirectory()) {
+                  results = results.concat(getAllSimpleFiles(fullPath, baseDir));
+                } else if (item.endsWith('.simple')) {
+                  const relativePath = path.relative(baseDir, fullPath);
+                  results.push({ fullPath, relativePath, type: 'simple' });
+                }
               }
+              return results;
             }
 
-            // Helper: extract description
-            function extractDescription(filePath) {
-              try {
-                const content = fs.readFileSync(filePath, 'utf8');
-                const doc = parse(content);
-                const metaDesc = doc.querySelector('meta[name="description"]');
-                if (metaDesc) {
-                  return metaDesc.getAttribute('content') || '';
-                }
-                const firstP = doc.querySelector('p');
-                if (firstP) {
-                  return firstP.text.trim().substring(0, 150) + '…';
-                }
-              } catch {}
-              return 'Explore this immersive experience.';
+            // Collect all files
+            const htmlFiles = getAllHtmlFiles(imagineDir);
+            const simpleFiles = getAllSimpleFiles(simpleDir);
+            const allFiles = [...htmlFiles, ...simpleFiles];
+
+            if (allFiles.length === 0) {
+              console.log('No files found in imagine/ or simple-games/ – nothing to do.');
+              return;
             }
 
-            // Helper: extract category from meta tag (default: "demos")
-            function extractCategory(filePath) {
-              try {
-                const content = fs.readFileSync(filePath, 'utf8');
-                const doc = parse(content);
-                const metaCat = doc.querySelector('meta[name="category"]');
-                if (metaCat) {
-                  return metaCat.getAttribute('content') || 'demos';
-                }
-              } catch {}
-              return 'demos'; // fallback category
-            }
-
-            // Helper: check if a card with the same link already exists
-            function cardExists(link) {
-              return cardsData.some(card => card.link === link);
-            }
-
-            // 5. Add new entries
             let addedCount = 0;
-            for (const { fullPath, relativePath } of files) {
-              const link = `imagine/${relativePath.replace(/\\/g, '/')}`;
+            for (const { fullPath, relativePath, type } of allFiles) {
+              let link;
+              if (type === 'html') {
+                link = `imagine/${relativePath.replace(/\\/g, '/')}`;
+              } else {
+                link = `simple-games/${relativePath.replace(/\\/g, '/')}`;
+              }
+
               if (cardExists(link)) {
-                console.log(`Card for ${relativePath} already exists – skipping.`);
+                console.log(`Card for ${link} already exists – skipping.`);
                 continue;
               }
 
-              const title = extractTitle(fullPath) || 
-                path.basename(relativePath, path.extname(relativePath)).replace(/[-_]/g, ' ') +
-                ' ' + path.extname(relativePath).substring(1).toUpperCase();
-              const description = extractDescription(fullPath);
-              const category = extractCategory(fullPath);
+              let metadata;
+              if (type === 'html') {
+                metadata = extractHtmlMetadata(fullPath);
+              } else {
+                metadata = extractSimpleMetadata(fullPath);
+              }
 
-              // Default icon (you could also extract from meta)
-              const icon = '📄';
+              if (!metadata) {
+                console.log(`Could not extract metadata from ${fullPath} – skipping.`);
+                continue;
+              }
 
-              // Build a new card object matching the structure in cardsData
+              const { title, description, category } = metadata;
+
+              // Default icon based on type
+              const icon = type === 'html' ? '📄' : '🎮';
+
               const newCard = {
                 icon: icon,
                 title: title,
                 description: description,
                 features: [
-                  'Immersive experience',
-                  'New dimension',
+                  type === 'html' ? 'Immersive experience' : 'SimpleGames syntax',
+                  type === 'html' ? 'New dimension' : 'Custom game engine',
                   'Interactive content'
                 ],
                 link: link,
@@ -213,7 +253,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/selector.html
           if ! git diff --staged --quiet; then
-            git commit -m "Auto‑add imagine file links [skip ci]"
+            git commit -m "Auto‑add imagine & simple file links [skip ci]"
             git push
           else
             echo "No changes to selector.html; skipping commit."
