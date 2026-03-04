@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleGames · open studio (custom syntax)</title>
+    <!-- Ace editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/ace.js"></script>
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* same style as before – no password modal, studio always visible */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #1a2a1f;
+            height: 100vh;
+            overflow: hidden;
+            color: #ddd;
+        }
+        #studio {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .toolbar {
+            background: #162516;
+            padding: 0.5rem 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border-bottom: 1px solid #2d442d;
+        }
+        .toolbar button {
+            background: #2d442d;
+            border: none;
+            color: #ccc;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid #405c40;
+            transition: 0.1s;
+        }
+        .toolbar button:hover {
+            background: #3d603d;
+            color: white;
+        }
+        .toolbar .spacer {
+            flex: 1;
+        }
+        .toolbar .validate-btn {
+            background: #4d4a2d;
+            border-color: #8b8b2e;
+            color: #ffffb0;
+        }
+        .toolbar .push-btn {
+            background: #2d4a3b;
+            border-color: #2e8b57;
+            color: #b0ffd0;
+        }
+        .main-panel {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .file-tree {
+            width: 320px;
+            background: #1c2e1c;
+            border-right: 2px solid #2a422a;
+            padding: 1rem 0.5rem 1rem 1rem;
+            overflow-y: auto;
+            user-select: none;
+            font-size: 0.95rem;
+        }
+        .tree-root {
+            list-style: none;
+            padding-left: 0.5rem;
+        }
+        .tree-node {
+            list-style: none;
+            margin: 2px 0;
+            white-space: nowrap;
+        }
+        .tree-node .item-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px 4px 4px;
+            border-radius: 8px;
+            cursor: default;
+            background: #253825;
+            margin: 2px 0;
+            border: 1px solid transparent;
+            transition: background 0.1s;
+            position: relative;
+        }
+        .tree-node .item-row:hover {
+            background: #2f4a2f;
+            border-color: #4f7a4f;
+        }
+        .tree-node .item-row.selected {
+            background: #3e643e;
+            border-left: 4px solid #8cba8c;
+        }
+        .item-row.dragover {
+            background: #4a7a4a !important;
+            border: 1px dashed #a9ffa9;
+        }
+        .item-row i {
+            width: 20px;
+            color: #b0dab0;
+        }
+        .item-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .folder-children {
+            list-style: none;
+            padding-left: 24px;
+            margin-left: 8px;
+            border-left: 1px dotted #3a5a3a;
+        }
+        .empty-folder {
+            color: #6a8a6a;
+            font-style: italic;
+            padding-left: 28px;
+            font-size: 0.85rem;
+        }
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1a2a1a;
+        }
+        #editor {
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+        }
+        .status-bar {
+            background: #162516;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.85rem;
+            color: #8aaa8a;
+            border-top: 1px solid #2d442d;
+            display: flex;
+            justify-content: space-between;
+        }
+        .dragging-ghost {
+            background: #4c8c4c;
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 8px 16px black;
+        }
+        i.fa-folder { color: #7ae07a; }
+        i.fa-file { color: #b0d0b0; }
+        .validation-result {
+            color: #ffd966;
+        }
+    </style>
+</head>
+<body>
+
+<!-- studio is always visible (no password) -->
+<div id="studio">
+    <div class="toolbar">
+        <button id="newFileBtn"><i class="fas fa-file"></i> new file</button>
+        <button id="newFolderBtn"><i class="fas fa-folder-plus"></i> new folder</button>
+        <button id="deleteBtn"><i class="fas fa-trash-alt"></i> delete</button>
+        <span class="spacer"></span>
+        <button id="validateBtn" class="validate-btn"><i class="fas fa-check-circle"></i> validate with Secure.js</button>
+        <button id="saveBtn"><i class="fas fa-save"></i> save</button>
+        <button id="pushBtn" class="push-btn"><i class="fab fa-github"></i> push to simple‑games</button>
+    </div>
+    <div class="main-panel">
+        <div class="file-tree" id="fileTreeContainer">
+            <!-- dynamic tree injected -->
+        </div>
+        <div class="editor-pane">
+            <div id="editor"></div>
+            <div class="status-bar">
+                <span id="status">📄 ready</span>
+                <span id="validationMsg" class="validation-result"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ---------- VIRTUAL FILESYSTEM (with a real example of your syntax) ----------
+        let items = [
+            { id: 'root', name: 'simple-games', type: 'folder', parent: null, content: null },
+            { id: 'f1', name: 'demo.simple', type: 'file', parent: 'root', 
+              content: `// My first SimpleGame
+// Movement and drawing example
+Move: @Pos*1@ $FPS 20*Graphics=High
+@Pos*1 $Draw Sq
+// Secret cheat mode (optional)
+Debug_ENAbLE -True
+cUsToM dRaWiNg pHySiCs -True
+// You can also write plain text – the validator will check for the special patterns.` },
+            { id: 'f2', name: 'readme.txt', type: 'file', parent: 'root',
+              content: 'Use .simple files for games. Syntax: @...@, $..., Debug_ENAbLE, etc.' }
+        ];
+
+        // helper: generate short id
+        function genId() { return Date.now() + '-' + Math.random().toString(36).substring(2, 9); }
+
+        // get children of a folder
+        function getChildren(parentId) {
+            return items.filter(it => it.parent === parentId).sort((a,b) => a.name.localeCompare(b.name));
+        }
+
+        // get item by id
+        function getItem(id) { return items.find(it => it.id === id); }
+
+        // check if descendant (for drag safety)
+        function isDescendant(descendantId, ancestorId) {
+            if (descendantId === ancestorId) return true;
+            let item = getItem(descendantId);
+            while (item && item.parent) {
+                if (item.parent === ancestorId) return true;
+                item = getItem(item.parent);
+            }
+            return false;
+        }
+
+        // current selected file id (for editor)
+        let selectedFileId = null;
+        let aceEditor = null;
+
+        // ---------- RENDER TREE ----------
+        function renderTree() {
+            const container = document.getElementById('fileTreeContainer');
+            container.innerHTML = ''; 
+            const rootFolder = getItem('root');
+            if (!rootFolder) return;
+            const rootUl = document.createElement('ul');
+            rootUl.className = 'tree-root';
+            renderNode('root', rootUl, 0);
+            container.appendChild(rootUl);
+            // re-attach drag listeners after render
+            attachDragDropListeners();
+        }
+
+        function renderNode(parentId, parentUl, depth) {
+            const children = getChildren(parentId);
+            if (children.length === 0) return;
+            for (let child of children) {
+                const li = document.createElement('li');
+                li.className = 'tree-node';
+                li.dataset.id = child.id;
+                li.dataset.type = child.type;
+                li.setAttribute('draggable', child.type === 'file' || child.type === 'folder');
+                
+                const row = document.createElement('div');
+                row.className = `item-row ${selectedFileId === child.id ? 'selected' : ''}`;
+                row.dataset.id = child.id;
+                
+                const icon = document.createElement('i');
+                icon.className = child.type === 'folder' ? 'fas fa-folder' : 'fas fa-file-code';
+                row.appendChild(icon);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'item-name';
+                nameSpan.textContent = child.name;
+                row.appendChild(nameSpan);
+                
+                li.appendChild(row);
+                
+                if (child.type === 'folder') {
+                    const childContainer = document.createElement('ul');
+                    childContainer.className = 'folder-children';
+                    renderNode(child.id, childContainer, depth+1);
+                    if (getChildren(child.id).length === 0) {
+                        const emptyLi = document.createElement('li');
+                        emptyLi.className = 'empty-folder';
+                        emptyLi.textContent = '⌀ empty';
+                        childContainer.appendChild(emptyLi);
+                    }
+                    li.appendChild(childContainer);
+                }
+                
+                parentUl.appendChild(li);
+            }
+        }
+
+        // ---------- DRAG AND DROP (same as before) ----------
+        let draggedId = null;
+        let currentDragoverFolderRow = null;
+
+        function findFolderNode(element) {
+            let current = element.closest('.tree-node');
+            while (current) {
+                if (current.dataset.type === 'folder') {
+                    return current;
+                }
+                current = current.parentElement?.closest('.tree-node');
+            }
+            return null;
+        }
+
+        function attachDragDropListeners() {
+            const treeContainer = document.getElementById('fileTreeContainer');
+            
+            treeContainer.ondragover = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const folderNode = findFolderNode(e.target);
+                if (!folderNode) {
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
+                    }
+                    return;
+                }
+                
+                const folderRow = folderNode.querySelector('.item-row');
+                if (folderRow && folderRow !== currentDragoverFolderRow) {
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                    }
+                    folderRow.classList.add('dragover');
+                    currentDragoverFolderRow = folderRow;
+                }
+            };
+            
+            treeContainer.ondragleave = (e) => {
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
+            };
+            
+            treeContainer.ondrop = (e) => {
+                e.preventDefault();
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
+                
+                const folderNode = findFolderNode(e.target);
+                if (!folderNode) {
+                    const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                    if (!dragged) return;
+                    const draggedItem = getItem(dragged);
+                    if (!draggedItem || draggedItem.id === 'root') return;
+                    draggedItem.parent = 'root';
+                    renderTree();
+                    return;
+                }
+                
+                const targetId = folderNode.dataset.id;
+                const targetItem = getItem(targetId);
+                if (!targetItem || targetItem.type !== 'folder') return;
+                
+                const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                if (!dragged) return;
+                if (dragged === targetId || isDescendant(targetId, dragged)) {
+                    alert('Cannot move a folder into itself or its subfolder.');
+                    return;
+                }
+                const draggedItem = getItem(dragged);
+                if (!draggedItem) return;
+                
+                draggedItem.parent = targetId;
+                renderTree();
+            };
+            
+            const allRows = document.querySelectorAll('.item-row');
+            allRows.forEach(row => {
+                const li = row.closest('.tree-node');
+                if (!li) return;
+                const id = li.dataset.id;
+                const type = li.dataset.type;
+                
+                row.setAttribute('draggable', type === 'file' || type === 'folder');
+                row.ondragstart = (e) => {
+                    if (type !== 'file' && type !== 'folder') {
+                        e.preventDefault();
+                        return;
+                    }
+                    draggedId = id;
+                    e.dataTransfer.setData('text/plain', id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    const ghost = document.createElement('span');
+                    ghost.className = 'dragging-ghost';
+                    ghost.textContent = getItem(id)?.name || 'item';
+                    document.body.appendChild(ghost);
+                    e.dataTransfer.setDragImage(ghost, 20, 10);
+                    setTimeout(() => document.body.removeChild(ghost), 0);
+                };
+                row.ondragend = () => { 
+                    draggedId = null; 
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
+                    }
+                };
+            });
+        }
+
+        // ---------- ACE EDITOR ----------
+        function initAce() {
+            aceEditor = ace.edit('editor');
+            aceEditor.setTheme('ace/theme/tomorrow_night');
+            aceEditor.session.setMode('ace/mode/text'); // default, but we'll set per file
+            aceEditor.setOptions({
+                fontSize: '14px',
+                showPrintMargin: false,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true
+            });
+            aceEditor.setReadOnly(false);
+            // select first file by default
+            const firstFile = items.find(it => it.type === 'file');
+            if (firstFile) selectFile(firstFile.id);
+        }
+
+        // select file (sets editor content)
+        function selectFile(id) {
+            const file = getItem(id);
+            if (!file || file.type !== 'file') return;
+            selectedFileId = id;
+            aceEditor.session.setValue(file.content || '');
+            // set syntax mode based on extension
+            const ext = file.name.split('.').pop();
+            let mode = 'ace/mode/text';
+            if (ext === 'simple') mode = 'ace/mode/text'; // keep plain for now
+            else if (ext === 'html' || ext === 'htm') mode = 'ace/mode/html';
+            else if (ext === 'css') mode = 'ace/mode/css';
+            else if (ext === 'js') mode = 'ace/mode/javascript';
+            else if (ext === 'json') mode = 'ace/mode/json';
+            else if (ext === 'md') mode = 'ace/mode/markdown';
+            aceEditor.session.setMode(mode);
+            document.getElementById('status').innerHTML = `📄 editing ${file.name}`;
+            renderTree(); // re-render to update selected style
+        }
+
+        // save current file
+        function saveCurrentFile() {
+            if (!selectedFileId) { alert('No file selected'); return; }
+            const file = getItem(selectedFileId);
+            if (file && file.type === 'file') {
+                file.content = aceEditor.session.getValue();
+                document.getElementById('status').innerHTML = `💾 saved ${file.name}`;
+                renderTree(); 
+            }
+        }
+
+        // new file
+        function newFile() {
+            let parentId = 'root';
+            if (selectedFileId) {
+                const sel = getItem(selectedFileId);
+                if (sel.type === 'folder') parentId = sel.id;
+                else parentId = sel.parent;
+            }
+            const name = prompt('Enter file name (with extension):', 'newgame.simple');
+            if (!name) return;
+            const newId = genId();
+            items.push({
+                id: newId,
+                name: name,
+                type: 'file',
+                parent: parentId,
+                content: '// new SimpleGame\nMove: @Pos*1@ $FPS 30\n'
+            });
+            renderTree();
+            selectFile(newId);
+        }
+
+        function newFolder() {
+            let parentId = 'root';
+            if (selectedFileId) {
+                const sel = getItem(selectedFileId);
+                if (sel.type === 'folder') parentId = sel.id;
+                else parentId = sel.parent;
+            }
+            const name = prompt('Folder name:', 'assets');
+            if (!name) return;
+            items.push({
+                id: genId(),
+                name: name,
+                type: 'folder',
+                parent: parentId,
+                content: null
+            });
+            renderTree();
+        }
+
+        function deleteSelected() {
+            if (!selectedFileId) { alert('select a file/folder to delete'); return; }
+            if (selectedFileId === 'root') { alert('cannot delete root'); return; }
+            if (!confirm('Permanently delete? This will also delete all children.')) return;
+            const idsToDelete = new Set();
+            function collect(id) {
+                idsToDelete.add(id);
+                getChildren(id).forEach(child => collect(child.id));
+            }
+            collect(selectedFileId);
+            items = items.filter(it => !idsToDelete.has(it.id));
+            selectedFileId = null;
+            aceEditor.session.setValue('// item deleted');
+            renderTree();
+        }
+
+        // ---------- VALIDATE WITH SECURE.JS (NETLIFY FUNCTION) ----------
+        async function validateSyntax() {
+            if (!selectedFileId) {
+                alert('Select a .simple file first');
+                return;
+            }
+            const file = getItem(selectedFileId);
+            if (!file.name.endsWith('.simple')) {
+                alert('Validation only applies to .simple files');
+                return;
+            }
+            const code = aceEditor.session.getValue();
+            document.getElementById('validationMsg').innerHTML = '⏳ validating...';
+            try {
+                const response = await fetch('/.netlify/functions/secure', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    if (result.valid) {
+                        document.getElementById('validationMsg').innerHTML = '✅ valid syntax';
+                    } else {
+                        document.getElementById('validationMsg').innerHTML = '❌ ' + (result.error || 'invalid syntax');
+                    }
+                } else {
+                    document.getElementById('validationMsg').innerHTML = '❌ validation error';
+                }
+            } catch (err) {
+                document.getElementById('validationMsg').innerHTML = '❌ network error';
+            }
+        }
+
+        // ---------- PUSH TO GITHUB VIA NETLIFY FUNCTION (unchanged) ----------
+        async function pushImagine() {
+            const files = items.filter(it => it.type === 'file' && it.id !== 'root');
+            function buildPath(itemId) {
+                const item = getItem(itemId);
+                if (!item) return '';
+                const pathParts = [];
+                let cur = item;
+                while (cur && cur.id !== 'root') {
+                    pathParts.unshift(cur.name);
+                    cur = getItem(cur.parent);
+                }
+                return pathParts.join('/');
+            }
+            const fileMap = {};
+            files.forEach(f => {
+                const path = buildPath(f.id);
+                fileMap[path] = f.content || '';
+            });
+            document.getElementById('status').innerHTML = '⏳ pushing to GitHub...';
+            try {
+                const response = await fetch('/.netlify/functions/push-to-github', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: fileMap })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('status').innerHTML = '✅ push successful!';
+                } else {
+                    document.getElementById('status').innerHTML = '❌ push error: ' + (result.error || 'unknown');
+                }
+            } catch (err) {
+                document.getElementById('status').innerHTML = '❌ network error: ' + err.message;
+            }
+        }
+
+        // ---------- INITIALISE ----------
+        window.onload = function() {
+            initAce();
+            renderTree();
+            // attach listeners
+            document.getElementById('newFileBtn').onclick = newFile;
+            document.getElementById('newFolderBtn').onclick = newFolder;
+            document.getElementById('deleteBtn').onclick = deleteSelected;
+            document.getElementById('saveBtn').onclick = saveCurrentFile;
+            document.getElementById('validateBtn').onclick = validateSyntax;
+            document.getElementById('pushBtn').onclick = pushImagine;
+            // click on file to select
+            document.addEventListener('click', (e) => {
+                const row = e.target.closest('.item-row');
+                if (!row) return;
+                const li = row.closest('.tree-node');
+                if (li) {
+                    const id = li.dataset.id;
+                    const item = getItem(id);
+                    if (item && item.type === 'file') selectFile(id);
+                }
+            });
+        };
+    })();
+</script>
+
+<!-- ========== NETLIFY FUNCTIONS (place in /netlify/functions/) ========== -->
+
+<!-- 1. secure.js – validates the custom syntax
+     (also serves as the "Secure.js" function you requested)
+     ===================================================== -->
+<!--
+const simpleSyntaxCheck = (code) => {
+  // Basic validation rules for your custom language
+  const lines = code.split('\n');
+  const errors = [];
+
+  // Rule 1: @...@ must be balanced
+  const atMatches = code.match(/@/g) || [];
+  if (atMatches.length % 2 !== 0) {
+    errors.push('Unbalanced @ symbols');
+  }
+
+  // Rule 2: $... must appear at least once (just an example)
+  if (!code.includes('$')) {
+    errors.push('Missing $ directive');
+  }
+
+  // Rule 3: special cheat codes (optional)
+  const debugEnable = /Debug_ENAbLE\s*-\s*True/i.test(code);
+  const customDrawing = /cUsToM dRaWiNg pHySiCs\s*-\s*True/i.test(code);
+  // no error, just note
+
+  // Rule 4: Move: pattern (optional)
+  const movePattern = /Move\s*:\s*@[^@]*@\s*\$FPS\s*\d+/i;
+  if (!movePattern.test(code)) {
+    errors.push('Expected a Move: command with @...@ and $FPS');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors: errors,
+    notes: { debugEnabled: debugEnable, customPhysics: customDrawing }
+  };
+};
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+  try {
+    const { code } = JSON.parse(event.body);
+    const result = simpleSyntaxCheck(code);
+    return {
+      statusCode: 200,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ valid: result.valid, error: result.errors.join('; ') })
+    };
+  } catch (err) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Bad request' }) };
+  }
+};
+-->
+
+<!-- 2. push-to-github.js (same as before, but target folder public/simple-games/)
+     ================================================================= -->
+<!--
+const { Octokit } = require('@octokit/rest');
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  const { files } = JSON.parse(event.body); // files = { 'path/file.simple': 'content', ... }
+  const token = process.env.GITHUB_TOKEN;
+  const owner = process.env.GITHUB_OWNER;
+  const repo = process.env.GITHUB_REPO;
+  const branch = 'main';
+
+  if (!token || !owner || !repo) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'Missing GitHub configuration' }) };
+  }
+
+  const octokit = new Octokit({ auth: token });
+
+  try {
+    const { data: refData } = await octokit.git.getRef({ owner, repo, ref: `heads/${branch}` });
+    const latestCommitSha = refData.object.sha;
+    const { data: commitData } = await octokit.git.getCommit({ owner, repo, commit_sha: latestCommitSha });
+    const baseTreeSha = commitData.tree.sha;
+
+    const tree = await Promise.all(
+      Object.entries(files).map(async ([filePath, content]) => {
+        const { data: blob } = await octokit.git.createBlob({ owner, repo, content, encoding: 'utf-8' });
+        return {
+          path: `public/simple-games/${filePath}`,
+          mode: '100644',
+          type: 'blob',
+          sha: blob.sha,
+        };
+      })
+    );
+
+    const { data: newTree } = await octokit.git.createTree({ owner, repo, base_tree: baseTreeSha, tree });
+    const { data: newCommit } = await octokit.git.createCommit({
+      owner, repo,
+      message: 'Auto‑push from SimpleGames studio [skip ci]',
+      tree: newTree.sha,
+      parents: [latestCommitSha],
+    });
+    await octokit.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: newCommit.sha, force: false });
+
+    return { statusCode: 200, headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ success: true }) };
+  } catch (error) {
+    console.error('GitHub API error:', error);
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+  }
+};
+-->
+
+<!-- 
+  Environment variables needed:
+  - GITHUB_TOKEN (fine‑grained with repo access)
+  - GITHUB_OWNER (your GitHub username)
+  - GITHUB_REPO (repository name, e.g. 'simple-games')
+  No password needed for the studio itself.
+-->
+</body>
+</html>
