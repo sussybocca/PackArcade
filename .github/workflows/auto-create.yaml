@@ -183,7 +183,7 @@ jobs:
               if (type === 'html') {
                 link = `imagine/${relativePath.replace(/\\/g, '/')}`;
               } else {
-                link = `imagime/SimpleGames/${relativePath.replace(/\\/g, '/')}`;
+                link = `imagine/SimpleGames/${relativePath.replace(/\\/g, '/')}`;
               }
 
               if (cardExists(link)) {
