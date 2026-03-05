@@ -257,9 +257,15 @@
         let items = [
             { id: 'root', name: 'simple-games', type: 'folder', parent: null, content: null },
             { id: 'f1', name: 'shooter.simple', type: 'file', parent: 'root', 
-              content: `// Spaceship Shooter
-Player: @pos=(100,300)@ $speed=5 $fireRate=0.5
-Enemy: @pos=(700,200)@ $speed=2 $move=sin
+              content: `// Spaceship Shooter Advanced
+Var:
+  @max_score=100@
+  @lives=3@
+  @player_speed=5@
+  @enemy_speed=2@
+
+Player: @pos=(100,300)@ $speed=player_speed $fireRate=0.5 $invincible=false
+Enemy: @pos=(700,200)@ $speed=enemy_speed $move=sin $health=2
 
 Level_1:
   @width=20@ @height=12@
@@ -269,29 +275,46 @@ Level_1:
     100P0000000000000001
     100000000000E0000001
     11111111111111111111
+  properties:
+    @background=stars@
+    @music=intense.ogg@
 
 Physics:
   gravity = @0@
   friction = @0.05@
   max_speed = @8@
+  collisions = @pixel_perfect@
 
-OnCollision: @Player,Bullet,Enemy@ $score+=10 $playSound=explode.wav
-OnCollision: @Player,Enemy@ $lives-=1 $resetPos
+OnCollision: @Player,Bullet,Enemy@ $score+=10 $playSound=explode.wav $spawn=Explosion
+OnCollision: @Player,Enemy@ $lives-=1 $resetPos $if(lives<=0) $gameOver
 
 Sprites:
   player = "ship.png"
   enemy = "enemy.png"
   bullet = "laser.png"
+  explosion = "explode.png"
 
 Anim_Explosion:
   frames: @1,2,3,4,5@ $fps=24 $loop=false
 
+ParticleSystem ExplosionParticles:
+  @count=20@ @lifetime=1.5@ $spread=360 $speed=50 $color=orange
+
+Behavior Patrol:
+  states:
+    idle: @duration=2@ then=move
+    move: @target=random@ $speed=1.5
+  on_see_player: chase
+
+Camera:
+  @follow=player@ $shake_on_hit=true $bounds=(0,0,2000,2000)
+
 If Debug_ENAbLE -True:
   $showHitboxes
   $logCollisions
+  $overlay_info
 
-Music: "bgm.ogg" $volume=50 $loop
-WinCondition: @score>=100@
+WinCondition: @score>=max_score@
 LoseCondition: @lives==0@` },
             { id: 'f2', name: 'readme.txt', type: 'file', parent: 'root',
               content: 'Use .simple files. Syntax: @...@, $..., sections, and cheat codes.' }
@@ -576,7 +599,7 @@ LoseCondition: @lives==0@` },
             renderTree();
         }
 
-        // ---------- VALIDATE WITH SECURE.JS (mock call) ----------
+        // ---------- VALIDATE WITH SECURE.JS (ADVANCED) ----------
         async function validateSyntax() {
             if (!selectedFileId) {
                 alert('Select a .simple file first');
@@ -716,104 +739,487 @@ LoseCondition: @lives==0@` },
 
 <!-- ========== NETLIFY FUNCTIONS (place in /netlify/functions/) ========== -->
 
-<!-- 1. secure.js – full validator for all 10 syntax extensions -->
+<!-- 1. secure.js – ADVANCED VALIDATOR for all extended syntax features -->
 <!--
-const validateSimpleSyntax = (code) => {
-  const errors = [];
-  const warnings = [];
-  const notes = {};
+const { strict } = require('assert');
 
-  // 1. Balanced @
-  const atMatches = code.match(/@/g) || [];
-  if (atMatches.length % 2 !== 0) errors.push('Unbalanced @ symbols');
-
-  // 2. At least one $ directive
-  if (!code.includes('$')) warnings.push('No $ directive found');
-
-  // 3. Named objects (e.g., "Player: @...@ $...")
-  const objectPattern = /^([A-Za-z][A-Za-z0-9_]*)\s*:\s*@[^@]*@(\s*\$[A-Za-z0-9_]+=[^@\n]*)*$/gm;
-  let objectMatch;
-  while ((objectMatch = objectPattern.exec(code)) !== null) {
-    // could validate object name uniqueness later
+class SimpleValidator {
+  constructor(code) {
+    this.code = code;
+    this.lines = code.split('\n');
+    this.errors = [];
+    this.warnings = [];
+    this.notes = {};
+    this.symbols = {          // symbol table
+      variables: new Set(),   // variable names
+      objects: new Set(),     // e.g. Player, Enemy
+      sprites: new Set(),
+      sounds: new Set(),
+      animations: new Set(),
+      behaviors: new Set(),
+      particles: new Set(),
+      cameras: new Set(),
+      levels: new Map(),      // level name -> { width, height, tiles }
+    };
+    this.currentLine = 0;
   }
 
-  // 4. Level tilemaps
-  const levelRegex = /Level_(\d+):\s*@width=(\d+)@.*?tiles:\s*([\s\S]+?)(?=\n\S|$)/gi;
-  let levelMatch;
-  while ((levelMatch = levelRegex.exec(code)) !== null) {
-    const width = parseInt(levelMatch[2]);
-    const tileSection = levelMatch[3].trim();
-    const rows = tileSection.split('\n').map(r => r.trim()).filter(r => r);
-    let playerCount = 0;
-    rows.forEach((row, idx) => {
-      if (row.length !== width) errors.push(`Level ${levelMatch[1]} row ${idx+1} has ${row.length} tiles, expected ${width}`);
-      if (!/^[01PE]+$/.test(row)) errors.push(`Level ${levelMatch[1]} row ${idx+1} contains invalid chars (only 0,1,P,E)`);
-      playerCount += (row.match(/P/g) || []).length;
-    });
-    if (playerCount !== 1) errors.push(`Level ${levelMatch[1]} must have exactly one player start (P)`);
+  error(msg) {
+    this.errors.push(`Line ${this.currentLine+1}: ${msg}`);
   }
 
-  // 5. Event triggers
-  const eventPattern = /^On[A-Z][a-z]+:\s*@[^@]+@\s*(\$[A-Za-z0-9_]+[^@\n]*)+$/gm;
-  if (!eventPattern.test(code)) {
-    // not an error, just note
+  warn(msg) {
+    this.warnings.push(`Line ${this.currentLine+1}: ${msg}`);
   }
 
-  // 6. Animation sequences
-  const animPattern = /Anim_[A-Za-z0-9_]+:\s*frames:\s*@[^@]+@\s*(\$[A-Za-z0-9_]+=[^@\n]*)*/gm;
-  // could validate frame list format
+  // Main entry
+  validate() {
+    // First pass: collect all section headers and top-level declarations
+    const lines = this.lines;
+    let i = 0;
+    const sectionPattern = /^([A-Za-z][A-Za-z0-9_]*)\s*:/;
+    const varPattern = /^Var\s*:/;
+    const objectPattern = /^(Player|Enemy|NPC)\s*:/;
+    const levelPattern = /^Level_(\d+)\s*:/;
+    const animPattern = /^Anim_([A-Za-z0-9_]+)\s*:/;
+    const particlePattern = /^ParticleSystem\s+([A-Za-z0-9_]+)\s*:/;
+    const behaviorPattern = /^Behavior\s+([A-Za-z0-9_]+)\s*:/;
+    const cameraPattern = /^Camera\s*:/;
+    const eventPattern = /^On([A-Z][a-z]+)\s*:/;
+    const ifPattern = /^If\s+(.+?)\s*-\s*True\s*:/;
 
-  // 7. Physics overrides
-  const physicsSection = code.match(/Physics:\s*([\s\S]+?)(?=\n\S|$)/i);
-  if (physicsSection) {
-    const lines = physicsSection[1].split('\n');
-    lines.forEach(line => {
-      if (line.includes('=') && !/@/.test(line)) {
-        warnings.push(`Physics line "${line.trim()}" should use @...@ around values`);
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      this.currentLine = i;
+
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
       }
-    });
-  }
 
-  // 8. Conditional directives (cheat blocks)
-  const cheatBlocks = code.match(/If\s+(Debug_ENAbLE|cUsToM dRaWiNg pHySiCs)\s*-\s*True:/gi);
-  if (cheatBlocks) {
-    notes.cheats = cheatBlocks;
-  }
-
-  // 9. Math expressions inside @...@ (basic token check)
-  const exprBlocks = code.match(/@([^@]+)@/g) || [];
-  exprBlocks.forEach(block => {
-    const inner = block.slice(1, -1).trim();
-    if (inner.includes('=') && !/^[A-Za-z][A-Za-z0-9_]*\s*=\s*[^,]+$/.test(inner)) {
-      errors.push(`Invalid assignment in @...@: "${inner}"`);
+      // Var section
+      if (varPattern.test(line)) {
+        i = this.parseVarSection(i);
+      }
+      // Object (Player, Enemy)
+      else if (objectPattern.test(line)) {
+        const match = line.match(/^(Player|Enemy|NPC)\s*:/);
+        const objName = match[1];
+        this.symbols.objects.add(objName);
+        // parse rest of line and possibly multiline?
+        i = this.parseObjectLine(i, objName);
+      }
+      // Level
+      else if (levelPattern.test(line)) {
+        const match = line.match(/^Level_(\d+)\s*:/);
+        const levelId = match[1];
+        i = this.parseLevel(i, levelId);
+      }
+      // Animation
+      else if (animPattern.test(line)) {
+        const match = line.match(/^Anim_([A-Za-z0-9_]+)\s*:/);
+        const animName = match[1];
+        this.symbols.animations.add(animName);
+        i = this.parseAnimation(i, animName);
+      }
+      // ParticleSystem
+      else if (particlePattern.test(line)) {
+        const match = line.match(/^ParticleSystem\s+([A-Za-z0-9_]+)\s*:/);
+        const psName = match[1];
+        this.symbols.particles.add(psName);
+        i = this.parseParticleSystem(i, psName);
+      }
+      // Behavior
+      else if (behaviorPattern.test(line)) {
+        const match = line.match(/^Behavior\s+([A-Za-z0-9_]+)\s*:/);
+        const behName = match[1];
+        this.symbols.behaviors.add(behName);
+        i = this.parseBehavior(i, behName);
+      }
+      // Camera
+      else if (cameraPattern.test(line)) {
+        this.symbols.cameras.add('camera');
+        i = this.parseCamera(i);
+      }
+      // Event (OnCollision, etc.)
+      else if (eventPattern.test(line)) {
+        i = this.parseEvent(i);
+      }
+      // Conditional If
+      else if (ifPattern.test(line)) {
+        i = this.parseIfBlock(i);
+      }
+      // Sprites, Music, Sound sections
+      else if (/^(Sprites|Music|Sound):/.test(line)) {
+        i = this.parseResourceSection(i, line.split(':')[0]);
+      }
+      // Physics section
+      else if (/^Physics:/.test(line)) {
+        i = this.parsePhysics(i);
+      }
+      // Win/Lose conditions
+      else if (/^(WinCondition|LoseCondition):/.test(line)) {
+        i = this.parseCondition(i);
+      }
+      else {
+        // unknown top-level, maybe error
+        this.warn(`Unknown top-level section: ${line}`);
+        i++;
+      }
     }
-    // check for unbalanced parentheses
-    const parens = (inner.match(/\(/g) || []).length;
-    if (parens !== (inner.match(/\)/g) || []).length) {
-      errors.push(`Unbalanced parentheses in @...@: "${inner}"`);
+
+    // After parsing, run semantic checks
+    this.checkReferences();
+
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      notes: this.notes
+    };
+  }
+
+  // ---------- Section parsers ----------
+
+  parseVarSection(startLine) {
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      // Var lines: @var=expr@  (or multiple)
+      const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+      if (atMatches.length === 0) {
+        // end of section (next section starts with word:)
+        if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+        this.warn(`Expected @...@ in Var section`);
+        i++;
+        continue;
+      }
+      for (const m of atMatches) {
+        const expr = m[1].trim();
+        // simple assignment: id = value
+        if (!expr.includes('=')) {
+          this.error(`Variable assignment must contain '=': ${expr}`);
+        } else {
+          const [id, val] = expr.split('=').map(s => s.trim());
+          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(id)) {
+            this.error(`Invalid variable name: ${id}`);
+          } else {
+            this.symbols.variables.add(id);
+            // type/value check can be added
+          }
+        }
+      }
+      i++;
     }
-  });
-
-  // 10. Resource declarations (Sprites, Music, Sound)
-  const resourceSections = code.match(/(Sprites|Music|Sound):\s*([\s\S]+?)(?=\n\S|$)/gi);
-  if (resourceSections) {
-    // could check for duplicate keys
+    return i;
   }
 
-  // 11. Game rules
-  const winCondition = /WinCondition:\s*@[^@]+@/i.test(code);
-  const loseCondition = /LoseCondition:\s*@[^@]+@/i.test(code);
-  if (!winCondition && !loseCondition) {
-    warnings.push('No win/lose conditions defined');
+  parseObjectLine(startLine, objName) {
+    let line = this.lines[startLine].trim();
+    // parse inline @...@ and $... directives
+    this.parseInlineDirectives(line, objName);
+    // could be multiline if next lines indented?
+    return startLine + 1;
   }
 
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-    notes
-  };
-};
+  parseLevel(startLine, levelId) {
+    let i = startLine + 1;
+    let width = null, height = null;
+    let tilesStart = -1;
+    // first lines may contain @width=xx@ @height=xx@
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (line.startsWith('tiles:')) {
+        tilesStart = i + 1;
+        break;
+      }
+      // parse @...@ pairs
+      const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+      for (const m of atMatches) {
+        const expr = m[1].trim();
+        if (expr.startsWith('width=')) width = parseInt(expr.substring(6));
+        else if (expr.startsWith('height=')) height = parseInt(expr.substring(7));
+        else if (expr.startsWith('background=')) { /* string OK */ }
+        else if (expr.startsWith('music=')) { /* string OK */ }
+        else this.warn(`Unknown level attribute: ${expr}`);
+      }
+      i++;
+    }
+    if (tilesStart === -1) {
+      this.error(`Level ${levelId} missing 'tiles:' section`);
+      return i;
+    }
+    // read tile rows until next section or empty line
+    let rows = [];
+    let j = tilesStart;
+    while (j < this.lines.length) {
+      const line = this.lines[j].trim();
+      if (line === '' || /^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+      if (!line.startsWith('//')) {
+        rows.push(line);
+      }
+      j++;
+    }
+    if (!width || !height) {
+      this.error(`Level ${levelId} must define width and height via @...@`);
+    } else {
+      if (rows.length !== height) {
+        this.error(`Level ${levelId} expects ${height} rows, found ${rows.length}`);
+      }
+      let playerCount = 0;
+      rows.forEach((row, idx) => {
+        if (row.length !== width) {
+          this.error(`Level ${levelId} row ${idx+1} has ${row.length} tiles, expected ${width}`);
+        }
+        if (!/^[01PE]+$/.test(row)) {
+          this.error(`Level ${levelId} row ${idx+1} contains invalid characters (only 0,1,P,E)`);
+        }
+        playerCount += (row.match(/P/g) || []).length;
+      });
+      if (playerCount !== 1) {
+        this.error(`Level ${levelId} must have exactly one player start (P)`);
+      }
+    }
+    return j;
+  }
+
+  parseAnimation(startLine, animName) {
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break; // next section
+      this.parseInlineDirectives(line, 'anim');
+      i++;
+    }
+    return i;
+  }
+
+  parseParticleSystem(startLine, psName) {
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+      this.parseInlineDirectives(line, 'particle');
+      i++;
+    }
+    return i;
+  }
+
+  parseBehavior(startLine, behName) {
+    let i = startLine + 1;
+    let inStates = false;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (line.startsWith('states:')) {
+        inStates = true;
+        i++;
+        continue;
+      }
+      if (inStates) {
+        if (line.match(/^[a-z]+\s*:/)) {
+          // state definition
+          this.parseInlineDirectives(line, 'state');
+        } else if (line.startsWith('on_')) {
+          // transition
+        } else if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) {
+          inStates = false;
+          break;
+        }
+      } else {
+        if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+        this.parseInlineDirectives(line, 'behavior');
+      }
+      i++;
+    }
+    return i;
+  }
+
+  parseCamera(startLine) {
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+      this.parseInlineDirectives(line, 'camera');
+      i++;
+    }
+    return i;
+  }
+
+  parseEvent(startLine) {
+    let i = startLine;
+    const line = this.lines[i].trim();
+    this.currentLine = i;
+    // format: OnCollision: @list@ $action $action ...
+    const atMatch = line.match(/@([^@]+)@/);
+    if (atMatch) {
+      const list = atMatch[1].split(',').map(s => s.trim());
+      list.forEach(obj => {
+        if (!this.symbols.objects.has(obj) && obj !== 'Bullet' && obj !== 'Player' && obj !== 'Enemy') {
+          this.warn(`Object '${obj}' in event not declared (may be built-in)`);
+        }
+      });
+    } else {
+      this.error(`Event missing @object list@`);
+    }
+    // parse $ directives
+    this.parseInlineDirectives(line, 'event');
+    return i + 1;
+  }
+
+  parseIfBlock(startLine) {
+    // For simplicity, just parse the condition and then the indented block
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+      // inside block, expect $ directives
+      this.parseInlineDirectives(line, 'if');
+      i++;
+    }
+    return i;
+  }
+
+  parseResourceSection(startLine, sectionName) {
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+      // resource lines: name = "path"  or name = value
+      const eqIdx = line.indexOf('=');
+      if (eqIdx === -1) {
+        this.warn(`Expected key = value in ${sectionName}`);
+      } else {
+        const key = line.substring(0, eqIdx).trim();
+        const val = line.substring(eqIdx+1).trim();
+        if (sectionName === 'Sprites') this.symbols.sprites.add(key);
+        else if (sectionName === 'Music') this.symbols.sounds.add(key);
+        else if (sectionName === 'Sound') this.symbols.sounds.add(key);
+      }
+      i++;
+    }
+    return i;
+  }
+
+  parsePhysics(startLine) {
+    let i = startLine + 1;
+    while (i < this.lines.length) {
+      const line = this.lines[i].trim();
+      this.currentLine = i;
+      if (line === '' || line.startsWith('//')) {
+        i++;
+        continue;
+      }
+      if (/^[A-Za-z][A-Za-z0-9_]*\s*:/.test(line)) break;
+      // physics lines: param = @value@
+      if (!line.includes('@')) {
+        this.warn(`Physics value should be inside @...@: ${line}`);
+      }
+      i++;
+    }
+    return i;
+  }
+
+  parseCondition(startLine) {
+    let line = this.lines[startLine].trim();
+    this.currentLine = startLine;
+    const atMatch = line.match(/@([^@]+)@/);
+    if (!atMatch) {
+      this.error(`Win/Lose condition must have @expression@`);
+    } else {
+      // expression can be validated later
+    }
+    return startLine + 1;
+  }
+
+  // Helper to parse inline @...@ and $... on a single line
+  parseInlineDirectives(line, context) {
+    const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+    for (const m of atMatches) {
+      const expr = m[1].trim();
+      this.validateExpression(expr, context);
+    }
+    const dollarMatches = [...line.matchAll(/\$([A-Za-z0-9_]+(?:[=!]=?[^@\s]*)?)/g)];
+    for (const m of dollarMatches) {
+      const dir = m[1];
+      // could validate directive names
+    }
+  }
+
+  validateExpression(expr, context) {
+    // Basic expression validation: check parentheses, known identifiers, operators
+    const stack = [];
+    for (let i=0; i<expr.length; i++) {
+      const ch = expr[i];
+      if (ch === '(') stack.push('(');
+      else if (ch === ')') {
+        if (stack.pop() !== '(') {
+          this.error(`Unbalanced parentheses in expression: ${expr}`);
+          return;
+        }
+      }
+    }
+    if (stack.length) this.error(`Unbalanced parentheses in expression: ${expr}`);
+
+    // Check for undefined variables (identifiers not in symbols)
+    const idRegex = /[A-Za-z_][A-Za-z0-9_]*/g;
+    let match;
+    while ((match = idRegex.exec(expr)) !== null) {
+      const id = match[0];
+      // ignore numbers and keywords
+      if (/^\d+$/.test(id)) continue;
+      if (['sin','cos','clamp','random','true','false'].includes(id)) continue;
+      if (!this.symbols.variables.has(id) && !this.symbols.objects.has(id)) {
+        // might be a parameter, but warn
+        this.warn(`Possibly undefined identifier '${id}' in expression`);
+      }
+    }
+  }
+
+  checkReferences() {
+    // Ensure sprites referenced in animations exist, etc.
+    // This can be expanded.
+  }
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -821,7 +1227,8 @@ exports.handler = async (event) => {
   }
   try {
     const { code } = JSON.parse(event.body);
-    const result = validateSimpleSyntax(code);
+    const validator = new SimpleValidator(code);
+    const result = validator.validate();
     return {
       statusCode: 200,
       headers: { 'Access-Control-Allow-Origin': '*' },
@@ -833,12 +1240,13 @@ exports.handler = async (event) => {
       })
     };
   } catch (err) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Bad request' }) };
+    console.error(err);
+    return { statusCode: 400, body: JSON.stringify({ error: 'Bad request: ' + err.message }) };
   }
 };
 -->
 
-<!-- 2. push-to-github.js (supports subdir) -->
+<!-- 2. push-to-github.js (unchanged) -->
 <!--
 const { Octokit } = require('@octokit/rest');
 
