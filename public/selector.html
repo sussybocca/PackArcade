@@ -1644,93 +1644,58 @@
       }
     }
 
-    // ---------- SimpleGames Interpreter (full) ----------
+    // ---------- SimpleGames Interpreter (Advanced) ----------
     function runSimpleGame(code) {
       if (gameState.animationFrame) cancelAnimationFrame(gameState.animationFrame);
+
+      // Initialize game state with all new sections
       gameState = {
-        objects: {},
+        vars: {},                 // variables from Var:
+        objects: {},              // dynamic objects (Player, Enemy, etc.)
         physics: { gravity: 0.5, friction: 0.1, maxSpeed: 10 },
-        events: [],
+        events: [],               // OnCollision etc.
         animations: {},
+        particles: {},            // ParticleSystem definitions
+        behaviors: {},            // Behavior definitions
+        camera: { follow: null, shake_on_hit: false, bounds: { x1:0, y1:0, x2:800, y2:600 } },
+        debug: false,
         currentLevel: null,
         keys: {},
         score: 0,
         lives: 3,
+        gameOver: false,
+        win: false,
         frame: 0,
         animationFrame: null
       };
 
       const lines = code.split('\n');
       let currentSection = null;
-      lines.forEach(line => {
-        line = line.trim();
-        if (line.startsWith('//') || line === '') return;
+      let levelData = null;
 
-        // Object definition: Player: @pos=(100,300)@ $speed=5
-        const objMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*@([^@]*)@(.*)$/);
-        if (objMatch) {
-          const name = objMatch[1];
-          const inner = objMatch[2];
-          const rest = objMatch[3];
-          const attrs = {};
-          inner.split(',').forEach(part => {
-            const kv = part.split('=');
-            if (kv.length === 2) attrs[kv[0].trim()] = kv[1].trim();
-          });
-          const dirs = {};
-          const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
-          if (dollarMatches) {
-            dollarMatches.forEach(d => {
-              const eq = d.indexOf('=');
-              if (eq > -1) {
-                const key = d.substring(1, eq);
-                const val = d.substring(eq+1);
-                dirs[key] = val;
-              } else {
-                dirs[d.substring(1)] = true;
-              }
-            });
+      // Helper: parse @...@ into key=value pairs
+      function parseAtBlock(inner) {
+        const result = {};
+        const pairs = inner.split(',').map(s => s.trim()).filter(s => s);
+        for (let p of pairs) {
+          const eq = p.indexOf('=');
+          if (eq > -1) {
+            const key = p.substring(0, eq).trim();
+            const val = p.substring(eq+1).trim();
+            result[key] = val;
+          } else {
+            // treat as value-only? maybe expression
+            result[p] = true;
           }
-          gameState.objects[name] = { attrs, dirs, x: 100, y: 100, vx: 0, vy: 0 };
-          if (name === 'Player' && attrs.pos) {
-            const pos = attrs.pos.replace(/[()]/g, '').split(',');
-            if (pos.length === 2) {
-              gameState.objects[name].x = parseInt(pos[0]);
-              gameState.objects[name].y = parseInt(pos[1]);
-            }
-          }
-          return;
         }
+        return result;
+      }
 
-        // Level definition
-        const levelMatch = line.match(/^Level_(\d+):/i);
-        if (levelMatch) {
-          currentSection = 'level';
-          gameState.currentLevel = { width: 0, height: 0, tiles: [] };
-          return;
-        }
-
-        if (line.toLowerCase() === 'physics:') {
-          currentSection = 'physics';
-          return;
-        }
-
-        const eventMatch = line.match(/^On([A-Z][a-z]+):\s*@([^@]+)@\s*(.*)$/);
-        if (eventMatch) {
-          gameState.events.push({
-            type: eventMatch[1],
-            params: eventMatch[2].split(',').map(s => s.trim()),
-            actions: eventMatch[3]
-          });
-          return;
-        }
-
-        const animMatch = line.match(/^Anim_([A-Za-z0-9_]+):\s*frames:\s*@([^@]+)@\s*(.*)$/);
-        if (animMatch) {
-          const name = animMatch[1];
-          const frames = animMatch[2].split(',').map(f => f.trim());
-          const dirs = {};
-          const dollarMatches = animMatch[3].match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g) || [];
+      // Helper: parse $ directives into a map
+      function parseDollarBlock(rest) {
+        const dirs = {};
+        const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
+        if (dollarMatches) {
           dollarMatches.forEach(d => {
             const eq = d.indexOf('=');
             if (eq > -1) {
@@ -1741,13 +1706,149 @@
               dirs[d.substring(1)] = true;
             }
           });
-          gameState.animations[name] = { frames, dirs, currentFrame: 0 };
-          return;
+        }
+        return dirs;
+      }
+
+      // Helper: evaluate expression using vars and built-ins
+      function evaluateExpr(expr) {
+        expr = expr.trim();
+        // replace variables with their values
+        for (let [k, v] of Object.entries(gameState.vars)) {
+          const re = new RegExp('\\b' + k + '\\b', 'g');
+          expr = expr.replace(re, v);
+        }
+        // evaluate simple arithmetic (dangerous but we'll use Function)
+        try {
+          // allow only numbers, operators, parentheses, and built-in functions
+          if (!/^[0-9+\-*/()., sin cos clamp random]+$/.test(expr)) {
+            // maybe it's a string? fallback
+            return expr;
+          }
+          // replace sin, cos, clamp, random with Math.*
+          expr = expr.replace(/sin/g, 'Math.sin')
+                     .replace(/cos/g, 'Math.cos')
+                     .replace(/clamp/g, 'Math.clamp') // not standard, handle manually
+                     .replace(/random/g, 'Math.random');
+          // clamp function: clamp(x,min,max)
+          expr = expr.replace(/Math\.clamp\(([^,]+),([^,]+),([^)]+)\)/g, 'Math.min(Math.max($1,$2),$3)');
+          return Function('"use strict"; return (' + expr + ')')();
+        } catch (e) {
+          return expr; // fallback
+        }
+      }
+
+      // Main parsing loop
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line.startsWith('//') || line === '') continue;
+
+        // Section headers
+        if (line === 'Var:') {
+          currentSection = 'var';
+          continue;
+        }
+        if (line === 'Physics:') {
+          currentSection = 'physics';
+          continue;
+        }
+        if (line.startsWith('Level_')) {
+          currentSection = 'level';
+          const levelMatch = line.match(/^Level_(\d+):/i);
+          if (levelMatch) {
+            levelData = { id: levelMatch[1], width: null, height: null, tiles: [], props: {} };
+          }
+          continue;
+        }
+        if (line.startsWith('On')) {
+          // Event line: OnCollision: @list@ $actions
+          const eventMatch = line.match(/^On([A-Z][a-z]+):\s*@([^@]+)@\s*(.*)$/);
+          if (eventMatch) {
+            gameState.events.push({
+              type: eventMatch[1],
+              params: eventMatch[2].split(',').map(s => s.trim()),
+              actions: parseDollarBlock(eventMatch[3])
+            });
+          }
+          continue;
+        }
+        if (line.startsWith('Anim_')) {
+          const animMatch = line.match(/^Anim_([A-Za-z0-9_]+):\s*frames:\s*@([^@]+)@\s*(.*)$/);
+          if (animMatch) {
+            const name = animMatch[1];
+            const frames = animMatch[2].split(',').map(f => f.trim());
+            const dirs = parseDollarBlock(animMatch[3]);
+            gameState.animations[name] = { frames, dirs, currentFrame: 0 };
+          }
+          continue;
+        }
+        if (line.startsWith('ParticleSystem')) {
+          const psMatch = line.match(/^ParticleSystem\s+([A-Za-z0-9_]+):\s*(.*)$/);
+          if (psMatch) {
+            const name = psMatch[1];
+            const rest = psMatch[2];
+            const dirs = parseDollarBlock(rest);
+            // Also parse @...@ in same line or next lines
+            // For simplicity, store as string; we won't simulate particles fully.
+            gameState.particles[name] = { dirs };
+          }
+          continue;
+        }
+        if (line.startsWith('Behavior')) {
+          const behMatch = line.match(/^Behavior\s+([A-Za-z0-9_]+):/);
+          if (behMatch) {
+            const name = behMatch[1];
+            gameState.behaviors[name] = { states: {}, on_see_player: null };
+            currentSection = 'behavior';
+          }
+          continue;
+        }
+        if (line === 'Camera:') {
+          currentSection = 'camera';
+          continue;
+        }
+        if (line.startsWith('If')) {
+          // If Debug_ENAbLE -True:
+          const ifMatch = line.match(/^If\s+(.+?)\s*-\s*True:/i);
+          if (ifMatch) {
+            const condition = ifMatch[1].trim();
+            if (condition === 'Debug_ENAbLE' || condition === 'cUsToM dRaWiNg pHySiCs') {
+              gameState.debug = true;
+            }
+          }
+          currentSection = 'if';
+          continue;
+        }
+        if (line.startsWith('WinCondition:')) {
+          const wcMatch = line.match(/^WinCondition:\s*@([^@]+)@/);
+          if (wcMatch) gameState.winCondition = wcMatch[1];
+          continue;
+        }
+        if (line.startsWith('LoseCondition:')) {
+          const lcMatch = line.match(/^LoseCondition:\s*@([^@]+)@/);
+          if (lcMatch) gameState.loseCondition = lcMatch[1];
+          continue;
+        }
+        if (line.startsWith('Sprites:') || line.startsWith('Music:') || line.startsWith('Sound:')) {
+          currentSection = 'resources';
+          continue;
         }
 
-        if (line.match(/^If\s+(Debug_ENAbLE|cUsToM dRaWiNg pHySiCs)\s*-\s*True:/i)) {
-          currentSection = 'cheat';
-          return;
+        // Inside sections
+        if (currentSection === 'var') {
+          const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+          for (let m of atMatches) {
+            const expr = m[1].trim();
+            const eq = expr.indexOf('=');
+            if (eq > -1) {
+              const key = expr.substring(0, eq).trim();
+              let val = expr.substring(eq+1).trim();
+              // try to evaluate numeric
+              if (!isNaN(parseFloat(val))) val = parseFloat(val);
+              gameState.vars[key] = val;
+            }
+          }
+          continue;
         }
 
         if (currentSection === 'physics') {
@@ -1757,22 +1858,184 @@
             const val = parseFloat(physMatch[2]);
             if (!isNaN(val)) gameState.physics[key] = val;
           }
-        } else if (currentSection === 'level' && gameState.currentLevel) {
+          continue;
+        }
+
+        if (currentSection === 'level' && levelData) {
           const whMatch = line.match(/@width=(\d+)@.*@height=(\d+)@/);
           if (whMatch) {
-            gameState.currentLevel.width = parseInt(whMatch[1]);
-            gameState.currentLevel.height = parseInt(whMatch[2]);
-          } else if (line.match(/^tiles:/i)) {
-            // next lines are tile rows
-          } else if (/^[01PE]+$/.test(line)) {
-            gameState.currentLevel.tiles.push(line);
+            levelData.width = parseInt(whMatch[1]);
+            levelData.height = parseInt(whMatch[2]);
+          } else if (line.startsWith('tiles:')) {
+            // next lines are tile rows; we'll collect them in a loop
+            let j = i+1;
+            while (j < lines.length) {
+              const tileLine = lines[j].trim();
+              if (tileLine === '' || tileLine.startsWith('//')) { j++; continue; }
+              if (tileLine.match(/^[01PE]+$/)) {
+                levelData.tiles.push(tileLine);
+                j++;
+              } else {
+                break;
+              }
+            }
+            i = j-1; // advance main loop
+          } else if (line.startsWith('properties:')) {
+            // next lines have @...@
+          } else {
+            const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+            for (let m of atMatches) {
+              const expr = m[1].trim();
+              const eq = expr.indexOf('=');
+              if (eq > -1) {
+                const key = expr.substring(0, eq).trim();
+                const val = expr.substring(eq+1).trim();
+                levelData.props[key] = val;
+              }
+            }
+          }
+          continue;
+        }
+
+        if (currentSection === 'camera') {
+          const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+          for (let m of atMatches) {
+            const expr = m[1].trim();
+            const eq = expr.indexOf('=');
+            if (eq > -1) {
+              const key = expr.substring(0, eq).trim();
+              const val = expr.substring(eq+1).trim();
+              if (key === 'follow') gameState.camera.follow = val;
+              else if (key === 'bounds') {
+                const b = val.replace(/[()]/g,'').split(',').map(Number);
+                if (b.length===4) gameState.camera.bounds = { x1:b[0], y1:b[1], x2:b[2], y2:b[3] };
+              }
+            }
+          }
+          const dollarDirs = parseDollarBlock(line);
+          if (dollarDirs.shake_on_hit) gameState.camera.shake_on_hit = true;
+          continue;
+        }
+
+        // Object definition (Player, Enemy, NPC)
+        const objMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*@([^@]*)@(.*)$/);
+        if (objMatch) {
+          const name = objMatch[1];
+          const inner = objMatch[2];
+          const rest = objMatch[3];
+          const attrs = parseAtBlock(inner);
+          const dirs = parseDollarBlock(rest);
+          // Create object with defaults
+          let x = 100, y = 100;
+          if (attrs.pos) {
+            const pos = attrs.pos.replace(/[()]/g, '').split(',');
+            if (pos.length === 2) { x = parseInt(pos[0]); y = parseInt(pos[1]); }
+          }
+          gameState.objects[name] = {
+            name, type: name, attrs, dirs,
+            x, y, vx: 0, vy: 0,
+            width: 20, height: 20 // default size
+          };
+          continue;
+        }
+
+        // If inside a section we don't handle, skip
+      }
+
+      // After parsing, set level tiles into gameState
+      if (levelData && levelData.tiles.length > 0) {
+        gameState.currentLevel = levelData;
+        // Place player and enemies from level tiles
+        const tileW = 800 / levelData.width;
+        const tileH = 600 / levelData.height;
+        for (let row = 0; row < levelData.tiles.length; row++) {
+          for (let col = 0; col < levelData.tiles[row].length; col++) {
+            const ch = levelData.tiles[row][col];
+            if (ch === 'P' && gameState.objects['Player']) {
+              gameState.objects['Player'].x = col * tileW + tileW/2;
+              gameState.objects['Player'].y = row * tileH + tileH/2;
+            }
+            if (ch === 'E') {
+              // Create an enemy if none defined? We'll use existing Enemy or create one
+              if (!gameState.objects['Enemy']) {
+                gameState.objects['Enemy'] = { name: 'Enemy', type: 'Enemy', attrs: {}, dirs: { move: 'sin' }, x: col * tileW + tileW/2, y: row * tileH + tileH/2, vx: 0, vy: 0, width: 20, height: 20 };
+              } else {
+                // multiple enemies? We'll store as array? For simplicity, just one.
+              }
+            }
           }
         }
-      });
+      }
+
+      // ---------- Game Loop ----------
+      function checkCollisions(obj1, obj2) {
+        const dx = obj1.x - obj2.x;
+        const dy = obj1.y - obj2.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        return dist < (obj1.width/2 + obj2.width/2);
+      }
+
+      function processEvents() {
+        for (let ev of gameState.events) {
+          if (ev.type === 'Collision') {
+            // Check collisions between objects in ev.params list
+            for (let i = 0; i < ev.params.length; i+=2) {
+              const a = ev.params[i];
+              const b = ev.params[i+1];
+              if (!a || !b) continue;
+              const objA = gameState.objects[a];
+              const objB = gameState.objects[b];
+              if (objA && objB && checkCollisions(objA, objB)) {
+                // Execute actions
+                for (let [action, val] of Object.entries(ev.actions)) {
+                  if (action === 'if') {
+                    // conditional: $if(lives<=0)
+                    const cond = val; // e.g. lives<=0
+                    // evaluate using vars
+                    if (!evaluateExpr(cond)) continue;
+                  } else if (action === 'score') {
+                    if (val.startsWith('+=')) gameState.score += parseInt(val.substring(2)) || 10;
+                    else if (val.startsWith('-=')) gameState.score -= parseInt(val.substring(2)) || 10;
+                    else gameState.score = parseInt(val) || gameState.score;
+                  } else if (action === 'lives') {
+                    if (val.startsWith('+=')) gameState.lives += parseInt(val.substring(2)) || 1;
+                    else if (val.startsWith('-=')) gameState.lives -= parseInt(val.substring(2)) || 1;
+                    else gameState.lives = parseInt(val) || gameState.lives;
+                  } else if (action === 'resetPos') {
+                    if (objA.name === 'Player') { objA.x = 100; objA.y = 300; }
+                  } else if (action === 'gameOver') {
+                    gameState.gameOver = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
 
       function gameLoop() {
+        if (gameState.gameOver) {
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(0,0,800,600);
+          ctx.fillStyle = 'red';
+          ctx.font = '40px monospace';
+          ctx.fillText('GAME OVER', 200, 300);
+          gameState.animationFrame = requestAnimationFrame(gameLoop);
+          return;
+        }
+        if (gameState.win) {
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(0,0,800,600);
+          ctx.fillStyle = 'gold';
+          ctx.font = '40px monospace';
+          ctx.fillText('YOU WIN!', 250, 300);
+          gameState.animationFrame = requestAnimationFrame(gameLoop);
+          return;
+        }
+
         gameState.frame++;
 
+        // Apply physics
         Object.values(gameState.objects).forEach(obj => {
           obj.vy += gameState.physics.gravity;
           obj.vx *= (1 - gameState.physics.friction);
@@ -1784,27 +2047,64 @@
           obj.x += obj.vx;
           obj.y += obj.vy;
 
+          // bounds
           if (obj.x < 0) { obj.x = 0; obj.vx *= -0.5; }
           if (obj.x > 800) { obj.x = 800; obj.vx *= -0.5; }
           if (obj.y < 0) { obj.y = 0; obj.vy *= -0.5; }
           if (obj.y > 600) { obj.y = 600; obj.vy *= -0.5; }
         });
 
-        if (gameState.objects['Player']) {
-          const player = gameState.objects['Player'];
-          if (gameState.keys['ArrowLeft']) player.vx -= 0.5;
-          if (gameState.keys['ArrowRight']) player.vx += 0.5;
-          if (gameState.keys['ArrowUp']) player.vy -= 0.5;
-          if (gameState.keys['ArrowDown']) player.vy += 0.5;
+        // Player control
+        const player = gameState.objects['Player'];
+        if (player) {
+          if (gameState.keys['ArrowLeft'] || gameState.keys['a']) player.vx -= 0.5;
+          if (gameState.keys['ArrowRight'] || gameState.keys['d']) player.vx += 0.5;
+          if (gameState.keys['ArrowUp'] || gameState.keys['w']) player.vy -= 0.5;
+          if (gameState.keys['ArrowDown'] || gameState.keys['s']) player.vy += 0.5;
+          // limit speed from dirs
+          if (player.dirs.speed) {
+            let sp = parseFloat(player.dirs.speed);
+            if (!isNaN(sp)) {
+              if (Math.abs(player.vx) > sp) player.vx = Math.sign(player.vx) * sp;
+              if (Math.abs(player.vy) > sp) player.vy = Math.sign(player.vy) * sp;
+            }
+          }
         }
 
+        // Enemy AI based on $move
+        const enemy = gameState.objects['Enemy'];
+        if (enemy && enemy.dirs.move) {
+          if (enemy.dirs.move === 'sin') {
+            enemy.x += Math.sin(gameState.frame * 0.05) * 2;
+          } else if (enemy.dirs.move === 'random') {
+            if (gameState.frame % 60 === 0) {
+              enemy.vx = (Math.random() - 0.5) * 4;
+              enemy.vy = (Math.random() - 0.5) * 4;
+            }
+          }
+        }
+
+        // Process collisions
+        processEvents();
+
+        // Check win/lose conditions
+        if (gameState.winCondition) {
+          if (evaluateExpr(gameState.winCondition)) gameState.win = true;
+        }
+        if (gameState.loseCondition) {
+          if (evaluateExpr(gameState.loseCondition)) gameState.gameOver = true;
+        }
+
+        // Draw everything
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, 800, 600);
 
+        // Draw level tiles
         if (gameState.currentLevel && gameState.currentLevel.tiles.length) {
-          const tileW = 800 / gameState.currentLevel.width;
-          const tileH = 600 / gameState.currentLevel.height;
-          gameState.currentLevel.tiles.forEach((row, y) => {
+          const level = gameState.currentLevel;
+          const tileW = 800 / level.width;
+          const tileH = 600 / level.height;
+          level.tiles.forEach((row, y) => {
             for (let x = 0; x < row.length; x++) {
               const ch = row[x];
               if (ch === '1') {
@@ -1813,11 +2113,14 @@
               } else if (ch === 'E') {
                 ctx.fillStyle = '#f44';
                 ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
+              } else if (ch === 'P') {
+                // player tile, but we draw player separately
               }
             }
           });
         }
 
+        // Draw objects
         Object.entries(gameState.objects).forEach(([name, obj]) => {
           if (name === 'Player') {
             ctx.fillStyle = '#0f0';
@@ -1830,6 +2133,22 @@
           }
         });
 
+        // Camera follow
+        if (gameState.camera.follow && gameState.objects[gameState.camera.follow]) {
+          const target = gameState.objects[gameState.camera.follow];
+          // simple: keep target in center
+          // we can adjust canvas transform but for simplicity, we'll just draw as is
+        }
+
+        // Debug overlay
+        if (gameState.debug) {
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.font = '12px monospace';
+          ctx.fillText(`Objects: ${Object.keys(gameState.objects).length}`, 10, 90);
+          ctx.fillText(`Frame: ${gameState.frame}`, 10, 110);
+        }
+
+        // HUD
         ctx.fillStyle = '#fff';
         ctx.font = '20px monospace';
         ctx.fillText(`Score: ${gameState.score}`, 10, 30);
@@ -1838,6 +2157,7 @@
         gameState.animationFrame = requestAnimationFrame(gameLoop);
       }
 
+      // Keyboard handling
       window.addEventListener('keydown', (e) => {
         if (modal.classList.contains('active')) {
           gameState.keys[e.key] = true;
