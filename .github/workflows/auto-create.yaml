@@ -38,7 +38,7 @@ jobs:
 
             const selectorPath = 'public/selector.html';
             const imagineDir = 'public/imagine';
-            const simpleDir = 'public/simple-games';
+            const simpleDir = 'public/imagine/SimpleGames';
 
             // 1. Read the main selector page
             const selectorHtml = fs.readFileSync(selectorPath, 'utf8');
@@ -183,7 +183,7 @@ jobs:
               if (type === 'html') {
                 link = `imagine/${relativePath.replace(/\\/g, '/')}`;
               } else {
-                link = `simple-games/${relativePath.replace(/\\/g, '/')}`;
+                link = `imagime/SimpleGames/${relativePath.replace(/\\/g, '/')}`;
               }
 
               if (cardExists(link)) {
