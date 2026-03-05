@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <style>
+    /* ========== STYLES (unchanged) ========== */
     * {
       margin: 0;
       padding: 0;
@@ -82,21 +83,21 @@
     }
 
     /* ----- ULTRA ADVANCED AUDIO MIXER PANEL ----- */
-   .mixer-panel {
-  background: rgba(15, 20, 35, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 40px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  display: flex;
-  gap: 1rem;
-  overflow-x: auto;
-  overflow-y: auto;            /* ← new */
-  max-height: 600px;           /* ← new */
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
-}
+    .mixer-panel {
+      background: rgba(15, 20, 35, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 600px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
 
     .mixer-channel {
       min-width: 200px;
@@ -394,18 +395,79 @@
       color: #a8b2e0;
     }
 
-    /* ===== INDEPENDENT CONTROL SECTIONS (unchanged) ===== */
-    .music-controls {
+    /* Game Player Modal (new) */
+    .game-modal {
+      display: none;
       position: fixed;
-      bottom: 20px;
-      left: 20px;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .game-modal.active {
+      display: flex;
+    }
+    .game-canvas-container {
+      background: #111;
+      border-radius: 24px;
+      padding: 10px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      border: 1px solid #a28eff;
+    }
+    canvas#gameCanvas {
+      display: block;
+      width: 800px;
+      height: 600px;
+      border-radius: 16px;
+      background: #000;
+    }
+    .game-controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .game-controls button {
+      background: #5e50dc;
+      border: none;
+      color: white;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .game-controls button:hover {
+      background: #7a6af0;
+    }
+    .game-errors {
+      color: #ff7b7b;
+      max-width: 800px;
+      text-align: center;
+      margin-top: 10px;
+      font-family: monospace;
+    }
+
+    /* Independent control sections */
+    .music-controls, .funny-controls, .human-controls, .fx-controls {
+      position: fixed;
       z-index: 100;
       display: flex;
       gap: 0.8rem;
       align-items: center;
     }
+    .music-controls { bottom: 20px; left: 20px; }
+    .funny-controls { bottom: 100px; left: 20px; }
+    .human-controls { bottom: 180px; left: 20px; }
+    .fx-controls { bottom: 20px; right: 20px; }
 
-    #music-toggle {
+    #music-toggle, #funny-toggle, #human-toggle, #fx-toggle {
       background: rgba(20, 25, 45, 0.7);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -421,19 +483,12 @@
       gap: 0.5rem;
       line-height: 1;
     }
-
-    #music-toggle:hover {
+    #music-toggle:hover, #funny-toggle:hover, #human-toggle:hover, #fx-toggle:hover {
       background: rgba(50, 55, 80, 0.9);
       border-color: rgba(180, 130, 255, 0.5);
       transform: scale(1.05);
     }
-
-    #music-toggle span {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    #song-select {
+    #song-select, #fx-select, #human-select, #funny-select {
       background: rgba(20, 25, 45, 0.7);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -449,145 +504,9 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    #song-select option {
+    #song-select option, #fx-select option, #human-select option, #funny-select option {
       background: #1a1f33;
       color: white;
-    }
-
-    .funny-controls {
-      position: fixed;
-      bottom: 100px;
-      left: 20px;
-      z-index: 100;
-      display: flex;
-      gap: 0.8rem;
-      align-items: center;
-    }
-
-    #funny-toggle {
-      background: rgba(20, 25, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 0.7rem 1.2rem;
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      line-height: 1;
-    }
-
-    #funny-toggle span {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .human-controls {
-      position: fixed;
-      bottom: 180px;
-      left: 20px;
-      z-index: 100;
-      display: flex;
-      gap: 0.8rem;
-      align-items: center;
-    }
-
-    #human-toggle {
-      background: rgba(20, 25, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 0.7rem 1.2rem;
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      line-height: 1;
-    }
-
-    #human-toggle span {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .fx-controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
-      display: flex;
-      gap: 0.8rem;
-      align-items: center;
-    }
-
-    #fx-toggle {
-      background: rgba(20, 25, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 0.7rem 1.2rem;
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      line-height: 1;
-    }
-
-    #fx-toggle span {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    #fx-select {
-      background: rgba(20, 25, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 0.7rem 1.2rem;
-      color: white;
-      font-size: 0.9rem;
-      cursor: pointer;
-      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
-      transition: all 0.2s;
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    #fx-select option {
-      background: #1a1f33;
-      color: white;
-    }
-
-    #human-select, #funny-select {
-      background: rgba(20, 25, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 0.7rem 1.2rem;
-      color: white;
-      font-size: 0.9rem;
-      cursor: pointer;
-      box-shadow: 0 10px 25px -8px rgba(0,0,0,0.6);
-      transition: all 0.2s;
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     @media (max-width: 600px) {
@@ -613,7 +532,6 @@
     <source src="Videos/bg.mp4" type="video/mp4">
   </video>
 
-  
   <audio id="lobby-music" loop preload="auto" crossorigin="anonymous"></audio>
   <audio id="arcade-fx" loop preload="auto" crossorigin="anonymous"></audio>
   <audio id="funny-sounds" loop preload="auto" crossorigin="anonymous"></audio>
@@ -621,912 +539,633 @@
 
   <div class="container">
     
-    
-    <div class="mixer-panel" id="mixerPanel">
-      
-    </div>
+    <div class="mixer-panel" id="mixerPanel"></div>
 
-    
     <script>
+      // ========== YOUR ORIGINAL CARDS DATA (full) ==========
       const cardsData = [
-  {
-    icon: "🌌",
-    title: "Nebula Drifter",
-    description: "Pilot your ship through living starscapes. Collect cosmic energy and avoid black holes.",
-    features: [
-      "Open world",
-      "Space",
-      "Atmospheric"
-    ],
-    link: "imagine/nebula-drifter.html",
-    category: "games",
-    highlight: true
-  },
-  {
-    icon: "🏯",
-    title: "Echoes of the Samurai",
-    description: "Step into feudal Japan. Every decision reshapes the timeline.",
-    features: [
-      "RPG",
-      "Historical",
-      "Branching story"
-    ],
-    link: "imagine/echoes-samurai.html",
-    category: "interactive",
-    highlight: false
-  },
-  {
-    icon: "🧩",
-    title: "Quantum Puzzles",
-    description: "Manipulate particles to solve physics‑defying puzzles. 50+ levels.",
-    features: [
-      "Brain teaser",
-      "Minimalist",
-      "Quantum"
-    ],
-    link: "imagine/quantum-puzzles.html",
-    category: "puzzle",
-    highlight: false
-  },
-  {
-    icon: "🏝️",
-    title: "Luma Island VR",
-    description: "Relax on a glowing tropical island. Build, fish, and discover ancient secrets.",
-    features: [
-      "VR supported",
-      "Relaxing",
-      "Crafting"
-    ],
-    link: "imagine/luma-island.html",
-    category: "experience",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "2048",
-    description: "Join the numbers and get to the 2048 tile!…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/2048.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "8ballclassic HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/8ballclassic.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "CDN Game Editor & Explore",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/CDN.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "PackCDN · CDN Pack Maker",
-    description: "Your custom message here.…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/CDN_InstantCreator/PACK_QRCODE.htm",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "PackCDN · Pack Details",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/CDN_InstantCreator/pack-info.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "capybaraclicker HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/CapyBaraClicker/capybaraclicker.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "FSX Language Editor – External Runtime",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/FSX/FSX_EDITOR_.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "FOX · apex predator",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/Fox/Custom/Fox.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "GameImpossible – The Ultimate Maze",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/GameImpossible-Private/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "HSX Advanced Editor",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/HSX/hsx-editor.htm",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Pack Studio · Advanced File Editor",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/Pack/Custom-Lange/Editor.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "PARCORE · maze rush · fly & upgrade",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/ParCoreSim.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Pack Popup Creator · Manifest Generator",
-    description: "This pack adds epic levels and items. Check it out!…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/PopUpManger/Popup-creator.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "ROAD CHASE · just run them down",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/RoadChase.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "run HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/Run/Runner/run.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "🚀 SPACE SHOOTERS · upgrade & blast",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/SpaceShooters.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "◀ SPACE SHOOTERS ▶ · ANALOG HORROR · CRT-3000",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/SpaceShooters2/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "SpaceShooters – Menu",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/SpaceShooters2/main.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "SPACESHOOTERS · ARCADE MENU",
-    description: "→ ARROWS or WASD : move ship…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/SpaceShooters2/menu.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "SpaceShooters – Options",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/SpaceShooters2/options.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "crossyroad HTM",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/TinyFishing/Games/ETC/crossyroad.htm",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "ducklife HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/TinyFishing/Games/ETC/ducklife.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "tinyfishing HTML",
-    description: "Your browser doesn't support HTML5 canvas.…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/TinyFishing/Games/ETC/tinyfishing.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "ageofwar HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/ageofwar.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "amongus HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/amongus.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "angrybirds HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/angrybirds.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "basketbros HTML",
-    description: "Loading...…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/basketbros.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "bitlife HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/bitlife.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "bloonsTD HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/bloonsTD.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "brick breaker HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/brick-breaker.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "cookieclicker HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/cookieclicker.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "PackCDN · PURE THREE.JS GAME · CONTROLS WORK",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/deepseek_html_20260216_42dccb.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Flappy Bird",
-    description: "…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/flappybird.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "fnaf HTML",
-    description: "…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/fnaf.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Ghost Clicker 3D - Immersive Spectral Hunting",
-    description: "Enter a spectral dimension where ghosts drift in 3D space. Use your cursor to banish them in this immersive haunting experience!…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/ghost.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "JavaMods",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/index (1).html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Subway Surfers",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/index (2).html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "장기",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/janggi.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "일정관리",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/kanban.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "maze HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/maze.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Gomoku",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/omok.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "stack HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/stack.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Tetris",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/tetris.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "zombierush HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/zombierush.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Pacman",
-    description: "Your name:…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/PackMan/index (13).html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Pacman",
-    description: "Your name:…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/PackMan/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Geometry Dash",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/GeoMentry_Dash/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "eaglercraft | 3kh0",
-    description: "Eaglercraft is real Minecraft 1.5.2 that you can play in any regular web browser. That includes school chromebooks, it works on all chromebooks. It supports both singleplayer and multiplayer with no extensions.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/MineCraft/index (3).html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "paperio2 HTM",
-    description: "Paper.io 2 is a sequel to what might be the most popular mobile\n                game played by people from all around the world. Its simple\n          …",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/paper.io2/paperio2.htm",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "fruitninja HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/FruitNinja/fruitninja.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "happywheels HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/HappyWheels/Dude/Why/game/happywheels.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "run3 HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/Run/Runner/run3.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "chess HTML",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/chess.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "index HTML",
-    description: "Go on Safari and add this page.…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/html5ds.github.io-23322/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Game Play",
-    description: "Loading……",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/html5ds.github.io-23322/src/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Sizes",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/html5ds.github.io-23322/src/sizes.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Drugs.sim — experience the truth",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/BackUp/1/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Drugs.sim — experience the truth",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Hallicination.IO",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/Hallicination.IO/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "SpaceShooters 3 - Immersive 3D Open World",
-    description: "WASD: Move | Mouse: Aim | Click: Shoot…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/SpaceShooters3.beta.test.Production/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "MindClicker · production",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/MindClicker/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "GameImpossible – Maze of Fear",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/GameImpossbile2/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "Ludo 3D - Nairaland Challenge",
-    description: "A Classic Board Game in 3D…",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/index (5).html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "PackCDN · PURE THREE.JS GAME · CONTROLS WORK",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/levels/index.html",
-    category: "demos",
-    highlight: false
-  },
-  {
-    icon: "📄",
-    title: "my game",
-    description: "Explore this immersive experience.",
-    features: [
-      "Immersive experience",
-      "New dimension",
-      "Interactive content"
-    ],
-    link: "imagine/dudeadd/index.html",
-    category: "demos",
-    highlight: false
-  }
-];
+        {
+          icon: "🌌",
+          title: "Nebula Drifter",
+          description: "Pilot your ship through living starscapes. Collect cosmic energy and avoid black holes.",
+          features: ["Open world", "Space", "Atmospheric"],
+          link: "imagine/nebula-drifter.html",
+          category: "games",
+          highlight: true
+        },
+        {
+          icon: "🏯",
+          title: "Echoes of the Samurai",
+          description: "Step into feudal Japan. Every decision reshapes the timeline.",
+          features: ["RPG", "Historical", "Branching story"],
+          link: "imagine/echoes-samurai.html",
+          category: "interactive",
+          highlight: false
+        },
+        {
+          icon: "🧩",
+          title: "Quantum Puzzles",
+          description: "Manipulate particles to solve physics‑defying puzzles. 50+ levels.",
+          features: ["Brain teaser", "Minimalist", "Quantum"],
+          link: "imagine/quantum-puzzles.html",
+          category: "puzzle",
+          highlight: false
+        },
+        {
+          icon: "🏝️",
+          title: "Luma Island VR",
+          description: "Relax on a glowing tropical island. Build, fish, and discover ancient secrets.",
+          features: ["VR supported", "Relaxing", "Crafting"],
+          link: "imagine/luma-island.html",
+          category: "experience",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "2048",
+          description: "Join the numbers and get to the 2048 tile!…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/2048.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "8ballclassic HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/8ballclassic.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "CDN Game Editor & Explore",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/CDN.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "PackCDN · CDN Pack Maker",
+          description: "Your custom message here.…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/CDN_InstantCreator/PACK_QRCODE.htm",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "PackCDN · Pack Details",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/CDN_InstantCreator/pack-info.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "capybaraclicker HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/CapyBaraClicker/capybaraclicker.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "FSX Language Editor – External Runtime",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/FSX/FSX_EDITOR_.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "FOX · apex predator",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/Fox/Custom/Fox.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "GameImpossible – The Ultimate Maze",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/GameImpossible-Private/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "HSX Advanced Editor",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/HSX/hsx-editor.htm",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Pack Studio · Advanced File Editor",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/Pack/Custom-Lange/Editor.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "PARCORE · maze rush · fly & upgrade",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/ParCoreSim.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Pack Popup Creator · Manifest Generator",
+          description: "This pack adds epic levels and items. Check it out!…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/PopUpManger/Popup-creator.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "ROAD CHASE · just run them down",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/RoadChase.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "run HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/Run/Runner/run.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "🚀 SPACE SHOOTERS · upgrade & blast",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/SpaceShooters.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "◀ SPACE SHOOTERS ▶ · ANALOG HORROR · CRT-3000",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/SpaceShooters2/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "SpaceShooters – Menu",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/SpaceShooters2/main.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "SPACESHOOTERS · ARCADE MENU",
+          description: "→ ARROWS or WASD : move ship…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/SpaceShooters2/menu.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "SpaceShooters – Options",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/SpaceShooters2/options.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "crossyroad HTM",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/TinyFishing/Games/ETC/crossyroad.htm",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "ducklife HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/TinyFishing/Games/ETC/ducklife.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "tinyfishing HTML",
+          description: "Your browser doesn't support HTML5 canvas.…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/TinyFishing/Games/ETC/tinyfishing.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "ageofwar HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/ageofwar.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "amongus HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/amongus.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "angrybirds HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/angrybirds.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "basketbros HTML",
+          description: "Loading...…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/basketbros.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "bitlife HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/bitlife.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "bloonsTD HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/bloonsTD.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "brick breaker HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/brick-breaker.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "cookieclicker HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/cookieclicker.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "PackCDN · PURE THREE.JS GAME · CONTROLS WORK",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/deepseek_html_20260216_42dccb.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Flappy Bird",
+          description: "…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/flappybird.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "fnaf HTML",
+          description: "…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/fnaf.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Ghost Clicker 3D - Immersive Spectral Hunting",
+          description: "Enter a spectral dimension where ghosts drift in 3D space. Use your cursor to banish them in this immersive haunting experience!…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/ghost.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "JavaMods",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/index (1).html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Subway Surfers",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/index (2).html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "장기",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/janggi.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "일정관리",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/kanban.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "maze HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/maze.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Gomoku",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/omok.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "stack HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/stack.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Tetris",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/tetris.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "zombierush HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/zombierush.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Pacman",
+          description: "Your name:…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/PackMan/index (13).html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Pacman",
+          description: "Your name:…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/PackMan/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Geometry Dash",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/GeoMentry_Dash/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "eaglercraft | 3kh0",
+          description: "Eaglercraft is real Minecraft 1.5.2 that you can play in any regular web browser. That includes school chromebooks, it works on all chromebooks. It supports both singleplayer and multiplayer with no extensions.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/MineCraft/index (3).html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "paperio2 HTM",
+          description: "Paper.io 2 is a sequel to what might be the most popular mobile game played by people from all around the world. Its simple …",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/paper.io2/paperio2.htm",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "fruitninja HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/FruitNinja/fruitninja.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "happywheels HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/HappyWheels/Dude/Why/game/happywheels.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "run3 HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/Run/Runner/run3.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "chess HTML",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/chess.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "index HTML",
+          description: "Go on Safari and add this page.…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/html5ds.github.io-23322/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Game Play",
+          description: "Loading……",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/html5ds.github.io-23322/src/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Sizes",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/html5ds.github.io-23322/src/sizes.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Drugs.sim — experience the truth",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/BackUp/1/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Drugs.sim — experience the truth",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Hallicination.IO",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/Hallicination.IO/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "SpaceShooters 3 - Immersive 3D Open World",
+          description: "WASD: Move | Mouse: Aim | Click: Shoot…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/SpaceShooters3.beta.test.Production/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "MindClicker · production",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/MindClicker/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "GameImpossible – Maze of Fear",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/GameImpossbile2/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "Ludo 3D - Nairaland Challenge",
+          description: "A Classic Board Game in 3D…",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/index (5).html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "PackCDN · PURE THREE.JS GAME · CONTROLS WORK",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/levels/index.html",
+          category: "demos",
+          highlight: false
+        },
+        {
+          icon: "📄",
+          title: "my game",
+          description: "Explore this immersive experience.",
+          features: ["Immersive experience", "New dimension", "Interactive content"],
+          link: "imagine/dudeadd/index.html",
+          category: "demos",
+          highlight: false
+        }
+      ];
     </script>
 
     <div class="filter-bar" id="filterBar">
@@ -1536,7 +1175,18 @@
     <div class="cards-grid" id="cardsGrid"></div>
   </div>
 
-  
+  <!-- Game Player Modal (for SimpleGames) -->
+  <div id="gameModal" class="game-modal">
+    <div class="game-canvas-container">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+    <div class="game-controls">
+      <button id="closeGame">Close</button>
+      <button id="restartGame">Restart</button>
+    </div>
+    <div id="gameErrors" class="game-errors"></div>
+  </div>
+
   <div class="human-controls">
     <button id="human-toggle" class="muted" title="Toggle human sound"><span>🔇</span> <span>Human</span></button>
     <select id="human-select" title="Select a human sound"><option value="">Loading...</option></select>
@@ -1576,6 +1226,7 @@
         });
         filterBar.appendChild(btn);
       });
+
       function renderCards(category = 'all') {
         const filtered = category === 'all' ? cardsData : cardsData.filter(c => c.category === category);
         if (filtered.length === 0) {
@@ -1587,27 +1238,298 @@
           const highlightClass = card.highlight ? 'highlight' : '';
           const featuresHtml = card.features.map(f => `<span class="feature-tag">${f}</span>`).join('');
           const link = card.link.startsWith('http') ? card.link : card.link;
+          const isSimple = card.link.includes('.simple'); // detect .simple files
           html += `
-            <div class="card ${highlightClass}" onclick="window.location.href='${link}'">
+            <div class="card ${highlightClass}" data-link="${link}" data-issimple="${isSimple}">
               <div class="card-icon">${card.icon || '📁'}</div>
               <h3 class="card-title">${card.title}</h3>
               <p class="card-desc">${card.description}</p>
               <div class="features">${featuresHtml}</div>
-              <a href="${link}" class="card-link" onclick="event.stopPropagation();"><span>▶</span> enter</a>
+              <a href="#" class="card-link" onclick="event.preventDefault();"><span>▶</span> enter</a>
               <span class="category-badge">${card.category || 'demos'}</span>
             </div>
           `;
         });
         grid.innerHTML = html;
+
+        // Attach click handlers – for .simple files open modal, others go to URL
+        document.querySelectorAll('.card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            const link = card.dataset.link;
+            const isSimple = card.dataset.issimple === 'true';
+            if (isSimple) {
+              e.preventDefault();
+              openSimpleGame(link);
+            } else {
+              window.location.href = link;
+            }
+          });
+        });
       }
       renderCards('all');
     })();
 
-    // ========== AUDIO PLAYER SETUP (with Web Audio) ==========
+    // ========== SIMPLE GAMES PLAYER ==========
+    const modal = document.getElementById('gameModal');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const closeBtn = document.getElementById('closeGame');
+    const restartBtn = document.getElementById('restartGame');
+    const errorsDiv = document.getElementById('gameErrors');
+
+    let currentGameCode = '';
+    let gameState = {};
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+      if (gameState.animationFrame) {
+        cancelAnimationFrame(gameState.animationFrame);
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      if (currentGameCode) {
+        runSimpleGame(currentGameCode);
+      }
+    });
+
+    async function openSimpleGame(link) {
+      modal.classList.add('active');
+      errorsDiv.textContent = 'Loading...';
+      try {
+        const response = await fetch(link);
+        if (!response.ok) throw new Error('Failed to load game file');
+        const code = await response.text();
+        currentGameCode = code;
+        // Optional validation via secure.js
+        const validation = await fetch('/.netlify/functions/secure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        }).then(res => res.json()).catch(() => null);
+        if (validation && !validation.valid) {
+          errorsDiv.textContent = '⚠️ Validation errors: ' + (validation.error || 'unknown');
+        } else {
+          errorsDiv.textContent = '';
+        }
+        runSimpleGame(code);
+      } catch (err) {
+        errorsDiv.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // ---------- SimpleGames Interpreter (basic) ----------
+    function runSimpleGame(code) {
+      if (gameState.animationFrame) cancelAnimationFrame(gameState.animationFrame);
+      gameState = {
+        objects: {},
+        physics: { gravity: 0.5, friction: 0.1, maxSpeed: 10 },
+        events: [],
+        animations: {},
+        currentLevel: null,
+        keys: {},
+        score: 0,
+        lives: 3,
+        frame: 0,
+        animationFrame: null
+      };
+
+      const lines = code.split('\n');
+      let currentSection = null;
+      lines.forEach(line => {
+        line = line.trim();
+        if (line.startsWith('//') || line === '') return;
+
+        // Object definition: Player: @pos=(100,300)@ $speed=5
+        const objMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*@([^@]*)@(.*)$/);
+        if (objMatch) {
+          const name = objMatch[1];
+          const inner = objMatch[2];
+          const rest = objMatch[3];
+          const attrs = {};
+          inner.split(',').forEach(part => {
+            const kv = part.split('=');
+            if (kv.length === 2) attrs[kv[0].trim()] = kv[1].trim();
+          });
+          const dirs = {};
+          const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
+          if (dollarMatches) {
+            dollarMatches.forEach(d => {
+              const eq = d.indexOf('=');
+              if (eq > -1) {
+                const key = d.substring(1, eq);
+                const val = d.substring(eq+1);
+                dirs[key] = val;
+              } else {
+                dirs[d.substring(1)] = true;
+              }
+            });
+          }
+          gameState.objects[name] = { attrs, dirs, x: 100, y: 100, vx: 0, vy: 0 };
+          if (name === 'Player' && attrs.pos) {
+            const pos = attrs.pos.replace(/[()]/g, '').split(',');
+            if (pos.length === 2) {
+              gameState.objects[name].x = parseInt(pos[0]);
+              gameState.objects[name].y = parseInt(pos[1]);
+            }
+          }
+          return;
+        }
+
+        // Level definition
+        const levelMatch = line.match(/^Level_(\d+):/i);
+        if (levelMatch) {
+          currentSection = 'level';
+          gameState.currentLevel = { width: 0, height: 0, tiles: [] };
+          return;
+        }
+
+        if (line.toLowerCase() === 'physics:') {
+          currentSection = 'physics';
+          return;
+        }
+
+        const eventMatch = line.match(/^On([A-Z][a-z]+):\s*@([^@]+)@\s*(.*)$/);
+        if (eventMatch) {
+          gameState.events.push({
+            type: eventMatch[1],
+            params: eventMatch[2].split(',').map(s => s.trim()),
+            actions: eventMatch[3]
+          });
+          return;
+        }
+
+        const animMatch = line.match(/^Anim_([A-Za-z0-9_]+):\s*frames:\s*@([^@]+)@\s*(.*)$/);
+        if (animMatch) {
+          const name = animMatch[1];
+          const frames = animMatch[2].split(',').map(f => f.trim());
+          const dirs = {};
+          const dollarMatches = animMatch[3].match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g) || [];
+          dollarMatches.forEach(d => {
+            const eq = d.indexOf('=');
+            if (eq > -1) {
+              const key = d.substring(1, eq);
+              const val = d.substring(eq+1);
+              dirs[key] = val;
+            } else {
+              dirs[d.substring(1)] = true;
+            }
+          });
+          gameState.animations[name] = { frames, dirs, currentFrame: 0 };
+          return;
+        }
+
+        if (line.match(/^If\s+(Debug_ENAbLE|cUsToM dRaWiNg pHySiCs)\s*-\s*True:/i)) {
+          currentSection = 'cheat';
+          return;
+        }
+
+        if (currentSection === 'physics') {
+          const physMatch = line.match(/([a-z_]+)\s*=\s*@([^@]+)@/i);
+          if (physMatch) {
+            const key = physMatch[1];
+            const val = parseFloat(physMatch[2]);
+            if (!isNaN(val)) gameState.physics[key] = val;
+          }
+        } else if (currentSection === 'level' && gameState.currentLevel) {
+          const whMatch = line.match(/@width=(\d+)@.*@height=(\d+)@/);
+          if (whMatch) {
+            gameState.currentLevel.width = parseInt(whMatch[1]);
+            gameState.currentLevel.height = parseInt(whMatch[2]);
+          } else if (line.match(/^tiles:/i)) {
+            // next lines are tile rows
+          } else if (/^[01PE]+$/.test(line)) {
+            gameState.currentLevel.tiles.push(line);
+          }
+        }
+      });
+
+      function gameLoop() {
+        gameState.frame++;
+
+        Object.values(gameState.objects).forEach(obj => {
+          obj.vy += gameState.physics.gravity;
+          obj.vx *= (1 - gameState.physics.friction);
+          const speed = Math.sqrt(obj.vx*obj.vx + obj.vy*obj.vy);
+          if (speed > gameState.physics.maxSpeed) {
+            obj.vx *= gameState.physics.maxSpeed / speed;
+            obj.vy *= gameState.physics.maxSpeed / speed;
+          }
+          obj.x += obj.vx;
+          obj.y += obj.vy;
+
+          if (obj.x < 0) { obj.x = 0; obj.vx *= -0.5; }
+          if (obj.x > 800) { obj.x = 800; obj.vx *= -0.5; }
+          if (obj.y < 0) { obj.y = 0; obj.vy *= -0.5; }
+          if (obj.y > 600) { obj.y = 600; obj.vy *= -0.5; }
+        });
+
+        if (gameState.objects['Player']) {
+          const player = gameState.objects['Player'];
+          if (gameState.keys['ArrowLeft']) player.vx -= 0.5;
+          if (gameState.keys['ArrowRight']) player.vx += 0.5;
+          if (gameState.keys['ArrowUp']) player.vy -= 0.5;
+          if (gameState.keys['ArrowDown']) player.vy += 0.5;
+        }
+
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, 800, 600);
+
+        if (gameState.currentLevel && gameState.currentLevel.tiles.length) {
+          const tileW = 800 / gameState.currentLevel.width;
+          const tileH = 600 / gameState.currentLevel.height;
+          gameState.currentLevel.tiles.forEach((row, y) => {
+            for (let x = 0; x < row.length; x++) {
+              const ch = row[x];
+              if (ch === '1') {
+                ctx.fillStyle = '#666';
+                ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
+              } else if (ch === 'E') {
+                ctx.fillStyle = '#f44';
+                ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
+              }
+            }
+          });
+        }
+
+        Object.entries(gameState.objects).forEach(([name, obj]) => {
+          if (name === 'Player') {
+            ctx.fillStyle = '#0f0';
+            ctx.beginPath();
+            ctx.arc(obj.x, obj.y, 15, 0, 2*Math.PI);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = '#f90';
+            ctx.fillRect(obj.x-10, obj.y-10, 20, 20);
+          }
+        });
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px monospace';
+        ctx.fillText(`Score: ${gameState.score}`, 10, 30);
+        ctx.fillText(`Lives: ${gameState.lives}`, 10, 60);
+
+        gameState.animationFrame = requestAnimationFrame(gameLoop);
+      }
+
+      window.addEventListener('keydown', (e) => {
+        if (modal.classList.contains('active')) {
+          gameState.keys[e.key] = true;
+        }
+      });
+      window.addEventListener('keyup', (e) => {
+        if (modal.classList.contains('active')) {
+          delete gameState.keys[e.key];
+        }
+      });
+
+      gameLoop();
+    }
+
+    // ========== AUDIO PLAYER SETUP (FULL Web Audio) ==========
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
 
-    // Resume audio context on first user interaction
     document.body.addEventListener('click', () => {
       if (audioCtx.state === 'suspended') audioCtx.resume();
     }, { once: true });
@@ -1620,10 +1542,9 @@
       { id: 'human-sounds', name: 'Human', toggleId: 'human-toggle', selectId: 'human-select', apiPath: 'Human_Sounds' }
     ];
 
-    const nodes = {}; // per-channel nodes
-    const sendGains = {}; // for reverb/delay sends
+    const nodes = {};
 
-    // Create master effects
+    // Master effects
     const masterGain = audioCtx.createGain();
     const masterCompressor = audioCtx.createDynamicsCompressor();
     masterCompressor.threshold.value = -18;
@@ -1636,7 +1557,6 @@
     const reverbNode = audioCtx.createConvolver();
     const reverbReturnGain = audioCtx.createGain();
     reverbReturnGain.gain.value = 0;
-    // Create impulse response
     const sampleRate = audioCtx.sampleRate;
     const length = sampleRate * 2;
     const impulse = audioCtx.createBuffer(2, length, sampleRate);
@@ -1658,19 +1578,15 @@
     delayNode.connect(delayFeedback);
     delayFeedback.connect(delayNode);
 
-    // Connect master chain
     masterGain.connect(masterCompressor);
     masterCompressor.connect(audioCtx.destination);
-    // Reverb send/return
     masterCompressor.connect(reverbNode);
     reverbNode.connect(reverbReturnGain);
     reverbReturnGain.connect(audioCtx.destination);
-    // Delay send/return
     masterCompressor.connect(delayNode);
     delayNode.connect(delayReturnGain);
     delayReturnGain.connect(audioCtx.destination);
 
-    // Store master nodes
     const masterNodes = { masterGain, masterCompressor, reverbReturnGain, delayReturnGain };
 
     // Create per-channel processing
@@ -1678,7 +1594,6 @@
       const audio = document.getElementById(p.id);
       const source = audioCtx.createMediaElementSource(audio);
 
-      // Nodes
       const gainNode = audioCtx.createGain();
       const panNode = audioCtx.createStereoPanner();
       const lowEQ = audioCtx.createBiquadFilter();
@@ -1700,16 +1615,13 @@
       compressor.ratio.value = 12;
       compressor.attack.value = 0.003;
       compressor.release.value = 0.25;
-      const gateGain = audioCtx.createGain(); // simple gate simulation (threshold later)
+      const gateGain = audioCtx.createGain();
       gateGain.gain.value = 1;
-
-      // Send gains
       const reverbSend = audioCtx.createGain();
       reverbSend.gain.value = 0;
       const delaySend = audioCtx.createGain();
       delaySend.gain.value = 0;
 
-      // Connect chain: source -> gate -> compressor -> EQ -> pan -> gain -> master
       source.connect(gateGain);
       gateGain.connect(compressor);
       compressor.connect(lowEQ);
@@ -1718,14 +1630,11 @@
       highEQ.connect(panNode);
       panNode.connect(gainNode);
       gainNode.connect(masterGain);
-
-      // Sends: tap after gain? Usually before fader, but we'll tap after gain for simplicity.
       gainNode.connect(reverbSend);
       gainNode.connect(delaySend);
       reverbSend.connect(reverbNode);
       delaySend.connect(delayNode);
 
-      // Store nodes
       nodes[p.id] = {
         source, gainNode, panNode, lowEQ, midEQ, highEQ, compressor, gateGain,
         reverbSend, delaySend,
@@ -1742,44 +1651,17 @@
       channelDiv.className = 'mixer-channel';
       channelDiv.innerHTML = `
         <div class="channel-header">${playerName}</div>
-        <div class="control-row">
-          <span class="control-label">Vol</span>
-          <input type="range" min="0" max="100" value="100" class="volume-slider">
-        </div>
-        <div class="control-row">
-          <span class="control-label">Pan</span>
-          <input type="range" min="-100" max="100" value="0" class="pan-slider">
-        </div>
+        <div class="control-row"><span class="control-label">Vol</span><input type="range" min="0" max="100" value="100" class="volume-slider"></div>
+        <div class="control-row"><span class="control-label">Pan</span><input type="range" min="-100" max="100" value="0" class="pan-slider"></div>
         <div class="eq-row">
-          <div class="eq-band">
-            <span>L</span>
-            <input type="range" min="-20" max="20" value="0" class="eq-low">
-          </div>
-          <div class="eq-band">
-            <span>M</span>
-            <input type="range" min="-20" max="20" value="0" class="eq-mid">
-          </div>
-          <div class="eq-band">
-            <span>H</span>
-            <input type="range" min="-20" max="20" value="0" class="eq-high">
-          </div>
+          <div class="eq-band"><span>L</span><input type="range" min="-20" max="20" value="0" class="eq-low"></div>
+          <div class="eq-band"><span>M</span><input type="range" min="-20" max="20" value="0" class="eq-mid"></div>
+          <div class="eq-band"><span>H</span><input type="range" min="-20" max="20" value="0" class="eq-high"></div>
         </div>
-        <div class="control-row">
-          <span class="control-label">Reverb</span>
-          <input type="range" min="0" max="100" value="0" class="reverb-send">
-        </div>
-        <div class="control-row">
-          <span class="control-label">Delay</span>
-          <input type="range" min="0" max="100" value="0" class="delay-send">
-        </div>
-        <div class="control-row">
-          <span class="control-label">Comp</span>
-          <input type="range" min="-40" max="0" value="-24" class="comp-thresh">
-        </div>
-        <div class="control-row">
-          <span class="control-label">Gate</span>
-          <input type="range" min="0" max="1" step="0.01" value="0" class="gate-thresh">
-        </div>
+        <div class="control-row"><span class="control-label">Reverb</span><input type="range" min="0" max="100" value="0" class="reverb-send"></div>
+        <div class="control-row"><span class="control-label">Delay</span><input type="range" min="0" max="100" value="0" class="delay-send"></div>
+        <div class="control-row"><span class="control-label">Comp</span><input type="range" min="-40" max="0" value="-24" class="comp-thresh"></div>
+        <div class="control-row"><span class="control-label">Gate</span><input type="range" min="0" max="1" step="0.01" value="0" class="gate-thresh"></div>
         <div class="button-group">
           <button class="mixer-btn mute-btn">M</button>
           <button class="mixer-btn solo-btn">S</button>
@@ -1788,55 +1670,30 @@
       `;
       mixerPanel.appendChild(channelDiv);
 
-      // Connect sliders
-      const volSlider = channelDiv.querySelector('.volume-slider');
-      volSlider.addEventListener('input', () => {
-        n.gainNode.gain.value = volSlider.value / 100;
+      channelDiv.querySelector('.volume-slider').addEventListener('input', (e) => {
+        n.gainNode.gain.value = e.target.value / 100;
       });
-
-      const panSlider = channelDiv.querySelector('.pan-slider');
-      panSlider.addEventListener('input', () => {
-        n.panNode.pan.value = panSlider.value / 100;
+      channelDiv.querySelector('.pan-slider').addEventListener('input', (e) => {
+        n.panNode.pan.value = e.target.value / 100;
       });
-
-      const eqLow = channelDiv.querySelector('.eq-low');
-      eqLow.addEventListener('input', () => {
-        n.lowEQ.gain.value = eqLow.value;
+      channelDiv.querySelector('.eq-low').addEventListener('input', (e) => {
+        n.lowEQ.gain.value = e.target.value;
       });
-
-      const eqMid = channelDiv.querySelector('.eq-mid');
-      eqMid.addEventListener('input', () => {
-        n.midEQ.gain.value = eqMid.value;
+      channelDiv.querySelector('.eq-mid').addEventListener('input', (e) => {
+        n.midEQ.gain.value = e.target.value;
       });
-
-      const eqHigh = channelDiv.querySelector('.eq-high');
-      eqHigh.addEventListener('input', () => {
-        n.highEQ.gain.value = eqHigh.value;
+      channelDiv.querySelector('.eq-high').addEventListener('input', (e) => {
+        n.highEQ.gain.value = e.target.value;
       });
-
-      const reverbSend = channelDiv.querySelector('.reverb-send');
-      reverbSend.addEventListener('input', () => {
-        n.reverbSend.gain.value = reverbSend.value / 100;
+      channelDiv.querySelector('.reverb-send').addEventListener('input', (e) => {
+        n.reverbSend.gain.value = e.target.value / 100;
       });
-
-      const delaySend = channelDiv.querySelector('.delay-send');
-      delaySend.addEventListener('input', () => {
-        n.delaySend.gain.value = delaySend.value / 100;
+      channelDiv.querySelector('.delay-send').addEventListener('input', (e) => {
+        n.delaySend.gain.value = e.target.value / 100;
       });
-
-      const compThresh = channelDiv.querySelector('.comp-thresh');
-      compThresh.addEventListener('input', () => {
-        n.compressor.threshold.value = compThresh.value;
+      channelDiv.querySelector('.comp-thresh').addEventListener('input', (e) => {
+        n.compressor.threshold.value = e.target.value;
       });
-
-      const gateThresh = channelDiv.querySelector('.gate-thresh');
-      gateThresh.addEventListener('input', () => {
-        // Very simple gate: if threshold > 0, we attenuate based on input level? Too complex.
-        // We'll just simulate: if gateThresh > 0, we reduce gain by factor. Not accurate.
-        // For demo, we'll leave it as a placeholder.
-        // In a real gate, you'd need an envelope follower.
-      });
-
       const muteBtn = channelDiv.querySelector('.mute-btn');
       muteBtn.addEventListener('click', () => {
         if (n.gainNode.gain.value === 0) {
@@ -1847,16 +1704,13 @@
           muteBtn.classList.add('active');
         }
       });
-
       const soloBtn = channelDiv.querySelector('.solo-btn');
       soloBtn.addEventListener('click', () => {
         const isSolo = soloBtn.classList.contains('active');
         if (isSolo) {
           soloBtn.classList.remove('active');
-          // Restore all gains to previous values? We'll just set all to 1 (simplified)
           Object.values(nodes).forEach(n => n.gainNode.gain.value = 1);
         } else {
-          // Solo this channel
           document.querySelectorAll('.solo-btn').forEach(btn => btn.classList.remove('active'));
           soloBtn.classList.add('active');
           Object.values(nodes).forEach((n, idx) => {
@@ -1868,7 +1722,6 @@
           });
         }
       });
-
       const randomBtn = channelDiv.querySelector('.random-btn');
       randomBtn.addEventListener('click', () => {
         const selectEl = n.selectEl;
@@ -1880,72 +1733,46 @@
       });
     }
 
-    // Create channels
     createChannelUI('lobby-music', 'MUSIC');
     createChannelUI('arcade-fx', 'ARCADE');
     createChannelUI('funny-sounds', 'FUNNY');
     createChannelUI('human-sounds', 'HUMAN');
 
-    // Master channel
     const masterDiv = document.createElement('div');
     masterDiv.className = 'mixer-channel master-channel';
     masterDiv.innerHTML = `
       <div class="channel-header">MASTER</div>
-      <div class="control-row">
-        <span class="control-label">Vol</span>
-        <input type="range" min="0" max="100" value="100" id="master-vol">
-      </div>
-      <div class="control-row">
-        <span class="control-label">Comp</span>
-        <input type="range" min="-40" max="0" value="-18" id="master-comp-thresh">
-      </div>
-      <div class="control-row">
-        <span class="control-label">Reverb</span>
-        <input type="range" min="0" max="100" value="0" id="master-reverb">
-      </div>
-      <div class="control-row">
-        <span class="control-label">Delay</span>
-        <input type="range" min="0" max="100" value="0" id="master-delay">
-      </div>
-      <div class="button-group">
-        <button class="mixer-btn" id="master-mute">M</button>
-      </div>
+      <div class="control-row"><span class="control-label">Vol</span><input type="range" min="0" max="100" value="100" id="master-vol"></div>
+      <div class="control-row"><span class="control-label">Comp</span><input type="range" min="-40" max="0" value="-18" id="master-comp-thresh"></div>
+      <div class="control-row"><span class="control-label">Reverb</span><input type="range" min="0" max="100" value="0" id="master-reverb"></div>
+      <div class="control-row"><span class="control-label">Delay</span><input type="range" min="0" max="100" value="0" id="master-delay"></div>
+      <div class="button-group"><button class="mixer-btn" id="master-mute">M</button></div>
     `;
     mixerPanel.appendChild(masterDiv);
 
-    // Master controls
-    const masterVol = document.getElementById('master-vol');
-    masterVol.addEventListener('input', () => {
-      masterNodes.masterGain.gain.value = masterVol.value / 100;
+    document.getElementById('master-vol').addEventListener('input', (e) => {
+      masterNodes.masterGain.gain.value = e.target.value / 100;
     });
-
-    const masterCompThresh = document.getElementById('master-comp-thresh');
-    masterCompThresh.addEventListener('input', () => {
-      masterNodes.masterCompressor.threshold.value = masterCompThresh.value;
+    document.getElementById('master-comp-thresh').addEventListener('input', (e) => {
+      masterNodes.masterCompressor.threshold.value = e.target.value;
     });
-
-    const masterReverb = document.getElementById('master-reverb');
-    masterReverb.addEventListener('input', () => {
-      masterNodes.reverbReturnGain.gain.value = masterReverb.value / 100;
+    document.getElementById('master-reverb').addEventListener('input', (e) => {
+      masterNodes.reverbReturnGain.gain.value = e.target.value / 100;
     });
-
-    const masterDelay = document.getElementById('master-delay');
-    masterDelay.addEventListener('input', () => {
-      masterNodes.delayReturnGain.gain.value = masterDelay.value / 100;
+    document.getElementById('master-delay').addEventListener('input', (e) => {
+      masterNodes.delayReturnGain.gain.value = e.target.value / 100;
     });
-
-    const masterMute = document.getElementById('master-mute');
-    masterMute.addEventListener('click', () => {
+    document.getElementById('master-mute').addEventListener('click', (e) => {
       if (masterNodes.masterGain.gain.value === 0) {
         masterNodes.masterGain.gain.value = 1;
-        masterMute.classList.remove('active');
+        e.target.classList.remove('active');
       } else {
         masterNodes.masterGain.gain.value = 0;
-        masterMute.classList.add('active');
+        e.target.classList.add('active');
       }
     });
 
-    // ========== PLAYER LOADING (same as before) ==========
+    // ========== PLAYER LOADING (FULL) ==========
     function createPlayer(audioId, toggleId, selectId, apiPath, defaultName = 'Default') {
       const audio = document.getElementById(audioId);
       const toggleBtn = document.getElementById(toggleId);
