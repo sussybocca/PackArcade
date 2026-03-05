@@ -1,0 +1,154 @@
+// Advanced Platformer – "Lost Ruins"
+// A simple but complete platformer with coins, enemies, and a boss
+
+// ========== PLAYER ==========
+Player: @pos=(50,400)@ $speed=6 $jumpStrength=12 $maxJumps=2 $health=3 $lives=3
+// double jump enabled
+
+// ========== ENEMIES ==========
+// Basic walking enemy
+Enemy_Basic: @type=walker@ $speed=2 $damage=1 $points=10 $patrol=(200,400)
+// Flying enemy (sine movement)
+Enemy_Fly: @type=flyer@ $speed=1.5 $amplitude=50 $frequency=0.1 $damage=1 $points=20
+
+// Boss (placed later)
+Boss: @type=boss@ $health=20 $damage=3 $points=500 $speed=1 $pattern=wave
+
+// ========== POWER‑UPS ==========
+PowerUp_Health: @type=health@ $heal=1 $sprite="heart.png"
+PowerUp_Coin: @type=coin@ $value=10 $sprite="coin.png"
+PowerUp_Weapon: @type=weapon@ $newFireRate=0.2 $duration=10 $sprite="star.png"
+
+// ========== LEVEL 1 – INTRO ==========
+Level_1:
+  @width=30@ @height=15@
+  tiles:
+    111111111111111111111111111111
+    100000000000000000000000000001
+    100P0000C000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    1000000000000E0000000000000001
+    100000000000000000000000000001
+    111111111111111111111111111111
+  // 'P' = player start, 'C' = coin, 'E' = basic enemy
+
+// ========== LEVEL 2 – HARDER ==========
+Level_2:
+  @width=30@ @height=15@
+  tiles:
+    111111111111111111111111111111
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    1000000000000F0000000000000001  // 'F' = flying enemy spawn
+    100000000000000000000000000001
+    100000000000000000000000000001
+    1000000000000E0000000000000001
+    100000000000000000000000000001
+    111111111111111111111111111111
+  // multiple enemies, more coins later
+
+// ========== BOSS LEVEL ==========
+Level_Boss:
+  @width=30@ @height=15@
+  tiles:
+    111111111111111111111111111111
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    1000000000000B0000000000000001  // 'B' = boss spawn
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    100000000000000000000000000001
+    111111111111111111111111111111
+
+// ========== PHYSICS ==========
+Physics:
+  gravity = @0.6@
+  friction = @0.1@
+  max_speed_x = @8@
+  max_speed_y = @15@
+
+// ========== COLLISION HANDLERS ==========
+// Player collects coin
+OnCollision: @Player,Coin@ $score+=10 $playSound=coin.wav $removeObject
+
+// Player collects health
+OnCollision: @Player,Health@ $health=min(health+1,5) $playSound=powerup.wav $removeObject
+
+// Player collects weapon upgrade
+OnCollision: @Player,Weapon@ $fireRate=0.2 $duration=10 $playSound=powerup.wav $removeObject
+
+// Player hit by enemy (with invincibility frames)
+OnCollision: @Player,Enemy_Basic@ $health-=1 $ifHealth<=0$ gameOver $else$ invincible=60 $knockback $playSound=hurt.wav
+
+OnCollision: @Player,Enemy_Fly@ $health-=1 $ifHealth<=0$ gameOver $else$ invincible=60 $playSound=hurt.wav
+
+// Player vs Boss (special handling)
+OnCollision: @Player,Boss@ $health-=2 $ifHealth<=0$ gameOver $else$ invincible=90 $knockback $playSound=boss_hit.wav
+
+// Bullet hits enemy
+OnCollision: @PlayerBullet,Enemy_Basic@ $score+=10 $removeBullet $removeEnemy $playSound=explode.wav
+
+OnCollision: @PlayerBullet,Enemy_Fly@ $score+=20 $removeBullet $removeEnemy $playSound=explode.wav
+
+// Bullet hits boss (boss takes multiple hits)
+OnCollision: @PlayerBullet,Boss@ $bossHealth-=1 $ifBossHealth<=0$ $score+=500 $playSound=boss_death.wav $removeBoss $winConditionMet
+  $else$ $playSound=hit.wav $removeBullet
+
+// ========== SPRITES ==========
+Sprites:
+  player = "hero_sheet.png" $width=32 $height=32 $frames=4 $animIdle
+  enemy_basic = "goblin.png"
+  enemy_fly = "bat.png"
+  boss = "dragon.png"
+  coin = "coin.png"
+  health = "heart.png"
+  weapon = "star.png"
+  bullet = "fireball.png" $width=16 $height=16
+
+// ========== ANIMATIONS ==========
+Anim_Idle:
+  frames: @0,1,0,2@ $fps=8 $loop=true
+
+Anim_Run:
+  frames: @3,4,5,4@ $fps=12 $loop=true
+
+Anim_Jump:
+  frames: @6@ $loop=false
+
+Anim_Explosion:
+  frames: @0,1,2,3,4,5@ $fps=20 $loop=false
+
+// ========== BACKGROUND ==========
+Background:
+  image = "jungle_bg.png" $scrollSpeed=0.5 $parallax
+  overlay = "clouds.png" $scrollSpeed=0.2 $parallax $alpha=0.5
+
+// ========== MUSIC & SOUND ==========
+Music: "adventure.ogg" $volume=60 $loop
+Sound: coin.wav $volume=80
+Sound: hurt.wav $volume=70
+Sound: powerup.wav $volume=75
+Sound: explode.wav $volume=85
+Sound: boss_hit.wav $volume=90
+Sound: boss_death.wav $volume=100
+
+// ========== GAME RULES ==========
+WinCondition: @score>=1000@
+LoseCondition: @lives==0@
+// Also, boss defeat triggers win
+
+// ========== CHEAT / DEBUG ==========
+If Debug_ENAbLE -True:
+  $showHitboxes
+  $showCoords
+  $godMode
+  $unlimitedJumps
