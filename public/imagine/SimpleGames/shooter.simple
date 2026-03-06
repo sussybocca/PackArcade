@@ -1,106 +1,47 @@
-// Spaceship Shooter Advanced – now with enemies, power‑ups, and real gameplay!
+// Spaceship Shooter – simplified for the current interpreter
 
 // ========== VARIABLES ==========
 Var:
-  @max_score=200@               // Score needed to win
-  @lives=3@                     // Player starts with 3 lives
-  @player_speed=6@              // Base movement speed
-  @enemy_speed=2@               // Default enemy speed
-  @bullet_speed=8@              // How fast our lasers travel
-  @powerup_duration=300@        // Frames a power‑up lasts (5 sec at 60fps)
+  @max_score=200@
+  @lives=3@
+  @player_speed=6@
+  @enemy_speed=2@
+  @bullet_speed=8@
 
 // ========== PLAYER ==========
 Player: 
-  @pos=(400,500)@               // Start near bottom centre
-  $speed=player_speed 
-  $fireRate=0.2                 // Shoot every 0.2 seconds (cooldown)
+  @pos=(400,500)@
+  $speed=player_speed
+  $fireRate=0.2                  // (ignored)
   $invincible=false
-  $health=3                     // Separate health (lives are game‑over)
 
 // ========== ENEMIES ==========
 // Basic patrolling enemy
 Enemy_Patrol: 
   @pos=(200,200)@ 
   $speed=enemy_speed 
-  $move=patrol                  // Custom behavior (see below)
-  $health=2
-  $score_value=10
+  $move=sin                      // Moves in a sine wave
+  $score_value=10                 // (ignored)
 
 // Fast moving zig‑zag enemy
 Enemy_Racer: 
   @pos=(600,150)@ 
   $speed=4 
-  $move=zigzag                  // Moves left‑right quickly
-  $health=1
+  $move=random                    // Changes direction randomly
   $score_value=5
-
-// Stationary turret that shoots
-Enemy_Turret: 
-  @pos=(400,100)@ 
-  $shoot=true                   // Will fire at player
-  $fireRate=1.0 
-  $health=3
-  $score_value=20
-
-// ========== BULLETS ==========
-// Player bullets
-Bullet_Player:
-  @size=(5,10)@                 // Width, height
-  $speed=bullet_speed
-  $direction=up
-  $color=cyan
-  $damage=1
-
-// Enemy bullets
-Bullet_Enemy:
-  @size=(5,10)@
-  $speed=5
-  $direction=down
-  $color=red
-  $damage=1
-
-// ========== POWER‑UPS ==========
-PowerUp_Health:
-  @pos=(random,random)@         // Spawns randomly
-  $type=health
-  $value=1
-  $lifetime=600                 // Disappears after 10 seconds
-
-PowerUp_Speed:
-  @pos=(random,random)@
-  $type=speed
-  $value=2                      // Temporarily +2 speed
-  $duration=powerup_duration
-  $lifetime=600
-
-PowerUp_TripleShot:
-  @pos=(random,random)@
-  $type=weapon
-  $value=triple
-  $duration=powerup_duration
-  $lifetime=600
 
 // ========== LEVEL 1 – ASTEROID FIELD ==========
 Level_1:
   @width=30@ @height=20@
   tiles:
-    // Top border: 30 ones
     111111111111111111111111111111
-    // Row 2: 1, 28 zeros, 1
     100000000000000000000000000001
-    // Row 3: asteroid cluster at columns 9-11
     100000000111000000000000000001
-    // Row 4: asteroid cluster at columns 16-18
     100000000000000011100000000001
-    // Row 5: all zeros except borders
     100000000000000000000000000001
-    // Row 6: another cluster
     100000000000111000000000000001
-    // Row 7: all zeros
     100000000000000000000000000001
-    // Row 8: cluster at columns 17-19
     100000000000000000111000000001
-    // Rows 9-18: all zeros (borders only)
     100000000000000000000000000001
     100000000000000000000000000001
     100000000000000000000000000001
@@ -111,9 +52,7 @@ Level_1:
     100000000000000000000000000001
     100000000000000000000000000001
     100000000000000000000000000001
-    // Row 19: all zeros
     100000000000000000000000000001
-    // Bottom border: 30 ones
     111111111111111111111111111111
   properties:
     @background=stars@
@@ -122,142 +61,29 @@ Level_1:
 
 // ========== PHYSICS ==========
 Physics:
-  gravity = @0@                  // No gravity in space
-  friction = @0.01@              // Slight drag
+  gravity = @0@
+  friction = @0.01@
   max_speed = @10@
   collisions = @pixel_perfect@
 
 // ========== EVENTS ==========
-// Player bullet hits enemy
-OnCollision: @Bullet_Player,Enemy_Patrol@ 
-  $score+=10 
-  $enemy_health-=1 
-  $if(enemy_health<=0) $spawn=Explosion $deleteEnemy
-
-OnCollision: @Bullet_Player,Enemy_Racer@ 
-  $score+=5 
-  $enemy_health-=1 
-  $if(enemy_health<=0) $spawn=Explosion $deleteEnemy
-
-OnCollision: @Bullet_Player,Enemy_Turret@ 
-  $score+=20 
-  $enemy_health-=1 
-  $if(enemy_health<=0) $spawn=Explosion $deleteEnemy
-
-// Enemy bullet hits player
-OnCollision: @Bullet_Enemy,Player@ 
-  $player_health-=1 
-  $if(player_health<=0) $lives-=1 $player_health=3 $resetPos
-  $playSound=hit.wav
-
-// Player touches enemy (collision damage)
+// Player touches enemy – lose a life and reset position
 OnCollision: @Player,Enemy_Patrol@ 
-  $player_health-=1 
-  $if(player_health<=0) $lives-=1 $player_health=3 $resetPos
-  $score-=5
+  $lives-=1 
+  $resetPos
 
 OnCollision: @Player,Enemy_Racer@ 
-  $player_health-=1 
-  $if(player_health<=0) $lives-=1 $player_health=3 $resetPos
-  $score-=2
+  $lives-=1 
+  $resetPos
 
-OnCollision: @Player,Enemy_Turret@ 
-  $player_health-=2 
-  $if(player_health<=0) $lives-=1 $player_health=3 $resetPos
-  $score-=10
+// (No shooting or power‑ups – not supported yet)
 
-// Power‑up collection
-OnCollision: @Player,PowerUp_Health@ 
-  $player_health+=1 
-  $if(player_health>5) $player_health=5
-  $deletePowerUp
-  $playSound=powerup.wav
-
-OnCollision: @Player,PowerUp_Speed@ 
-  $player_speed+=2 
-  $duration=powerup_duration
-  $deletePowerUp
-  $playSound=powerup.wav
-
-OnCollision: @Player,PowerUp_TripleShot@ 
-  $weapon=triple 
-  $duration=powerup_duration
-  $deletePowerUp
-  $playSound=powerup.wav
-
-// ========== SPRITES ==========
+// ========== SPRITES (ignored) ==========
 Sprites:
   player = "ship.png"
   enemy_patrol = "enemy_patrol.png"
   enemy_racer = "enemy_racer.png"
-  enemy_turret = "turret.png"
-  bullet_player = "laser_green.png"
-  bullet_enemy = "laser_red.png"
-  explosion = "explode.png"
-  powerup_health = "heart.png"
-  powerup_speed = "lightning.png"
-  powerup_triple = "triple.png"
-
-// ========== ANIMATIONS ==========
-Anim_Explosion:
-  frames: @1,2,3,4,5@ 
-  $fps=24 
-  $loop=false
-
-Anim_Enemy_Patrol:
-  frames: @1,2@ 
-  $fps=4 
-  $loop=true
-
-// ========== PARTICLE SYSTEMS ==========
-ParticleSystem ExplosionParticles:
-  @count=20@ 
-  @lifetime=1.5@ 
-  $spread=360 
-  $speed=50 
-  $color=orange
-
-ParticleSystem EngineTrail:
-  @count=5@ 
-  @lifetime=0.3@ 
-  $spread=30 
-  $speed=10 
-  $color=cyan
-
-// ========== BEHAVIORS ==========
-Behavior Patrol:
-  states:
-    idle: @duration=2@ then=move_left
-    move_left: @target=left@ $speed=1.5 then=idle
-    move_right: @target=right@ $speed=1.5 then=idle
-  on_see_player: chase
-
-Behavior ZigZag:
-  states:
-    left: @duration=1@ then=right
-    right: @duration=1@ then=left
-  $speed=4
-
-Behavior Chase:
-  states:
-    approach: @distance=200@ $speed=3 then=attack
-    attack: @cooldown=1@ $shoot=true then=retreat
-    retreat: @distance=300@ $speed=2 then=approach
-
-// ========== CAMERA ==========
-Camera:
-  @follow=player@ 
-  $shake_on_hit=true 
-  $bounds=(0,0,3000,2000)
-  $scroll_speed=0.1
-
-// ========== DEBUG / CHEAT BLOCK ==========
-If Debug_ENAbLE -True:
-  $showHitboxes
-  $logCollisions
-  $overlay_info
-  $spawnPowerUp always
 
 // ========== WIN / LOSE CONDITIONS ==========
-WinCondition: @score>=max_score@
+WinCondition: @score>=max_score@      // Score never increases, so you won't win
 LoseCondition: @lives==0@
