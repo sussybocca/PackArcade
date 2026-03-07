@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "DragonSim",
   "resources": {
-    "hash": "sha256-e3FooBV9VJG/PIQyEF1Ya7j1qKCGWzewSJ5dOwLYzo8=",
+    "hash": "sha256-fHMThnrDbi0n97laWLWV/lUwSmVY6BWPVh449rxC124=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-4g0GzvOXSwZvTLca4PrWJkoeltz+V9IF/hEFDcnVros="
     },
@@ -61,7 +61,7 @@
       "System.Text.RegularExpressions.wasm": "sha256-EBNNP57+VS/OjAuJHOY1mCfaJCJQYORnhF3/w7wP5kI=",
       "System.wasm": "sha256-YSihFa+YInKtLQNBZCK8pNPmas5a97BeIhBK9Cl2Qx8=",
       "System.Private.CoreLib.wasm": "sha256-/JrBeuh1BmI12lqfERojE8xJ0Z6oA6avn7RrojfsAuo=",
-      "DragonSim.wasm": "sha256-LFaYLOc7cZsNFBNGtsF1lnkeMvvMwW6A5WT9IqBzR4E="
+      "DragonSim.wasm": "sha256-GxxdgZuJgvs4AxnIy4OadLnsPhF4jfJr2vDRudfRQok="
     }
   },
   "cacheBootResources": true,
