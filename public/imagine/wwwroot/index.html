@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dragon.sim</title>
+    <base href="/" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="DragonSim.styles.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="js/three-engine.js"></script>
+    <script>
+        window.registerInputHandlers = (dotNetRef) => {
+            window.addEventListener('keydown', (e) => dotNetRef.invokeMethodAsync('OnKeyDown', e.key));
+            window.addEventListener('keyup', (e) => dotNetRef.invokeMethodAsync('OnKeyUp', e.key));
+            window.addEventListener('mousemove', (e) => dotNetRef.invokeMethodAsync('OnMouseMove', e.clientX, e.clientY));
+            window.addEventListener('mousedown', (e) => dotNetRef.invokeMethodAsync('OnMouseDown', e.button));
+            window.addEventListener('mouseup', (e) => dotNetRef.invokeMethodAsync('OnMouseUp', e.button));
+        };
+        window.unregisterInputHandlers = () => {
+            // remove listeners if needed
+        };
+    </script>
+</body>
+</html>

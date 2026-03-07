@@ -1,0 +1,189 @@
+/* Import fantasy fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Open+Sans:wght@400;600&display=swap');
+
+html, body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #0a0c0e;
+    color: #e0d6c7;
+    overflow: hidden;
+}
+
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Canvas takes full screen */
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    outline: none;
+}
+
+/* HUD base panel style */
+.hud-panel {
+    background: rgba(10, 15, 20, 0.75);
+    backdrop-filter: blur(4px);
+    border: 1px solid #c9a04b;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(201, 160, 75, 0.3);
+    padding: 12px 18px;
+    color: #f0e6d2;
+    font-family: 'Cinzel', serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.5px;
+}
+
+/* Specific HUD sections */
+.top-left-hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.top-right-hud {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.bottom-center-hud {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    border-radius: 50px;
+    padding: 10px 25px;
+    border: 1px solid #c9a04b;
+    box-shadow: 0 0 20px rgba(201, 160, 75, 0.3);
+}
+
+/* Info rows */
+.info-row {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+    font-size: 1rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #c9a04b;
+    margin-right: 8px;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.info-value {
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 0 8px #c9a04b;
+}
+
+/* Dragon scale decoration (optional) */
+.dragon-scale {
+    background-image: repeating-linear-gradient(45deg, rgba(201, 160, 75, 0.1) 0px, rgba(201, 160, 75, 0.1) 4px, transparent 4px, transparent 8px);
+    border-radius: 8px;
+}
+
+/* Button styling */
+.dragon-btn {
+    background: linear-gradient(145deg, #2a2f35, #1a1e22);
+    border: 1px solid #c9a04b;
+    color: #f0e6d2;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #0f1215, 0 0 10px rgba(201, 160, 75, 0.3);
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    outline: none;
+}
+
+.dragon-btn:hover {
+    background: linear-gradient(145deg, #3a3f45, #2a2e32);
+    box-shadow: 0 2px 0 #0f1215, 0 0 15px #c9a04b;
+    transform: translateY(-2px);
+}
+
+.dragon-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #0f1215, 0 0 10px #c9a04b;
+}
+
+.dragon-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+/* FPS counter special */
+.fps-counter {
+    font-family: 'Open Sans', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #7ec8e0;
+    text-shadow: 0 0 10px #3a6e8a;
+    border: none;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    padding: 8px 15px;
+}
+
+/* Mounted dragon name */
+.mount-name {
+    color: #c9a04b;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Health/stamina bars (if we add them later) */
+.stat-bar {
+    width: 150px;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 6px;
+    border: 1px solid #5a4a3a;
+    overflow: hidden;
+    margin-left: 8px;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c9a04b, #f0c674);
+    border-radius: 6px;
+    box-shadow: 0 0 8px #c9a04b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hud-panel {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    .dragon-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+}
