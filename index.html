@@ -30,7 +30,7 @@
       position: relative;
     }
 
-    /* ---------- SIDEBAR (collapsible) ---------- */
+    /* ---------- SIDEBAR (collapsible, with toggle inside) ---------- */
     .sidebar {
       position: absolute;
       top: 0;
@@ -54,11 +54,11 @@
       transform: translateX(-100%);
     }
 
-    /* toggle tab – always visible on the left edge */
+    /* toggle tab – positioned absolutely inside sidebar */
     .sidebar-toggle {
       position: absolute;
       top: 50%;
-      left: 100%;               /* sits just outside the sidebar */
+      right: -32px;              /* sits just outside the right edge */
       transform: translateY(-50%);
       width: 32px;
       height: 70px;
@@ -76,7 +76,7 @@
       cursor: pointer;
       box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
       transition: background 0.2s, color 0.2s;
-      z-index: 31;
+      z-index: 31;               /* above iframe */
       line-height: 1;
     }
 
@@ -194,6 +194,7 @@
         width: 28px;
         height: 60px;
         font-size: 1.1rem;
+        right: -28px;
       }
     }
   </style>
@@ -202,6 +203,9 @@
 
   <!-- Collapsible sidebar (contains all header/overlay elements) -->
   <div class="sidebar" id="mainSidebar">
+    <!-- toggle button now inside sidebar -->
+    <div class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">◀</div>
+
     <div class="sidebar-header">⚡ DIMENSION<br>SELECTOR</div>
 
     <!-- navigation links (formerly in header) -->
@@ -220,9 +224,6 @@
       ✦ auto‑linked from <code>public/imagine/</code> ✦
     </div>
   </div>
-
-  <!-- toggle button to open/close sidebar -->
-  <div class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">◀</div>
 
   <!-- iframe container (now completely unobstructed when sidebar is closed) -->
   <div class="iframe-container">
