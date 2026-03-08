@@ -3,13 +3,17 @@
 /403.html   403
 /500.html   500
 
-# Language folders – serve content from the appropriate subdirectory
-/en/*        /en/:splat   200
-/es/*        /es/:splat   200
-/fr/*        /fr/:splat   200
+# Language detection for root – redirect based on Accept-Language header
+# Order matters: put higher priority languages first.
+/            /es/         302  Language=es
+/            /fr/         302  Language=fr
+/            /en/         302   # fallback (no condition)
 
-# Root – redirect to English version (you can change this to language detection later)
-/            /en/         302
+# Optional: if you need to support clean URLs (e.g., /en/page without .html),
+# uncomment the following lines to rewrite requests to the actual files.
+# /en/*        /en/:splat   200
+# /es/*        /es/:splat   200
+# /fr/*        /fr/:splat   200
 
-# Example: permanent redirects for old URLs
+# Example: permanent redirects for old URLs (uncomment and adjust as needed)
 # /old-blog/*  /news/:splat  301
