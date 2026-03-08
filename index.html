@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Immersive Game Hub · collapsible sidebar</title>
+  <title>Immersive Game Hub · right‑click menu</title>
 
   <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
@@ -30,113 +30,94 @@
       position: relative;
     }
 
-    /* ---------- SIDEBAR (collapsible, with toggle inside) ---------- */
-    .sidebar {
+    /* ---------- IFRAME (full window) ---------- */
+    .iframe-container {
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
       height: 100%;
-      width: 260px;
-      background: rgba(10, 15, 30, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-right: 1px solid rgba(255, 255, 255, 0.08);
-      z-index: 30;
-      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem 1rem;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
+      z-index: 1;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #0e121f;
+    }
+
+    /* ---------- CUSTOM CONTEXT MENU ---------- */
+    .context-menu {
+      position: fixed;
+      z-index: 1000;
+      background: rgba(10, 15, 30, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 0.75rem 0.5rem;
+      min-width: 220px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.1s ease, transform 0.1s ease;
+      pointer-events: none;
+    }
+
+    .context-menu.show {
+      opacity: 1;
+      transform: scale(1);
       pointer-events: auto;
     }
 
-    .sidebar.collapsed {
-      transform: translateX(-100%);
+    /* menu header (optional) */
+    .context-menu-header {
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem 0.3rem;
+      color: #b8bfff;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 0.3rem;
     }
 
-    /* toggle tab – positioned absolutely inside sidebar */
-    .sidebar-toggle {
-      position: absolute;
-      top: 50%;
-      right: -32px;              /* sits just outside the right edge */
-      transform: translateY(-50%);
-      width: 32px;
-      height: 70px;
-      background: rgba(10, 15, 30, 0.8);
-      backdrop-filter: blur(12px);
-      border-top-right-radius: 30px;
-      border-bottom-right-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-left: none;
+    .context-menu-item {
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: #b8bfff;
-      font-size: 1.3rem;
-      cursor: pointer;
-      box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
-      transition: background 0.2s, color 0.2s;
-      z-index: 31;               /* above iframe */
-      line-height: 1;
-    }
-
-    .sidebar-toggle:hover {
-      background: rgba(30, 35, 60, 0.9);
-      color: white;
-    }
-
-    /* sidebar content */
-    .sidebar-header {
-      font-size: 1.6rem;
-      font-weight: 500;
-      background: linear-gradient(135deg, #b8bfff, #a678ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      padding-bottom: 0.75rem;
-    }
-
-    .sidebar-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      flex: 1;
-    }
-
-    .sidebar-link {
-      color: white;
-      background: rgba(255,255,255,0.06);
+      gap: 0.75rem;
       padding: 0.6rem 1rem;
       border-radius: 40px;
+      color: #eef2ff;
       text-decoration: none;
       font-size: 0.95rem;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      transition: background 0.15s;
+      margin: 0.1rem 0;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
     }
 
-    .sidebar-link:hover {
-      background: rgba(255,255,255,0.15);
+    .context-menu-item:hover {
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    .sidebar-footer {
-      margin-top: auto;
-      padding-top: 1.5rem;
-      font-size: 0.75rem;
-      color: #5b6482;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      text-align: center;
+    .context-menu-item.icon {
+      font-size: 1.2rem;
     }
 
-    /* Chromebook badge – placed inside sidebar */
+    /* separator */
+    .context-menu-separator {
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 0.5rem 0.5rem;
+    }
+
+    /* Chromebook badge inside menu */
     #chromebook-badge-container {
-      margin: 1rem 0 0.5rem;
+      margin: 0.5rem 0.5rem 0.3rem;
       display: none;   /* controlled by JS */
     }
 
@@ -160,91 +141,109 @@
       border: 0;
     }
 
-    /* ---------- IFRAME (full window) ---------- */
-    .iframe-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #0e121f;
-    }
-
-    /* adjust for mobile – smaller sidebar width */
-    @media (max-width: 600px) {
-      .sidebar {
-        width: 220px;
-        padding: 1rem;
-      }
-      .sidebar-header {
-        font-size: 1.3rem;
-      }
-      .sidebar-link {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.85rem;
-      }
-      .sidebar-toggle {
-        width: 28px;
-        height: 60px;
-        font-size: 1.1rem;
-        right: -28px;
-      }
+    /* menu footer (like the old sidebar footer) */
+    .context-menu-footer {
+      font-size: 0.7rem;
+      color: #5b6482;
+      padding: 0.5rem 1rem 0.2rem;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 0.2rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- Collapsible sidebar (contains all header/overlay elements) -->
-  <div class="sidebar" id="mainSidebar">
-    <!-- toggle button now inside sidebar -->
-    <div class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">◀</div>
-
-    <div class="sidebar-header">⚡ DIMENSION<br>SELECTOR</div>
-
-    <!-- navigation links (formerly in header) -->
-    <nav class="sidebar-nav">
-      <a href="/launcher.html" class="sidebar-link">⬇️ Install Arcade Web App</a>
-      <a href="Pack-Studio.html" class="sidebar-link">🎮 Studio</a>
-      <a href="Packpo.html" class="sidebar-link">📦 Repo</a>
-      <a href="netlify-dash.html" class="sidebar-link">📡 Netlify</a>
-    </nav>
-
-    <!-- Chromebook badge will be injected here by JS if needed -->
-    <div id="chromebook-badge-container"></div>
-
-    <!-- footer text moved inside sidebar -->
-    <div class="sidebar-footer">
-      ✦ auto‑linked from <code>public/imagine/</code> ✦
-    </div>
+  <!-- iframe container (full screen) -->
+  <div class="iframe-container">
+    <iframe src="public/selector.html" title="Game Selector" loading="lazy" id="gameIframe"></iframe>
   </div>
 
-  <!-- iframe container (now completely unobstructed when sidebar is closed) -->
-  <div class="iframe-container">
-    <iframe src="public/selector.html" title="Game Selector" loading="lazy"></iframe>
+  <!-- Custom context menu (hidden by default) -->
+  <div id="customContextMenu" class="context-menu">
+    <div class="context-menu-header">⚡ DIMENSION SELECTOR</div>
+    <a href="/launcher.html" class="context-menu-item">⬇️ Install Arcade Web App</a>
+    <a href="Pack-Studio.html" class="context-menu-item">🎮 Studio</a>
+    <a href="Packpo.html" class="context-menu-item">📦 Repo</a>
+    <a href="netlify-dash.html" class="context-menu-item">📡 Netlify</a>
+    <div class="context-menu-separator"></div>
+    <!-- Chromebook badge will be injected here if needed -->
+    <div id="chromebook-badge-container"></div>
+    <div class="context-menu-footer">✦ auto‑linked from <code>public/imagine/</code> ✦</div>
   </div>
 
   <script>
     (function() {
-      // ---------- SIDEBAR TOGGLE ----------
-      const sidebar = document.getElementById('mainSidebar');
-      const toggleBtn = document.getElementById('sidebarToggle');
-      let isCollapsed = false;  // start expanded
+      // ---------- CUSTOM CONTEXT MENU ----------
+      const menu = document.getElementById('customContextMenu');
+      let hideTimeout = null;
 
-      toggleBtn.addEventListener('click', () => {
-        isCollapsed = !isCollapsed;
-        if (isCollapsed) {
-          sidebar.classList.add('collapsed');
-          toggleBtn.innerHTML = '▶';  // arrow points right when collapsed
-        } else {
-          sidebar.classList.remove('collapsed');
-          toggleBtn.innerHTML = '◀';  // arrow points left when expanded
+      // Hide menu function
+      function hideMenu() {
+        menu.classList.remove('show');
+      }
+
+      // Show menu at given coordinates
+      function showMenu(x, y) {
+        // Keep menu inside viewport
+        const menuRect = menu.getBoundingClientRect();
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        let left = x;
+        let top = y;
+
+        if (left + menuRect.width > winWidth) {
+          left = winWidth - menuRect.width - 5;
+        }
+        if (top + menuRect.height > winHeight) {
+          top = winHeight - menuRect.height - 5;
+        }
+
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        menu.classList.add('show');
+      }
+
+      // Global right‑click handler for the main document
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showMenu(e.clientX, e.clientY);
+      });
+
+      // Hide on left click outside menu
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) {
+          hideMenu();
+        }
+      });
+
+      // Hide on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          hideMenu();
+        }
+      });
+
+      // Hide on scroll (optional, but keeps UX clean)
+      window.addEventListener('scroll', hideMenu);
+      window.addEventListener('resize', hideMenu);
+
+      // ---------- IFRAME RIGHT‑CLICK (if same origin) ----------
+      const iframe = document.getElementById('gameIframe');
+      iframe.addEventListener('load', () => {
+        try {
+          // Access iframe contentWindow only if same origin
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          iframeDoc.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            // Get mouse position relative to iframe, then add iframe offset
+            const rect = iframe.getBoundingClientRect();
+            showMenu(rect.left + e.clientX, rect.top + e.clientY);
+          });
+        } catch (err) {
+          // Cross‑origin – silently fail (default browser menu will show)
+          console.log('Cannot override iframe right‑click (cross‑origin)');
         }
       });
 
@@ -257,7 +256,6 @@
       if (isChromeOS && !isStandalone) {
         const badgeContainer = document.getElementById('chromebook-badge-container');
         if (badgeContainer) {
-          // Insert the badge HTML (same as before)
           badgeContainer.innerHTML = `
             <a href="/launcher.html?utm_source=Arcade&utm_campaign=Games" id="add-to-chromebook-link">
               <picture>
