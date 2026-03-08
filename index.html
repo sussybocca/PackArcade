@@ -3,19 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Immersive Game Hub</title>
+  <title>Immersive Game Hub · collapsible sidebar</title>
 
   <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
-
-  <!-- Favicon -->
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-
-  <!-- AWA enhancer (your custom immersive UI) -->
   <script src="/AWA.js" defer></script>
 
   <style>
-    /* Reset everything */
+    /* ---------- RESET ---------- */
     * {
       margin: 0;
       padding: 0;
@@ -34,87 +30,114 @@
       position: relative;
     }
 
-    /* Header – slim, floating */
-    .header {
+    /* ---------- SIDEBAR (collapsible) ---------- */
+    .sidebar {
       position: absolute;
       top: 0;
       left: 0;
-      right: 0;
-      z-index: 10;
-      padding: 0.5rem 1.5rem;
-      background: rgba(10, 15, 30, 0.5);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      height: 100%;
+      width: 260px;
+      background: rgba(10, 15, 30, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 30;
+      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      pointer-events: none;       /* allow clicks through to iframe */
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
     }
 
-    .header h1 {
-      font-size: 1.4rem;
+    .sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+
+    /* toggle tab – always visible on the left edge */
+    .sidebar-toggle {
+      position: absolute;
+      top: 50%;
+      left: 100%;               /* sits just outside the sidebar */
+      transform: translateY(-50%);
+      width: 32px;
+      height: 70px;
+      background: rgba(10, 15, 30, 0.8);
+      backdrop-filter: blur(12px);
+      border-top-right-radius: 30px;
+      border-bottom-right-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-left: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b8bfff;
+      font-size: 1.3rem;
+      cursor: pointer;
+      box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+      transition: background 0.2s, color 0.2s;
+      z-index: 31;
+      line-height: 1;
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(30, 35, 60, 0.9);
+      color: white;
+    }
+
+    /* sidebar content */
+    .sidebar-header {
+      font-size: 1.6rem;
       font-weight: 500;
       background: linear-gradient(135deg, #b8bfff, #a678ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      margin-bottom: 1.5rem;
       letter-spacing: 0.5px;
-      pointer-events: none;        /* text shouldn't block clicks */
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 0.75rem;
     }
 
-    .header p {
-      color: #a0a8c0;
-      font-size: 0.85rem;
-      pointer-events: none;
-    }
-
-    /* Header actions container – all links live here */
-    .header-actions {
+    .sidebar-nav {
       display: flex;
-      gap: 0.8rem;
-      align-items: center;
-      pointer-events: auto;        /* make links clickable */
-      flex-wrap: wrap;             /* allow wrapping on very small screens */
-      justify-content: flex-end;
+      flex-direction: column;
+      gap: 0.6rem;
+      flex: 1;
     }
 
-    /* Shared link style for all buttons */
-    .header-link {
+    .sidebar-link {
       color: white;
-      background: rgba(255,255,255,0.15);
-      padding: 0.4rem 1rem;
-      border-radius: 30px;
+      background: rgba(255,255,255,0.06);
+      padding: 0.6rem 1rem;
+      border-radius: 40px;
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
       transition: background 0.2s;
-      white-space: nowrap;
-    }
-    .header-link:hover {
-      background: rgba(255,255,255,0.25);
-    }
-
-    /* Install link specific (kept for any potential external references) */
-    .install-link {
-      /* inherits from .header-link */
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    /* Studio link specific */
-    .studio-link {
-      /* inherits from .header-link */
+    .sidebar-link:hover {
+      background: rgba(255,255,255,0.15);
     }
 
-    /* Chromebook badge container – positioned below header */
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      font-size: 0.75rem;
+      color: #5b6482;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      text-align: center;
+    }
+
+    /* Chromebook badge – placed inside sidebar */
     #chromebook-badge-container {
-      position: absolute;
-      top: 4.5rem;            /* below header (adjust as needed) */
-      right: 1.5rem;
-      z-index: 20;
-      display: none;           /* will be shown by JavaScript on ChromeOS */
-      pointer-events: auto;
-      background: transparent;
+      margin: 1rem 0 0.5rem;
+      display: none;   /* controlled by JS */
     }
 
     #chromebook-badge-container a {
@@ -131,18 +154,20 @@
 
     #chromebook-badge-container picture img {
       display: block;
-      width: 150px;
+      width: 100%;
+      max-width: 150px;
       height: auto;
       border: 0;
     }
 
-    /* iframe container – fills entire viewport */
+    /* ---------- IFRAME (full window) ---------- */
     .iframe-container {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
+      z-index: 1;
     }
 
     iframe {
@@ -152,92 +177,94 @@
       background: #0e121f;
     }
 
-    /* Footer overlay */
-    .footer {
-      position: absolute;
-      bottom: 0.5rem;
-      right: 1rem;
-      z-index: 10;
-      color: #5b6482;
-      font-size: 0.7rem;
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(4px);
-      padding: 0.2rem 0.8rem;
-      border-radius: 40px;
-      pointer-events: none;
-    }
-
+    /* adjust for mobile – smaller sidebar width */
     @media (max-width: 600px) {
-      .header h1 { font-size: 1.2rem; }
-      .header p { font-size: 0.75rem; }
-      #chromebook-badge-container {
-        top: 5rem;
-        right: 0.5rem;
+      .sidebar {
+        width: 220px;
+        padding: 1rem;
       }
-      #chromebook-badge-container picture img {
-        width: 120px;
+      .sidebar-header {
+        font-size: 1.3rem;
       }
-      .header-link {
-        padding: 0.3rem 0.8rem;
-        font-size: 0.8rem;
+      .sidebar-link {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
       }
-      /* Allow wrapping on small screens */
-      .header-actions {
-        gap: 0.5rem;
+      .sidebar-toggle {
+        width: 28px;
+        height: 60px;
+        font-size: 1.1rem;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Chromebook badge – hidden by default, will be shown via JS -->
-  <div id="chromebook-badge-container">
-    <a href="/launcher.html?utm_source=Arcade&utm_campaign=Games" id="add-to-chromebook-link">
-      <picture>
-        <source srcset="https://chromeos.dev/badges/en/dark.svg" media="(prefers-color-scheme: dark)">
-        <img src="https://chromeos.dev/badges/en/primary.svg" alt="Add to Chromebook">
-      </picture>
-    </a>
+
+  <!-- Collapsible sidebar (contains all header/overlay elements) -->
+  <div class="sidebar" id="mainSidebar">
+    <div class="sidebar-header">⚡ DIMENSION<br>SELECTOR</div>
+
+    <!-- navigation links (formerly in header) -->
+    <nav class="sidebar-nav">
+      <a href="/launcher.html" class="sidebar-link">⬇️ Install Arcade Web App</a>
+      <a href="Pack-Studio.html" class="sidebar-link">🎮 Studio</a>
+      <a href="Packpo.html" class="sidebar-link">📦 Repo</a>
+      <a href="netlify-dash.html" class="sidebar-link">📡 Netlify</a>
+    </nav>
+
+    <!-- Chromebook badge will be injected here by JS if needed -->
+    <div id="chromebook-badge-container"></div>
+
+    <!-- footer text moved inside sidebar -->
+    <div class="sidebar-footer">
+      ✦ auto‑linked from <code>public/imagine/</code> ✦
+    </div>
   </div>
 
-  <!-- Minimal header – now with all four links inside header-actions -->
-  <header class="header">
-    <h1>⚡ DIMENSION SELECTOR</h1>
-    <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; justify-content: flex-end;">
-      <p>choose your immersive experience</p>
-      <div class="header-actions">
-        <a href="/launcher.html" class="header-link install-link">⬇️ Install Arcade Web App</a>
-        <a href="Pack-Studio.html" class="header-link studio-link">🎮 Studio</a>
-        <a href="Packpo.html" class="header-link">📦 Repo</a>
-        <a href="netlify-dash.html" class="header-link">📡 Netlify</a>
-      </div>
-    </div>
-  </header>
+  <!-- toggle button to open/close sidebar -->
+  <div class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">◀</div>
 
-  <!-- iframe fills the whole window -->
+  <!-- iframe container (now completely unobstructed when sidebar is closed) -->
   <div class="iframe-container">
     <iframe src="public/selector.html" title="Game Selector" loading="lazy"></iframe>
   </div>
 
-  <!-- Footer overlay -->
-  <div class="footer">
-    <span>✦ auto‑linked from <code>public/imagine/</code> ✦</span>
-  </div>
-
-  <!-- Advanced detection script: show badge only on ChromeOS when not installed -->
   <script>
     (function() {
-      // Detect ChromeOS
+      // ---------- SIDEBAR TOGGLE ----------
+      const sidebar = document.getElementById('mainSidebar');
+      const toggleBtn = document.getElementById('sidebarToggle');
+      let isCollapsed = false;  // start expanded
+
+      toggleBtn.addEventListener('click', () => {
+        isCollapsed = !isCollapsed;
+        if (isCollapsed) {
+          sidebar.classList.add('collapsed');
+          toggleBtn.innerHTML = '▶';  // arrow points right when collapsed
+        } else {
+          sidebar.classList.remove('collapsed');
+          toggleBtn.innerHTML = '◀';  // arrow points left when expanded
+        }
+      });
+
+      // ---------- CHROMEBOOK BADGE (unchanged logic) ----------
       const isChromeOS = navigator.userAgentData?.platform === 'ChromeOS' || 
                          navigator.userAgent.includes('CrOS');
-      
-      // Check if app is already installed (standalone mode)
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                            window.navigator.standalone === true;
-      
-      // Show the badge only if on ChromeOS AND not already installed
+
       if (isChromeOS && !isStandalone) {
         const badgeContainer = document.getElementById('chromebook-badge-container');
         if (badgeContainer) {
+          // Insert the badge HTML (same as before)
+          badgeContainer.innerHTML = `
+            <a href="/launcher.html?utm_source=Arcade&utm_campaign=Games" id="add-to-chromebook-link">
+              <picture>
+                <source srcset="https://chromeos.dev/badges/en/dark.svg" media="(prefers-color-scheme: dark)">
+                <img src="https://chromeos.dev/badges/en/primary.svg" alt="Add to Chromebook">
+              </picture>
+            </a>
+          `;
           badgeContainer.style.display = 'block';
         }
       }
