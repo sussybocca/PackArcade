@@ -1,19 +1,232 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Install AWA</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install Arcade Web App</title>
+
+  <!-- PWA manifest (required for installability) -->
   <link rel="manifest" href="/manifest.json">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+  <!-- AWA enhancer (handles custom UI after installation) -->
   <script src="/AWA.js" defer></script>
+
   <style>
-    body { font-family: system-ui; text-align: center; padding: 2rem; }
-    #installButton { padding: 1rem 2rem; font-size: 1.2rem; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(145deg, #0b0f1c 0%, #1a1f33 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated background effect (subtle moving particles) */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(100, 80, 255, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 60%, rgba(255, 100, 200, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Main card – glassmorphism */
+    .install-card {
+      position: relative;
+      z-index: 10;
+      background: rgba(20, 25, 45, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      padding: 2.5rem 2rem;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* App icon */
+    .app-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 1.5rem;
+      background: linear-gradient(135deg, #4a42b0, #7a5af5);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 15px 25px rgba(90, 60, 220, 0.4);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #b8bfff, #a678ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #9aa4c9;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 1.5rem;
+    }
+
+    /* Install button (shown by AWA.js when available) */
+    #installContainer {
+      margin: 1.5rem 0 1rem;
+    }
+
+    #installButton {
+      background: linear-gradient(145deg, #6c5ce7, #5849c2);
+      border: none;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 600;
+      padding: 1rem 2.5rem;
+      border-radius: 60px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(90, 60, 220, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(255,255,255,0.15);
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #installButton:hover {
+      transform: scale(1.02);
+      box-shadow: 0 12px 28px rgba(90, 60, 220, 0.6);
+    }
+
+    /* Chromebook badge container */
+    #chromebook-badge-container {
+      margin: 1.5rem 0 0;
+      display: none; /* hidden by default, shown via JS on ChromeOS */
+    }
+
+    #chromebook-badge-container a {
+      display: inline-block;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+    }
+
+    #chromebook-badge-container a:hover {
+      transform: scale(1.02);
+    }
+
+    #chromebook-badge-container picture img {
+      display: block;
+      width: 180px;
+      height: auto;
+    }
+
+    /* Status message (when not installable) */
+    #statusMessage {
+      margin-top: 2rem;
+      color: #ffb86b;
+      font-size: 0.9rem;
+      background: rgba(255, 200, 100, 0.1);
+      padding: 0.8rem 1rem;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 200, 100, 0.2);
+    }
+
+    /* Footer note */
+    .footer-note {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #5b6482;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 500px) {
+      .install-card { padding: 2rem 1.5rem; }
+      h1 { font-size: 1.8rem; }
+      .app-icon { width: 80px; height: 80px; font-size: 2.5rem; }
+    }
   </style>
 </head>
 <body>
-  <h1>Arcade Web App</h1>
-  <div id="installContainer" style="display: none;">
-    <button id="installButton">Install AWA</button>
+  <div class="install-card">
+    <!-- App icon (you can replace with your actual favicon.png) -->
+    <div class="app-icon">⚡</div>
+
+    <h1>Arcade Web App</h1>
+    <div class="subtitle">Immersive gaming, now on your device</div>
+
+    <!-- Install button container – hidden by default, shown by AWA.js when beforeinstallprompt fires -->
+    <div id="installContainer" style="display: none;">
+      <button id="installButton">⬇️ Install AWA</button>
+    </div>
+
+    <!-- Chromebook badge – hidden by default, shown only on ChromeOS when not installed -->
+    <div id="chromebook-badge-container">
+      <a href="/?utm_source=Arcade&utm_campaign=Chromebook_Install" id="add-to-chromebook-link">
+        <picture>
+          <source srcset="https://chromeos.dev/badges/en/dark.svg" media="(prefers-color-scheme: dark)">
+          <img src="https://chromeos.dev/badges/en/primary.svg" alt="Add to Chromebook">
+        </picture>
+      </a>
+    </div>
+
+    <!-- Status message (e.g., when browser doesn't support installation) -->
+    <p id="statusMessage"></p>
+
+    <div class="footer-note">✦ auto‑linked from the DIMENSION SELECTOR ✦</div>
   </div>
-  <p id="statusMessage"></p>
+
+  <!-- Detection script for Chromebook badge -->
+  <script>
+    (function() {
+      // Detect ChromeOS
+      const isChromeOS = navigator.userAgentData?.platform === 'ChromeOS' || 
+                         navigator.userAgent.includes('CrOS');
+      
+      // Check if app is already installed (standalone mode)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                           window.navigator.standalone === true;
+      
+      // Show badge only on ChromeOS and when not installed
+      if (isChromeOS && !isStandalone) {
+        const badgeContainer = document.getElementById('chromebook-badge-container');
+        if (badgeContainer) {
+          badgeContainer.style.display = 'block';
+        }
+      }
+    })();
+  </script>
 </body>
 </html>
