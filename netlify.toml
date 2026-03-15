@@ -1,30 +1,119 @@
 [build]
-  command = "echo 'No build step needed – static site'"
   publish = "."
 
-# Headers for caching fonts and other assets
-[[headers]]
-  for = "/fonts/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+# Wildcard subdomain → game folder redirects
+[[redirects]]
+  from = "https://nebula.packarcade.xyz/*"
+  to = "/imagine/nebula-drifter.html"
+  status = 200
+  force = true
 
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
+[[redirects]]
+  from = "https://samurai.packarcade.xyz/*"
+  to = "/imagine/echoes-samurai.html"
+  status = 200
+  force = true
 
-# Optional: define error pages here as well (overrides _redirects if both exist)
+[[redirects]]
+  from = "https://quantum.packarcade.xyz/*"
+  to = "/imagine/quantum-puzzles.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://luma.packarcade.xyz/*"
+  to = "/imagine/luma-island.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://space.packarcade.xyz/*"
+  to = "/imagine/SpaceShooters.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://mario.packarcade.xyz/*"
+  to = "/imagine/SuperMario/sm64.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://tetris.packarcade.xyz/*"
+  to = "/imagine/tetris.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://pacman.packarcade.xyz/*"
+  to = "/imagine/PackMan/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://2048.packarcade.xyz/*"
+  to = "/imagine/2048.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://flappy.packarcade.xyz/*"
+  to = "/imagine/flappybird.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://slope.packarcade.xyz/*"
+  to = "/imagine/Slope/slope.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://subway.packarcade.xyz/*"
+  to = "/imagine/SubwaySufers/subwaysurferssanfrancisco.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://minecraft.packarcade.xyz/*"
+  to = "/imagine/MineCraft/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://geometry.packarcade.xyz/*"
+  to = "/imagine/GeoMentry_Dash/index.html"
+  status = 200
+  force = true
+
+# Fallback: if subdomain not listed, redirect to main site
+[[redirects]]
+  from = "https://*.packarcade.xyz/*"
+  to = "https://packarcade.xyz"
+  status = 302
+  force = true
+
+# Main domain
+[[redirects]]
+  from = "packarcade.xyz/*"
+  to = "/index.html"
+  status = 200
+  force = true
+
+# Error pages
 [[redirects]]
   from = "/*"
   to = "/404.html"
   status = 404
 
-[[redirects]]
-  from = "/403"
-  to = "/403.html"
-  status = 403
+# Cache headers
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
-[[redirects]]
-  from = "/500"
-  to = "/500.html"
-  status = 500
+[[headers]]
+  for = "/*.simple"
+  [headers.values]
+    Content-Type = "text/plain"
+    Cache-Control = "public, max-age=3600"
