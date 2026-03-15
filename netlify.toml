@@ -30,8 +30,8 @@
   force = true
 # === messed up url (.....messed.up.urls) ===
 [[redirects]]
- from = "https://root.foot.nut.cut.dut.fuck.profile.packarcade.xyz/*"
-  to = "/profile.html"
+ from = "https://root.foot.nut.cut.dut.fuck.index.packarcade.xyz/*"
+  to = "/index.html"
    status = 200
      force = true
 
