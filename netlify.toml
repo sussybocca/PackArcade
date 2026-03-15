@@ -172,6 +172,58 @@
   status = 200
   force = true
 
+# === CREATIVE SUBDOMAINS (explicit redirects for portal, languages, secret, doorway, language versions) ===
+# These map the full subdomain to its folder under /public/ using :splat so assets load correctly.
+
+[[redirects]]
+  from = "https://portal.packarcade.xyz/*"
+  to = "/public/portal/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://languages.sites.packarcade.xyz/*"
+  to = "/public/languages/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://secret.packarcade.xyz/*"
+  to = "/public/secret/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://door.way.packarcade.xyz/*"
+  to = "/public/doorway/:splat"
+  status = 200
+  force = true
+
+# Language-specific subdomains (point to their respective folders)
+[[redirects]]
+  from = "https://fr.packarcade.xyz/*"
+  to = "/public/fr/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://es.packarcade.xyz/*"
+  to = "/public/es/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://en.packarcade.xyz/*"
+  to = "/public/en/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://de.packarcade.xyz/*"
+  to = "/public/de/:splat"
+  status = 200
+  force = true
+
 # === MAIN DOMAIN ===
 [[redirects]]
   from = "packarcade.xyz/*"
@@ -179,9 +231,7 @@
   status = 200
   force = true
 
-# === NEW EDGE FUNCTIONS ===
-# These run before the error page redirect, in the order listed.
-
+# === EDGE FUNCTIONS (keep as fallbacks for any unlisted subdomains) ===
 [[edge_functions]]
   path = "/*"
   function = "doorway-router"
@@ -196,7 +246,7 @@
 
 [[edge_functions]]
   path = "/*"
-  function = "creative-router"   # for languages.sites, portal, etc.
+  function = "creative-router"
 
 # === ERROR PAGES (must be last) ===
 [[redirects]]
