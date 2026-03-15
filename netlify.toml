@@ -177,7 +177,7 @@
 
 [[redirects]]
   from = "https://portal.packarcade.xyz/*"
-  to = "/public/portal/index.html"
+  to = "/portal/:splat"
   status = 200
   force = true
 
