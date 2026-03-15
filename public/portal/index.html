@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackArcade Time Portal</title>
+    <link rel="stylesheet" href="/portal/assets/css/demo.css">
+    <style>
+        /* Additional critical styles */
+        body { margin: 0; font-family: 'Segoe UI', system-ui; background: #0a0c10; color: #e6edf3; }
+        .portal-header { background: linear-gradient(135deg, #1a1f2a 0%, #0d1117 100%); padding: 2rem; text-align: center; border-bottom: 1px solid #30363d; }
+        .portal-header h1 { margin: 0; font-size: 2.5rem; background: linear-gradient(45deg, #79c0ff, #a5d6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .portal-header p { color: #8b949e; margin-top: 0.5rem; }
+        .loading { display: flex; justify-content: center; align-items: center; min-height: 300px; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #58a6ff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="portal-header">
+        <h1>🌀 PACKARCADE TIME PORTAL</h1>
+        <p>Explore the complete history of PackArcade through GitHub commits</p>
+    </div>
+    
+    <main id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <span style="margin-left: 1rem;">Loading commit history...</span>
+        </div>
+    </main>
+
+    <!-- Templates -->
+    <template id="commit-list-template">
+        <div class="commit-list-container">
+            <h2>Commit Timeline</h2>
+            <div class="commit-grid" id="commit-grid"></div>
+        </div>
+    </template>
+
+    <template id="commit-card-template">
+        <div class="commit-card">
+            <div class="commit-card-header">
+                <span class="commit-hash"></span>
+                <span class="commit-date"></span>
+            </div>
+            <div class="commit-message"></div>
+            <div class="commit-author"></div>
+            <button class="view-commit-btn">View This Version →</button>
+        </div>
+    </template>
+
+    <template id="commit-viewer-template">
+        <div class="commit-viewer">
+            <div class="viewer-header">
+                <button class="back-btn">← Back to Timeline</button>
+                <div>
+                    <h3>Viewing commit: <span id="commit-hash-display"></span></h3>
+                    <p id="commit-message-display"></p>
+                </div>
+            </div>
+            <div class="viewer-content">
+                <div class="file-tree" id="file-tree"></div>
+                <div class="file-preview" id="file-preview">
+                    <div class="preview-placeholder">Select a file to preview</div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/portal/assets/js/github-api.js"></script>
+    <script src="/portal/assets/js/renderer.js"></script>
+    <script src="/portal/assets/js/demo.js"></script>
+</body>
+</html>
