@@ -168,6 +168,13 @@
     <a href="Packpo.html" class="context-menu-item">📦 Repo</a>
     <a href="netlify-dash.html" class="context-menu-item">📡 Netlify</a>
     <div class="context-menu-separator"></div>
+    
+    <!-- NEW: Leaderboard, Challenges, Profile pages -->
+    <a href="https://Root.LeaderBoard.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">🏆 Leaderboard</a>
+    <a href="https://Root.Challenges.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">🎯 Challenges</a>
+    <a href="https://Root.Profile.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">👤 Profile</a>
+    <div class="context-menu-separator"></div>
+    
     <!-- Chromebook badge will be injected here if needed -->
     <div id="chromebook-badge-container"></div>
     <div class="context-menu-footer">✦ auto‑linked from <code>public/imagine/</code> ✦</div>
@@ -229,6 +236,16 @@
       // Hide on scroll (optional, but keeps UX clean)
       window.addEventListener('scroll', hideMenu);
       window.addEventListener('resize', hideMenu);
+
+      // Hide menu when any clickable item inside it is clicked
+      const clickableItems = menu.querySelectorAll('a, button, .context-menu-item');
+      for (let item of clickableItems) {
+        item.addEventListener('click', (e) => {
+          // Allow the click to go through (e.g., follow the link) but hide the menu
+          // Use a tiny delay to let the navigation start, then hide
+          setTimeout(hideMenu, 10);
+        });
+      }
 
       // ---------- IFRAME RIGHT‑CLICK (if same origin) ----------
       const iframe = document.getElementById('gameIframe');
