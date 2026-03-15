@@ -1861,6 +1861,78 @@
   </div>
 
   <script>
+     // ========== SUBDOMAIN ROUTER ==========
+    (function() {
+        const host = window.location.hostname;
+        const parts = host.split('.');
+        // If it's a subdomain (like spaceshooters.packarcade.xyz)
+        if (parts.length > 2 && parts[0] !== 'www' && parts[0] !== 'packarcade') {
+            const sub = parts[0];
+            // Mapping of subdomain to game file
+            const gameMap = {
+                'nebula': '/imagine/nebula-drifter.html',
+                'samurai': '/imagine/echoes-samurai.html',
+                'quantum': '/imagine/quantum-puzzles.html',
+                'luma': '/imagine/luma-island.html',
+                'space': '/imagine/SpaceShooters.html',
+                'mario': '/imagine/SuperMario/sm64.html',
+                'tetris': '/imagine/tetris.html',
+                'pacman': '/imagine/PackMan/index.html',
+                '2048': '/imagine/2048.html',
+                'flappy': '/imagine/flappybird.html',
+                'slope': '/imagine/Slope/slope.html',
+                'subway': '/imagine/SubwaySufers/subwaysurferssanfrancisco.html',
+                'minecraft': '/imagine/MineCraft/index.html',
+                'geometry': '/imagine/GeoMentry_Dash/index.html',
+                // Add more as needed
+            };
+
+            if (gameMap[sub]) {
+                // Redirect to the specific game page
+                window.location.replace(gameMap[sub]);
+            } else {
+                // Optional: show a 404-like message
+                document.body.innerHTML = `<h1>Game "${sub}" not found</h1><a href="/">Back to Arcade</a>`;
+            }
+        }
+    })();
+
+    // ========== ADD SUBDOMAIN HINTS TO CARDS ==========
+    function addSubdomainHints() {
+        const subdomainMap = {
+            'nebula-drifter': 'nebula',
+            'echoes-samurai': 'samurai',
+            'quantum-puzzles': 'quantum',
+            'luma-island': 'luma',
+            'SpaceShooters': 'space',
+            'SuperMario': 'mario',
+            'tetris': 'tetris',
+            'PackMan': 'pacman',
+            '2048': '2048',
+            'flappybird': 'flappy',
+            'Slope': 'slope',
+            'SubwaySufers': 'subway',
+            'MineCraft': 'minecraft',
+            'GeoMentry_Dash': 'geometry'
+        };
+
+        document.querySelectorAll('.card').forEach(card => {
+            const link = card.dataset.link;
+            if (!link) return;
+            for (let [path, sub] of Object.entries(subdomainMap)) {
+                if (link.includes(path)) {
+                    const hint = document.createElement('div');
+                    hint.className = 'subdomain-hint';
+                    hint.innerHTML = `<small>🔗 ${sub}.packarcade.xyz</small>`;
+                    card.appendChild(hint);
+                    break;
+                }
+            }
+        });
+    }
+
+    // Call after cards are rendered
+    setTimeout(addSubdomainHints, 500);
     // ========== GAME CARDS RENDERING ==========
     (function() {
       const grid = document.getElementById('cardsGrid');
