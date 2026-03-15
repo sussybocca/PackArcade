@@ -5,6 +5,11 @@ const SECRET_KEY = "OpenSesame123";
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
   
+  // CRITICAL: Let ALL files with extensions pass through
+  if (url.pathname.match(/\.([a-zA-Z0-9]+)$/)) {
+    return context.next();
+  }
+
   // Skip functions
   if (url.pathname.startsWith('/.netlify/functions/')) {
     return context.next();
