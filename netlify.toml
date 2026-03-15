@@ -18,16 +18,22 @@
   force = true
 
 [[redirects]]
-  from = "https://root.Challenges.packarcade.xyz/*"
+  from = "https://root.challenges.packarcade.xyz/*"
   to = "/challenges.html"
   status = 200
   force = true
 
 [[redirects]]
-  from = "https://root.Profile.packarcade.xyz/*"
+  from = "https://root.profile.packarcade.xyz/*"
   to = "/profile.html"
   status = 200
   force = true
+# === messed up url (.....messed.up.urls) ===
+[[redirects]]
+ from = "https://root.foot.nut.cut.dut.fuck.profile.packarcade.xyz/*"
+  to = "/profile.html"
+   status = 200
+     force = true
 
 # === STANDARD SUBDOMAINS ===
 [[redirects]]
