@@ -3,13 +3,13 @@ import type { Context } from "https://edge.netlify.com/";
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
   
-  // Skip functions
-  if (url.pathname.startsWith('/.netlify/functions/')) {
+  // CRITICAL: Let ALL files with extensions pass through
+  if (url.pathname.match(/\.([a-zA-Z0-9]+)$/)) {
     return context.next();
   }
 
-  // Skip static assets with extensions
-  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|json|webp|avif|woff|woff2|ttf|eot)$/)) {
+  // Skip functions
+  if (url.pathname.startsWith('/.netlify/functions/')) {
     return context.next();
   }
 
