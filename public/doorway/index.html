@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doorway to Another World</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: black; color: white; font-family: Arial, sans-serif; }
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">🚪 You have entered the doorway. Welcome.</div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 8);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.0;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(2, 5, 3);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        const pointLight = new THREE.PointLight(0x4466ff, 1, 10);
+        pointLight.position.set(0, 2, 2);
+        scene.add(pointLight);
+
+        // Main portal: a glowing torus knot
+        const geometry = new THREE.TorusKnotGeometry(1, 0.3, 128, 16);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x44aaff,
+            emissive: 0x224488,
+            roughness: 0.2,
+            metalness: 0.8,
+            wireframe: false
+        });
+        const knot = new THREE.Mesh(geometry, material);
+        knot.castShadow = true;
+        knot.receiveShadow = true;
+        knot.position.y = 1;
+        scene.add(knot);
+
+        // Inner glow with a smaller knot inside
+        const innerGeo = new THREE.TorusKnotGeometry(0.9, 0.2, 128, 16);
+        const innerMat = new THREE.MeshStandardMaterial({
+            color: 0xffaa44,
+            emissive: 0x442200,
+            roughness: 0.3,
+            metalness: 0.5
+        });
+        const innerKnot = new THREE.Mesh(innerGeo, innerMat);
+        innerKnot.castShadow = true;
+        innerKnot.receiveShadow = true;
+        innerKnot.position.y = 1;
+        scene.add(innerKnot);
+
+        // Floating particles around the portal
+        const particleCount = 1000;
+        const particlesGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            const radius = 2.5 + Math.random() * 1.5;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            positions[i*3] = Math.sin(phi) * Math.cos(theta) * radius;
+            positions[i*3+1] = Math.sin(phi) * Math.sin(theta) * radius + 1;
+            positions[i*3+2] = Math.cos(phi) * radius;
+        }
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particlesMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.05, transparent: true });
+        const particles = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particles);
+
+        // Ground plane (semi-transparent)
+        const planeGeo = new THREE.CircleGeometry(5, 32);
+        const planeMat = new THREE.MeshStandardMaterial({ color: 0x112233, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+        const plane = new THREE.Mesh(planeGeo, planeMat);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = 0;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the knots in opposite directions
+            knot.rotation.x += 0.005;
+            knot.rotation.y += 0.01;
+            innerKnot.rotation.x -= 0.003;
+            innerKnot.rotation.y -= 0.007;
+
+            // Slowly rotate particles
+            particles.rotation.y += 0.0002;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
