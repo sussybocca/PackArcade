@@ -1949,12 +1949,12 @@
               }
               
               if (subdomain) {
-                // Go to subdomain
-                window.location.href = `https://${subdomain}.packarcade.xyz`;
+                  if (subdomain) {
+                // Go to subdomain in the top-level window (break out of iframe)
+                window.top.location.href = `https://${subdomain}.packarcade.xyz`;
               } else {
-                // Original file path (fallback)
-                window.location.href = link;
-              }
+                // Original file path (fallback) – also break out
+                window.top.location.href = link;
               // ========== END OF CHANGE ==========
             }
           });
