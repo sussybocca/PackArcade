@@ -20,13 +20,8 @@ export default async (request: Request, context: Context) => {
 
   const host = url.hostname;
 
-  // Portal subdomain
-  if (host === "portal.packarcade.xyz") {
-    if (url.pathname === '/' || url.pathname === '') {
-      return context.rewrite(new URL('/portal/index.html', request.url));
-    }
-    return context.rewrite(new URL(`/portal${url.pathname}`, request.url));
-  }
+  // REMOVE THIS ENTIRE BLOCK - let the redirect handle it
+  // if (host === "portal.packarcade.xyz") { ... }
 
   // Language sites subdomain
   if (host === "languages.sites.packarcade.xyz") {
