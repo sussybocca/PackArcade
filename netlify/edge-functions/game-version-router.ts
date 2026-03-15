@@ -1,37 +1,36 @@
-// netlify/edge-functions/game-version-router.ts
-import type { Config, Context } from "https://edge.netlify.com/";
+import type { Context } from "https://edge.netlify.com/";
 
-export default async function handler(request: Request, context: Context) {
+export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
-  const host = url.hostname;
-
-  // Only handle subdomains of packarcade.xyz
-  if (!host.endsWith("packarcade.xyz")) {
+  
+  // Skip functions
+  if (url.pathname.startsWith('/.netlify/functions/')) {
     return context.next();
   }
+
+  // Skip static assets with extensions
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|json|webp|avif|woff|woff2|ttf|eot)$/)) {
+    return context.next();
+  }
+
+  const host = url.hostname;
+  if (!host.endsWith("packarcade.xyz")) return context.next();
 
   const parts = host.split(".");
-  // parts = [sub1, sub2, "packarcade", "xyz"]  (at least 2 subdomain parts)
-  if (parts.length < 4) {
-    // Single‑part subdomains (e.g., "nebula") are handled by explicit redirects above
-    return context.next();
+  // Must have at least version.game.packarcade.xyz (4 parts)
+  if (parts.length !== 4) return context.next();
+
+  const version = parts[0];
+  const game = parts[1];
+
+  // Construct path to versioned game
+  const basePath = `/public/imagine/${game}/${version}`;
+  
+  // If requesting root, serve index.html
+  if (url.pathname === '/' || url.pathname === '') {
+    return context.rewrite(new URL(`${basePath}/index.html`, request.url));
   }
 
-  const version = parts[0]; // e.g., "v2", "beta", "test"
-  const game = parts[1];     // e.g., "run", "mario", "quantum"
-
-  // Build the base path inside /public/imagine
-  let basePath = `/public/imagine/${game}/${version}`;
-
-  // Append the rest of the request path
-  let fullPath = basePath + url.pathname;
-
-  // If the path ends with '/', append 'index.html'
-  if (fullPath.endsWith("/")) {
-    fullPath += "index.html";
-  }
-
-  // Edge Functions can rewrite to an internal path using context.rewrite()
-  // This tells Netlify to serve the file from that location.
-  return context.rewrite(new URL(fullPath, request.url));
-}
+  // Otherwise serve the requested file
+  return context.rewrite(new URL(`${basePath}${url.pathname}`, request.url));
+};
