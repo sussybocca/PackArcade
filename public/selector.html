@@ -1861,6 +1861,32 @@
   </div>
 
   <script>
+    // ========== SUBDOMAIN MAPPING (ADD THIS RIGHT HERE) ==========
+    const subdomainMap = {
+      'nebula-drifter': 'nebula',
+      'echoes-samurai': 'samurai',
+      'quantum-puzzles': 'quantum',
+      'luma-island': 'luma',
+      'SpaceShooters': 'space',
+      'SuperMario': 'mario',
+      'tetris': 'tetris',
+      'PackMan': 'pacman',
+      '2048': '2048',
+      'flappybird': 'flappy',
+      'Slope': 'slope',
+      'SubwaySufers': 'subway',
+      'MineCraft': 'minecraft',
+      'GeoMentry_Dash': 'geometry',
+      'FruitNinja': 'fruitninja',
+      'cookieclicker': 'cookieclicker',
+      'bitlife': 'bitlife',
+      'bloonsTD': 'bloonstd',
+      'angrybirds': 'angrybirds',
+      'ageofwar': 'ageofwar',
+      'Run': 'run',
+      'run3': 'run3'
+    };
+
     // ========== GAME CARDS RENDERING ==========
     (function() {
       const grid = document.getElementById('cardsGrid');
@@ -1912,7 +1938,24 @@
               e.preventDefault();
               openSimpleGame(link);
             } else {
-              window.location.href = link;
+              // ========== THE ONLY CHANGE ==========
+              // Check if this game has a subdomain mapping
+              let subdomain = null;
+              for (let [path, sub] of Object.entries(subdomainMap)) {
+                if (link.includes(path)) {
+                  subdomain = sub;
+                  break;
+                }
+              }
+              
+              if (subdomain) {
+                // Go to subdomain
+                window.location.href = `https://${subdomain}.packarcade.xyz`;
+              } else {
+                // Original file path (fallback)
+                window.location.href = link;
+              }
+              // ========== END OF CHANGE ==========
             }
           });
         });
