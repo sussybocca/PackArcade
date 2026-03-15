@@ -1,7 +1,45 @@
 [build]
   publish = "."
 
-# Wildcard subdomain → game folder redirects
+# === COLON-BASED ROUTING (:Root.LeaderBoard) ===
+[[redirects]]
+  from = "https://:Root.LeaderBoard.packarcade.xyz/*"
+  to = "/leaderboard.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://:Root.Challenges.packarcade.xyz/*"
+  to = "/challenges.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://:Root.Profile.packarcade.xyz/*"
+  to = "/profile.html"
+  status = 200
+  force = true
+
+# === STANDARD SUBDOMAINS (keep these too) ===
+[[redirects]]
+  from = "https://leaderboard.packarcade.xyz/*"
+  to = "/leaderboard.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://challenges.packarcade.xyz/*"
+  to = "/challenges.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://profile.packarcade.xyz/*"
+  to = "/profile.html"
+  status = 200
+  force = true
+
+# === GAME SUBDOMAINS ===
 [[redirects]]
   from = "https://nebula.packarcade.xyz/*"
   to = "/public/imagine/nebula-drifter.html"
@@ -86,10 +124,9 @@
   status = 200
   force = true
 
-# New redirects for additional subdomains
 [[redirects]]
   from = "https://run.packarcade.xyz/*"
-  to = "/public/imagine/Run/Runner/run.html"
+  to = "/public/imagine/run/runner/run.html"
   status = 200
   force = true
 
@@ -135,27 +172,27 @@
   status = 200
   force = true
 
-# Fallback: if subdomain not listed, redirect to main site
-[[redirects]]
-  from = "https://*.packarcade.xyz/*"
-  to = "https://packarcade.xyz"
-  status = 302
-  force = true
-
-# Main domain
+# === MAIN DOMAIN ===
 [[redirects]]
   from = "packarcade.xyz/*"
   to = "/index.html"
   status = 200
   force = true
 
-# Error pages
+# === FALLBACK ===
+[[redirects]]
+  from = "https://*.packarcade.xyz/*"
+  to = "https://packarcade.xyz"
+  status = 302
+  force = true
+
+# === ERROR PAGES ===
 [[redirects]]
   from = "/*"
   to = "/404.html"
   status = 404
 
-# Cache headers
+# === CACHE HEADERS ===
 [[headers]]
   for = "/assets/*"
   [headers.values]
