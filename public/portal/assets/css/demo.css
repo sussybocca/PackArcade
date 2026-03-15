@@ -1,0 +1,197 @@
+/* Commit List Styles */
+.commit-list-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.commit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.commit-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.commit-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(0,0,0,0.5);
+    border-color: #58a6ff;
+}
+
+.commit-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-family: 'SF Mono', monospace;
+    font-size: 0.85rem;
+}
+
+.commit-hash {
+    background: #0d1117;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    color: #58a6ff;
+    font-weight: 600;
+}
+
+.commit-date {
+    color: #8b949e;
+}
+
+.commit-message {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin: 1rem 0;
+    flex-grow: 1;
+    max-height: 4.5rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.commit-author {
+    color: #8b949e;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-commit-btn {
+    background: transparent;
+    border: 1px solid #58a6ff;
+    color: #58a6ff;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: auto;
+}
+
+.view-commit-btn:hover {
+    background: #58a6ff;
+    color: #0d1117;
+}
+
+/* Commit Viewer Styles */
+.commit-viewer {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    background: #0d1117;
+}
+
+.viewer-header {
+    padding: 1rem 2rem;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.back-btn {
+    background: transparent;
+    border: 1px solid #8b949e;
+    color: #8b949e;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    border-color: #e6edf3;
+    color: #e6edf3;
+}
+
+.viewer-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.file-tree {
+    width: 300px;
+    background: #0d1117;
+    border-right: 1px solid #30363d;
+    padding: 1rem;
+    overflow-y: auto;
+    font-family: 'SF Mono', monospace;
+    font-size: 0.9rem;
+}
+
+.file-tree ul {
+    list-style: none;
+    padding-left: 1.2rem;
+}
+
+.file-tree li {
+    margin: 0.3rem 0;
+    cursor: pointer;
+    color: #8b949e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-tree li:hover {
+    color: #58a6ff;
+}
+
+.file-tree .folder {
+    color: #e6edf3;
+    font-weight: 500;
+}
+
+.file-tree .folder::before {
+    content: "📁 ";
+}
+
+.file-tree .file::before {
+    content: "📄 ";
+}
+
+.file-preview {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background: #0d1117;
+}
+
+.preview-placeholder {
+    color: #8b949e;
+    text-align: center;
+    margin-top: 4rem;
+    font-style: italic;
+}
+
+.preview-content {
+    background: #161b22;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    overflow-x: auto;
+}
+
+.preview-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
