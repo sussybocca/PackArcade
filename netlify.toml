@@ -3,19 +3,19 @@
 
 # === COLON-BASED ROUTING (:Root.LeaderBoard) ===
 [[redirects]]
-  from = "https://:Root.LeaderBoard.packarcade.xyz/*"
+  from = "https://Root.LeaderBoard.packarcade.xyz/*"
   to = "/leaderboard.html"
   status = 200
   force = true
 
 [[redirects]]
-  from = "https://:Root.Challenges.packarcade.xyz/*"
+  from = "https://Root.Challenges.packarcade.xyz/*"
   to = "/challenges.html"
   status = 200
   force = true
 
 [[redirects]]
-  from = "https://:Root.Profile.packarcade.xyz/*"
+  from = "https://Root.Profile.packarcade.xyz/*"
   to = "/profile.html"
   status = 200
   force = true
