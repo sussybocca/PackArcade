@@ -509,18 +509,6 @@
       color: white;
     }
 
-    /* Subdomain hint styling */
-    .subdomain-hint {
-      margin-top: 0.5rem;
-      font-size: 0.8rem;
-      color: #a28eff;
-      background: rgba(0,0,0,0.3);
-      padding: 0.2rem 0.8rem;
-      border-radius: 20px;
-      display: inline-block;
-      border: 1px solid rgba(162,142,255,0.3);
-    }
-
     @media (max-width: 600px) {
       .container { padding: 0.3rem; }
       .filter-bar { padding: 0.6rem 1rem; }
@@ -1873,51 +1861,6 @@
   </div>
 
   <script>
-    // ========== SUBDOMAIN ROUTER ==========
-    (function() {
-      const host = window.location.hostname;
-      const parts = host.split('.');
-      // If it's a subdomain (like spaceshooters.packarcade.xyz)
-      if (parts.length > 2 && parts[0] !== 'www' && parts[0] !== 'packarcade') {
-        const sub = parts[0];
-        // Mapping of subdomain to game file
-        const gameMap = {
-          'nebula': 'imagine/nebula-drifter.html',
-          'samurai': 'imagine/echoes-samurai.html',
-          'quantum': 'imagine/quantum-puzzles.html',
-          'luma': 'imagine/luma-island.html',
-          'space': 'imagine/SpaceShooters.html',
-          'mario': 'imagine/SuperMario/sm64.html',
-          'tetris': 'imagine/tetris.html',
-          'pacman': 'imagine/PackMan/index.html',
-          '2048': 'imagine/2048.html',
-          'flappy': 'imagine/flappybird.html',
-          'slope': 'imagine/Slope/slope.html',
-          'subway': 'imagine/SubwaySufers/subwaysurferssanfrancisco.html',
-          'minecraft': 'imagine/MineCraft/index.html',
-          'geometry': 'imagine/GeoMentry_Dash/index.html',
-          'spaceshooters': 'imagine/SpaceShooters.html',
-          'spaceshooters2': 'imagine/SpaceShooters2/index.html',
-          'fruitninja': 'imagine/FruitNinja/fruitninja.html',
-          'run': 'imagine/Run/Runner/run.html',
-          'run3': 'imagine/Run/Runner/run3.html',
-          'cookieclicker': 'imagine/cookieclicker.html',
-          'bitlife': 'imagine/bitlife.html',
-          'bloonstd': 'imagine/bloonsTD.html',
-          'angrybirds': 'imagine/angrybirds.html',
-          'ageofwar': 'imagine/ageofwar.html'
-        };
-
-        if (gameMap[sub]) {
-          // Redirect to the specific game page
-          window.location.replace(gameMap[sub]);
-        } else {
-          // Optional: show a 404-like message
-          document.body.innerHTML = `<h1>Game "${sub}" not found</h1><a href="/">Back to Arcade</a>`;
-        }
-      }
-    })();
-
     // ========== GAME CARDS RENDERING ==========
     (function() {
       const grid = document.getElementById('cardsGrid');
@@ -1936,32 +1879,6 @@
         });
         filterBar.appendChild(btn);
       });
-
-      // Subdomain mapping for card clicks
-      const subdomainMap = {
-        'nebula-drifter': 'nebula',
-        'echoes-samurai': 'samurai',
-        'quantum-puzzles': 'quantum',
-        'luma-island': 'luma',
-        'SpaceShooters': 'space',
-        'SuperMario': 'mario',
-        'tetris': 'tetris',
-        'PackMan': 'pacman',
-        '2048': '2048',
-        'flappybird': 'flappy',
-        'Slope': 'slope',
-        'SubwaySufers': 'subway',
-        'MineCraft': 'minecraft',
-        'GeoMentry_Dash': 'geometry',
-        'FruitNinja': 'fruitninja',
-        'cookieclicker': 'cookieclicker',
-        'bitlife': 'bitlife',
-        'bloonsTD': 'bloonstd',
-        'angrybirds': 'angrybirds',
-        'ageofwar': 'ageofwar',
-        'Run': 'run',
-        'run3': 'run3'
-      };
 
       function renderCards(category = 'all') {
         const filtered = category === 'all' ? cardsData : cardsData.filter(c => c.category === category);
@@ -1987,85 +1904,21 @@
           `;
         });
         grid.innerHTML = html;
-        
-        // Card click handler using subdomains
         document.querySelectorAll('.card').forEach(card => {
           card.addEventListener('click', (e) => {
             const link = card.dataset.link;
             const isSimple = card.dataset.issimple === 'true';
-            
             if (isSimple) {
               e.preventDefault();
               openSimpleGame(link);
             } else {
-              // Find the subdomain for this game
-              let subdomain = null;
-              for (let [path, sub] of Object.entries(subdomainMap)) {
-                if (link.includes(path)) {
-                  subdomain = sub;
-                  break;
-                }
-              }
-              
-              if (subdomain) {
-                // Redirect to subdomain
-                window.location.href = `https://${subdomain}.packarcade.xyz`;
-              } else {
-                // Fallback to original link if no subdomain mapping found
-                window.location.href = link;
-              }
+              window.location.href = link;
             }
           });
         });
       }
       renderCards('all');
     })();
-
-    // ========== ADD SUBDOMAIN HINTS TO CARDS ==========
-    function addSubdomainHints() {
-      // Subdomain mapping for hints (duplicated here so it's in scope)
-      const hintMap = {
-        'nebula-drifter': 'nebula',
-        'echoes-samurai': 'samurai',
-        'quantum-puzzles': 'quantum',
-        'luma-island': 'luma',
-        'SpaceShooters': 'space',
-        'SuperMario': 'mario',
-        'tetris': 'tetris',
-        'PackMan': 'pacman',
-        '2048': '2048',
-        'flappybird': 'flappy',
-        'Slope': 'slope',
-        'SubwaySufers': 'subway',
-        'MineCraft': 'minecraft',
-        'GeoMentry_Dash': 'geometry',
-        'FruitNinja': 'fruitninja',
-        'cookieclicker': 'cookieclicker',
-        'bitlife': 'bitlife',
-        'bloonsTD': 'bloonstd',
-        'angrybirds': 'angrybirds',
-        'ageofwar': 'ageofwar',
-        'Run': 'run',
-        'run3': 'run3'
-      };
-
-      document.querySelectorAll('.card').forEach(card => {
-        const link = card.dataset.link;
-        if (!link) return;
-        for (let [path, sub] of Object.entries(hintMap)) {
-          if (link.includes(path)) {
-            const hint = document.createElement('div');
-            hint.className = 'subdomain-hint';
-            hint.innerHTML = `<small>🔗 ${sub}.packarcade.xyz</small>`;
-            card.appendChild(hint);
-            break;
-          }
-        }
-      });
-    }
-
-    // Call after cards are rendered
-    setTimeout(addSubdomainHints, 500);
 
     // ========== SIMPLE GAMES PLAYER ==========
     const modal = document.getElementById('gameModal');
@@ -2169,7 +2022,7 @@
         const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
         if (dollarMatches) {
           dollarMatches.forEach(d => {
-            const eq = d.indexOf('='');
+            const eq = d.indexOf('=');
             if (eq > -1) {
               const key = d.substring(1, eq);
               const val = d.substring(eq+1);
