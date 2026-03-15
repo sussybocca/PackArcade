@@ -134,6 +134,21 @@
             font-weight: 600;
             color: #a678ff;
         }
+        .loading, .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #b1b9d9;
+            font-size: 1.2rem;
+        }
+        .error-message {
+            color: #ff7b7b;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: #b1b9d9;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -162,69 +177,99 @@
                 <div>Score</div>
                 <div>Date</div>
             </div>
-            <div id="leaderboardRows"></div>
+            <div id="leaderboardRows">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
         </div>
     </div>
 
     <script>
-        const username = localStorage.getItem('packarcade_username');
-        if (!username) {
-            window.location.href = '/';
-        }
-        document.getElementById('usernameDisplay').textContent = username;
+        (function() {
+            const username = localStorage.getItem('packarcade_username');
+            if (!username) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('usernameDisplay').textContent = username;
 
-        // Load games for selector
-        const games = [
-            'All Games', 'SpaceShooters', 'Tetris', 'Pacman', 
-            'Flappy Bird', 'Cookie Clicker', 'Bitlife', 'Run'
-        ];
+            // List of games for selector (excluding "All Games" which is already present)
+            const games = [
+                'SpaceShooters', 'Tetris', 'Pacman', 
+                'Flappy Bird', 'Cookie Clicker', 'Bitlife', 'Run'
+            ];
 
-        const selector = document.getElementById('gameSelector');
-        games.forEach(game => {
-            if (game === 'All Games') return;
-            const btn = document.createElement('button');
-            btn.className = 'game-btn';
-            btn.dataset.game = game.toLowerCase().replace(/\s+/g, '');
-            btn.textContent = game;
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                loadLeaderboard(btn.dataset.game);
+            const selector = document.getElementById('gameSelector');
+            games.forEach(game => {
+                const btn = document.createElement('button');
+                btn.className = 'game-btn';
+                btn.dataset.game = game.toLowerCase().replace(/\s+/g, '');
+                btn.textContent = game;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.game-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    loadLeaderboard(btn.dataset.game);
+                });
+                selector.appendChild(btn);
             });
-            selector.appendChild(btn);
-        });
 
-        async function loadLeaderboard(game = 'all') {
-            const res = await fetch(`/.netlify/functions/get-leaderboard?game=${game}`);
-            const data = await res.json();
-            
-            const rows = document.getElementById('leaderboardRows');
-            rows.innerHTML = '';
-            
-            data.scores.forEach((entry, index) => {
-                const row = document.createElement('div');
-                row.className = `table-row ${entry.username === username ? 'current-user' : ''}`;
-                
-                let rankClass = '';
-                if (index === 0) rankClass = 'rank-1';
-                else if (index === 1) rankClass = 'rank-2';
-                else if (index === 2) rankClass = 'rank-3';
-                
-                row.innerHTML = `
-                    <div class="${rankClass}">#${index + 1}</div>
-                    <div class="player-name">
-                        <div class="avatar">${entry.username.charAt(0)}</div>
-                        ${entry.username}
-                    </div>
-                    <div class="score">${entry.score.toLocaleString()}</div>
-                    <div>${new Date(entry.created_at).toLocaleDateString()}</div>
-                `;
-                
-                rows.appendChild(row);
-            });
-        }
+            const rowsContainer = document.getElementById('leaderboardRows');
 
-        loadLeaderboard();
+            async function loadLeaderboard(game = 'all') {
+                // Show loading state
+                rowsContainer.innerHTML = '<div class="loading">Loading leaderboard...</div>';
+
+                try {
+                    const res = await fetch(`/.netlify/functions/get-leaderboard?game=${encodeURIComponent(game)}`);
+                    if (!res.ok) {
+                        throw new Error(`HTTP error ${res.status}`);
+                    }
+                    const data = await res.json();
+
+                    // Check if scores array exists
+                    if (!data.scores || !Array.isArray(data.scores)) {
+                        throw new Error('Invalid response format');
+                    }
+
+                    if (data.scores.length === 0) {
+                        rowsContainer.innerHTML = '<div class="empty-message">No scores yet. Be the first!</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.scores.forEach((entry, index) => {
+                        // Validate each entry
+                        const playerName = entry.username || 'Unknown';
+                        const score = entry.score || 0;
+                        const date = entry.created_at ? new Date(entry.created_at).toLocaleDateString() : 'N/A';
+
+                        const rowClass = `table-row ${playerName === username ? 'current-user' : ''}`;
+                        let rankClass = '';
+                        if (index === 0) rankClass = 'rank-1';
+                        else if (index === 1) rankClass = 'rank-2';
+                        else if (index === 2) rankClass = 'rank-3';
+
+                        html += `
+                            <div class="${rowClass}">
+                                <div class="${rankClass}">#${index + 1}</div>
+                                <div class="player-name">
+                                    <div class="avatar">${playerName.charAt(0)}</div>
+                                    ${playerName}
+                                </div>
+                                <div class="score">${score.toLocaleString()}</div>
+                                <div>${date}</div>
+                            </div>
+                        `;
+                    });
+                    rowsContainer.innerHTML = html;
+                } catch (error) {
+                    console.error('Leaderboard error:', error);
+                    rowsContainer.innerHTML = `<div class="error-message">Failed to load leaderboard: ${error.message}</div>`;
+                }
+            }
+
+            // Load initial leaderboard (all games)
+            loadLeaderboard('all');
+        })();
     </script>
 </body>
 </html>
