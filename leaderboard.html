@@ -187,6 +187,21 @@
             color: white;
             cursor: pointer;
         }
+        .debug-info {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #ffaa00;
+            white-space: pre-wrap;
+            word-break: break-all;
+            display: none;
+        }
+        .debug-info.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -203,6 +218,8 @@
 
     <div class="container">
         <h1><i class="fas fa-chart-line"></i> Global Leaderboard</h1>
+        
+        <div class="debug-info" id="debugInfo"></div>
         
         <div class="game-selector" id="gameSelector">
             <button class="game-btn active" data-game="all">All Games</button>
@@ -239,6 +256,14 @@
 
     <script>
         (function() {
+            // Debug function
+            function showDebug(message, type = 'info') {
+                const debugEl = document.getElementById('debugInfo');
+                debugEl.classList.add('visible');
+                debugEl.innerHTML += `[${type}] ${message}<br>`;
+                console.log(`[${type}]`, message);
+            }
+
             // Get username from localStorage if it exists, otherwise show "Guest"
             const username = localStorage.getItem('packarcade_username') || 'Guest';
             document.getElementById('usernameDisplay').textContent = username;
@@ -354,19 +379,51 @@
             async function loadLeaderboard() {
                 const rowsContainer = document.getElementById('leaderboardRows');
                 rowsContainer.innerHTML = '<div class="loading">Loading leaderboard...</div>';
+                
+                // Clear debug
+                document.getElementById('debugInfo').innerHTML = '';
+                document.getElementById('debugInfo').classList.remove('visible');
 
                 try {
-                    const res = await fetch(`/.netlify/functions/get-leaderboard?game=${encodeURIComponent(currentGame)}`);
+                    const url = `/.netlify/functions/get-leaderboard?game=${encodeURIComponent(currentGame)}`;
+                    showDebug(`Fetching: ${url}`);
+                    
+                    const res = await fetch(url);
+                    showDebug(`Response status: ${res.status} ${res.statusText}`);
+                    
+                    // Check content type
+                    const contentType = res.headers.get('content-type');
+                    showDebug(`Content-Type: ${contentType}`);
+                    
                     if (!res.ok) {
                         throw new Error(`HTTP error ${res.status}`);
                     }
-                    const data = await res.json();
 
-                    // Validate and store all scores
-                    if (!data.scores || !Array.isArray(data.scores)) {
-                        throw new Error('Invalid response format');
+                    // Try to get the response text first
+                    const text = await res.text();
+                    showDebug(`First 100 chars of response: ${text.substring(0, 100)}`);
+                    
+                    // Try to parse as JSON
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        showDebug(`Failed to parse JSON: ${e.message}`, 'error');
+                        throw new Error(`Invalid JSON response. Got HTML instead of JSON - your Netlify function might not be deployed correctly.`);
                     }
 
+                    // Validate data
+                    if (!data.scores) {
+                        showDebug(`Response missing 'scores' property`, 'error');
+                        throw new Error('Invalid response format: missing scores');
+                    }
+
+                    if (!Array.isArray(data.scores)) {
+                        showDebug(`'scores' is not an array`, 'error');
+                        throw new Error('Invalid response format: scores is not an array');
+                    }
+
+                    showDebug(`Success! Loaded ${data.scores.length} scores`);
                     allScores = data.scores;
                     currentPage = 1;
                     displayCurrentPage();
