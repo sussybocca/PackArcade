@@ -12,7 +12,7 @@
 
 # === COLON-BASED ROUTING (:Root.LeaderBoard) ===
 [[redirects]]
-  from = "https://root.LeaderBoard.packarcade.xyz/*"
+  from = "https://root.leaderboard.packarcade.xyz/*"
   to = "/leaderboard.html"
   status = 200
   force = true
