@@ -3,6 +3,11 @@ import type { Context } from "https://edge.netlify.com/";
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
   
+  // CRITICAL: Prevent infinite recursion - if path already has /public/ multiple times, abort
+  if (url.pathname.match(/\/public\/.*\/public\//)) {
+    return context.next();
+  }
+
   // CRITICAL: Let ALL files with extensions pass through
   if (url.pathname.match(/\.([a-zA-Z0-9]+)$/)) {
     return context.next();
