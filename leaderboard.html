@@ -198,7 +198,7 @@
             <a href="/challenges.html"><i class="fas fa-trophy"></i> Challenges</a>
             <a href="/profile.html"><i class="fas fa-user"></i> Profile</a>
         </div>
-        <div class="username" id="usernameDisplay">Loading...</div>
+        <div class="username" id="usernameDisplay">Guest</div>
     </div>
 
     <div class="container">
@@ -239,11 +239,8 @@
 
     <script>
         (function() {
-            const username = localStorage.getItem('packarcade_username');
-            if (!username) {
-                window.location.href = '/';
-                return;
-            }
+            // Get username from localStorage if it exists, otherwise show "Guest"
+            const username = localStorage.getItem('packarcade_username') || 'Guest';
             document.getElementById('usernameDisplay').textContent = username;
 
             // State management
