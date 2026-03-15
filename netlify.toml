@@ -39,7 +39,7 @@
   status = 200
   force = true
 
-# === GAME SUBDOMAINS (single-part) ===
+# === GAME SUBDOMAINS ===
 [[redirects]]
   from = "https://nebula.packarcade.xyz/*"
   to = "/public/imagine/nebula-drifter.html"
@@ -179,10 +179,24 @@
   status = 200
   force = true
 
-# === EDGE FUNCTION (handles versioned subdomains) ===
+# === NEW EDGE FUNCTIONS ===
+# These run before the error page redirect, in the order listed.
+
+[[edge_functions]]
+  path = "/*"
+  function = "doorway-router"
+
+[[edge_functions]]
+  path = "/*"
+  function = "language-router"
+
 [[edge_functions]]
   path = "/*"
   function = "game-version-router"
+
+[[edge_functions]]
+  path = "/*"
+  function = "creative-router"   # for languages.sites, portal, etc.
 
 # === ERROR PAGES (must be last) ===
 [[redirects]]
