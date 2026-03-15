@@ -20,7 +20,7 @@
   status = 200
   force = true
 
-# === STANDARD SUBDOMAINS (keep these too) ===
+# === STANDARD SUBDOMAINS ===
 [[redirects]]
   from = "https://leaderboard.packarcade.xyz/*"
   to = "/leaderboard.html"
@@ -39,7 +39,7 @@
   status = 200
   force = true
 
-# === GAME SUBDOMAINS ===
+# === GAME SUBDOMAINS (single-part) ===
 [[redirects]]
   from = "https://nebula.packarcade.xyz/*"
   to = "/public/imagine/nebula-drifter.html"
@@ -179,14 +179,12 @@
   status = 200
   force = true
 
-# === FALLBACK ===
-[[redirects]]
-  from = "https://*.packarcade.xyz/*"
-  to = "https://packarcade.xyz"
-  status = 302
-  force = true
+# === EDGE FUNCTION (handles versioned subdomains) ===
+[[edge_functions]]
+  path = "/*"
+  function = "game-version-router"
 
-# === ERROR PAGES ===
+# === ERROR PAGES (must be last) ===
 [[redirects]]
   from = "/*"
   to = "/404.html"
