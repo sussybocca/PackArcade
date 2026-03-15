@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackArcade · Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Same nav styles as before */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0b0e17, #1a1f2f);
+            color: #eef2ff;
+            min-height: 100vh;
+        }
+        .nav-bar {
+            background: rgba(15,20,35,0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a678ff, #7a5be8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-links a {
+            color: #b1b9d9;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: white;
+        }
+        .username {
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(162,142,255,0.3);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .profile-header {
+            background: rgba(20,25,45,0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7a5be8, #a678ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        .profile-info h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #a678ff;
+        }
+        .stat-label {
+            color: #929cce;
+            font-size: 0.9rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+        }
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .achievement-card {
+            background: rgba(20,25,45,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .achievement-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .achievement-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .achievement-desc {
+            font-size: 0.8rem;
+            color: #929cce;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="logo">🎮 PackArcade</div>
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> Games</a>
+            <a href="/leaderboard.html"><i class="fas fa-chart-line"></i> Leaderboard</a>
+            <a href="/challenges.html"><i class="fas fa-trophy"></i> Challenges</a>
+            <a href="/profile.html" class="active"><i class="fas fa-user"></i> Profile</a>
+        </div>
+        <div class="username" id="usernameDisplay">Loading...</div>
+    </div>
+
+    <div class="container">
+        <div class="profile-header" id="profileHeader">
+            <!-- Populated by JS -->
+        </div>
+
+        <h2 class="section-title">Recent Achievements</h2>
+        <div class="achievements-grid" id="achievementsGrid">
+            <div class="achievement-card">
+                <div class="achievement-icon">🏆</div>
+                <div class="achievement-name">First Win</div>
+                <div class="achievement-desc">Complete your first game</div>
+            </div>
+            <div class="achievement-card">
+                <div class="achievement-icon">⭐</div>
+                <div class="achievement-name">High Scorer</div>
+                <div class="achievement-desc">Score 10,000 points</div>
+            </div>
+            <div class="achievement-card">
+                <div class="achievement-icon">🎯</div>
+                <div class="achievement-name">Sharpshooter</div>
+                <div class="achievement-desc">100% accuracy in SpaceShooters</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const username = localStorage.getItem('packarcade_username');
+        if (!username) {
+            window.location.href = '/';
+        }
+        document.getElementById('usernameDisplay').textContent = username;
+
+        // Load profile data
+        const header = document.getElementById('profileHeader');
+        header.innerHTML = `
+            <div class="profile-avatar">${username.charAt(0)}</div>
+            <div class="profile-info">
+                <h2>${username}</h2>
+                <p>Member since ${new Date().toLocaleDateString()}</p>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Games Played</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">High Scores</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">Achievements</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    </script>
+</body>
+</html>
