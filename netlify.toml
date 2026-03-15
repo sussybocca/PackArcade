@@ -1,5 +1,14 @@
 [build]
   publish = "."
+ 
+
+# === FUNCTIONS FIRST - THIS IS CRITICAL ===
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
 
 # === COLON-BASED ROUTING (:Root.LeaderBoard) ===
 [[redirects]]
