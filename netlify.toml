@@ -4,85 +4,134 @@
 # Wildcard subdomain → game folder redirects
 [[redirects]]
   from = "https://nebula.packarcade.xyz/*"
-  to = "/imagine/nebula-drifter.html"
+  to = "/public/imagine/nebula-drifter.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://samurai.packarcade.xyz/*"
-  to = "/imagine/echoes-samurai.html"
+  to = "/public/imagine/echoes-samurai.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://quantum.packarcade.xyz/*"
-  to = "/imagine/quantum-puzzles.html"
+  to = "/public/imagine/quantum-puzzles.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://luma.packarcade.xyz/*"
-  to = "/imagine/luma-island.html"
+  to = "/public/imagine/luma-island.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://space.packarcade.xyz/*"
-  to = "/imagine/SpaceShooters.html"
+  to = "/public/imagine/SpaceShooters.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://mario.packarcade.xyz/*"
-  to = "/imagine/SuperMario/sm64.html"
+  to = "/public/imagine/SuperMario/sm64.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://tetris.packarcade.xyz/*"
-  to = "/imagine/tetris.html"
+  to = "/public/imagine/tetris.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://pacman.packarcade.xyz/*"
-  to = "/imagine/PackMan/index.html"
+  to = "/public/imagine/PackMan/index.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://2048.packarcade.xyz/*"
-  to = "/imagine/2048.html"
+  to = "/public/imagine/2048.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://flappy.packarcade.xyz/*"
-  to = "/imagine/flappybird.html"
+  to = "/public/imagine/flappybird.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://slope.packarcade.xyz/*"
-  to = "/imagine/Slope/slope.html"
+  to = "/public/imagine/Slope/slope.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://subway.packarcade.xyz/*"
-  to = "/imagine/SubwaySufers/subwaysurferssanfrancisco.html"
+  to = "/public/imagine/SubwaySufers/subwaysurferssanfrancisco.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://minecraft.packarcade.xyz/*"
-  to = "/imagine/MineCraft/index.html"
+  to = "/public/imagine/MineCraft/index.html"
   status = 200
   force = true
 
 [[redirects]]
   from = "https://geometry.packarcade.xyz/*"
-  to = "/imagine/GeoMentry_Dash/index.html"
+  to = "/public/imagine/GeoMentry_Dash/index.html"
+  status = 200
+  force = true
+
+# New redirects for additional subdomains
+[[redirects]]
+  from = "https://run.packarcade.xyz/*"
+  to = "/public/imagine/Run/Runner/run.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://run3.packarcade.xyz/*"
+  to = "/public/imagine/Run/Runner/run3.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://fruitninja.packarcade.xyz/*"
+  to = "/public/imagine/FruitNinja/fruitninja.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://cookieclicker.packarcade.xyz/*"
+  to = "/public/imagine/cookieclicker.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://bitlife.packarcade.xyz/*"
+  to = "/public/imagine/bitlife.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://bloonstd.packarcade.xyz/*"
+  to = "/public/imagine/bloonsTD.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://angrybirds.packarcade.xyz/*"
+  to = "/public/imagine/angrybirds.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://ageofwar.packarcade.xyz/*"
+  to = "/public/imagine/ageofwar.html"
   status = 200
   force = true
 
