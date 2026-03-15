@@ -1831,32 +1831,6 @@
     highlight: false
   }
 ];
-
-      // Subdomain mapping
-      const subdomainMap = {
-        'nebula-drifter': 'nebula',
-        'echoes-samurai': 'samurai',
-        'quantum-puzzles': 'quantum',
-        'luma-island': 'luma',
-        'SpaceShooters': 'space',
-        'SuperMario': 'mario',
-        'tetris': 'tetris',
-        'PackMan': 'pacman',
-        '2048': '2048',
-        'flappybird': 'flappy',
-        'Slope': 'slope',
-        'SubwaySufers': 'subway',
-        'MineCraft': 'minecraft',
-        'GeoMentry_Dash': 'geometry',
-        'FruitNinja': 'fruitninja',
-        'cookieclicker': 'cookieclicker',
-        'bitlife': 'bitlife',
-        'bloonsTD': 'bloonstd',
-        'angrybirds': 'angrybirds',
-        'ageofwar': 'ageofwar',
-        'Run': 'run',
-        'run3': 'run3'
-      };
     </script>
 
     <div class="filter-bar" id="filterBar">
@@ -1908,31 +1882,31 @@
         const sub = parts[0];
         // Mapping of subdomain to game file
         const gameMap = {
-          'nebula': 'public/imagine/nebula-drifter.html',
-          'samurai': 'public/imagine/echoes-samurai.html',
-          'quantum': 'public/imagine/quantum-puzzles.html',
-          'luma': 'public/imagine/luma-island.html',
-          'space': 'public/imagine/SpaceShooters.html',
-          'mario': 'public/imagine/SuperMario/sm64.html',
-          'tetris': 'public/imagine/tetris.html',
-          'pacman': 'public/imagine/PackMan/index.html',
-          '2048': 'public/imagine/2048.html',
-          'flappy': 'public/imagine/flappybird.html',
-          'slope': 'public/imagine/Slope/slope.html',
-          'subway': 'public/imagine/SubwaySufers/subwaysurferssanfrancisco.html',
-          'minecraft': 'public/imagine/MineCraft/index.html',
-          'geometry': 'public/imagine/GeoMentry_Dash/index.html',
-          'spaceshooters': 'public/imagine/SpaceShooters.html',
-          'spaceshooters2': 'public/imagine/SpaceShooters2/index.html',
-          'pacman': 'public/imagine/PackMan/index.html',
-          'fruitninja': 'public/imagine/FruitNinja/fruitninja.html',
-          'run': 'public/imagine/Run/Runner/run.html',
-          'run3': 'public/imagine/Run/Runner/run3.html',
-          'cookieclicker': 'public/imagine/cookieclicker.html',
-          'bitlife': 'public/imagine/bitlife.html',
-          'bloonstd': 'public/imagine/bloonsTD.html',
-          'angrybirds': 'public/imagine/angrybirds.html',
-          'ageofwar': 'public/imagine/ageofwar.html'
+          'nebula': '/imagine/nebula-drifter.html',
+          'samurai': '/imagine/echoes-samurai.html',
+          'quantum': '/imagine/quantum-puzzles.html',
+          'luma': '/imagine/luma-island.html',
+          'space': '/imagine/SpaceShooters.html',
+          'mario': '/imagine/SuperMario/sm64.html',
+          'tetris': '/imagine/tetris.html',
+          'pacman': '/imagine/PackMan/index.html',
+          '2048': '/imagine/2048.html',
+          'flappy': '/imagine/flappybird.html',
+          'slope': '/imagine/Slope/slope.html',
+          'subway': '/imagine/SubwaySufers/subwaysurferssanfrancisco.html',
+          'minecraft': '/imagine/MineCraft/index.html',
+          'geometry': '/imagine/GeoMentry_Dash/index.html',
+          'spaceshooters': '/imagine/SpaceShooters.html',
+          'spaceshooters2': '/imagine/SpaceShooters2/index.html',
+          'pacman': '/imagine/PackMan/index.html',
+          'fruitninja': '/imagine/FruitNinja/fruitninja.html',
+          'run': '/imagine/Run/Runner/run.html',
+          'run3': '/imagine/Run/Runner/run3.html',
+          'cookieclicker': '/imagine/cookieclicker.html',
+          'bitlife': '/imagine/bitlife.html',
+          'bloonstd': '/imagine/bloonsTD.html',
+          'angrybirds': '/imagine/angrybirds.html',
+          'ageofwar': '/imagine/ageofwar.html'
         };
 
         if (gameMap[sub]) {
@@ -1988,33 +1962,15 @@
           `;
         });
         grid.innerHTML = html;
-        
-        // UPDATED: Card click handler now uses subdomains
         document.querySelectorAll('.card').forEach(card => {
           card.addEventListener('click', (e) => {
             const link = card.dataset.link;
             const isSimple = card.dataset.issimple === 'true';
-            
             if (isSimple) {
               e.preventDefault();
               openSimpleGame(link);
             } else {
-              // Find the subdomain for this game
-              let subdomain = null;
-              for (let [path, sub] of Object.entries(subdomainMap)) {
-                if (link.includes(path)) {
-                  subdomain = sub;
-                  break;
-                }
-              }
-              
-              if (subdomain) {
-                // Redirect to subdomain
-                window.location.href = `https://${subdomain}.packarcade.xyz`;
-              } else {
-                // Fallback to original link if no subdomain mapping found
-                window.location.href = link;
-              }
+              window.location.href = link;
             }
           });
         });
@@ -2024,6 +1980,31 @@
 
     // ========== ADD SUBDOMAIN HINTS TO CARDS ==========
     function addSubdomainHints() {
+      const subdomainMap = {
+        'nebula-drifter': 'nebula',
+        'echoes-samurai': 'samurai',
+        'quantum-puzzles': 'quantum',
+        'luma-island': 'luma',
+        'SpaceShooters': 'space',
+        'SuperMario': 'mario',
+        'tetris': 'tetris',
+        'PackMan': 'pacman',
+        '2048': '2048',
+        'flappybird': 'flappy',
+        'Slope': 'slope',
+        'SubwaySufers': 'subway',
+        'MineCraft': 'minecraft',
+        'GeoMentry_Dash': 'geometry',
+        'FruitNinja': 'fruitninja',
+        'cookieclicker': 'cookieclicker',
+        'bitlife': 'bitlife',
+        'bloonsTD': 'bloonstd',
+        'angrybirds': 'angrybirds',
+        'ageofwar': 'ageofwar',
+        'Run': 'run',
+        'run3': 'run3'
+      };
+
       document.querySelectorAll('.card').forEach(card => {
         const link = card.dataset.link;
         if (!link) return;
@@ -2144,7 +2125,7 @@
         const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
         if (dollarMatches) {
           dollarMatches.forEach(d => {
-            const eq = d.indexOf('='');
+            const eq = d.indexOf('=');
             if (eq > -1) {
               const key = d.substring(1, eq);
               const val = d.substring(eq+1);
