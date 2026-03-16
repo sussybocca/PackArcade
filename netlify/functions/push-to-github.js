@@ -1,17 +1,26 @@
-// netlify/functions/push-to-github.js
 const { Octokit } = require('@octokit/rest');
 
 exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
-  const { files, subdir = '' } = JSON.parse(event.body);
-  // files = { 'path/to/file.simple': 'content', ... }
-  // subdir = e.g. 'SimpleGames' (will be appended to public/imagine/)
+  const { files, subdomain } = JSON.parse(event.body);
+  // files = { 'index.html': 'content', 'metadata.json': 'content' }
 
   const token = process.env.GITHUB_TOKEN;
   const owner = process.env.GITHUB_OWNER;
@@ -21,6 +30,7 @@ exports.handler = async (event) => {
   if (!token || !owner || !repo) {
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: 'Missing GitHub configuration' }),
     };
   }
@@ -44,11 +54,12 @@ exports.handler = async (event) => {
     });
     const baseTreeSha = commitData.tree.sha;
 
-    // 3. Create blobs and build tree
-    const basePath = subdir
-      ? `public/imagine/${subdir}/`
+    // 3. Create base path with subdomain
+    const basePath = subdomain 
+      ? `public/imagine/${subdomain}/`
       : 'public/imagine/';
 
+    // 4. Create blobs and build tree
     const tree = await Promise.all(
       Object.entries(files).map(async ([filePath, content]) => {
         const { data: blob } = await octokit.git.createBlob({
@@ -66,7 +77,7 @@ exports.handler = async (event) => {
       })
     );
 
-    // 4. Create new tree
+    // 5. Create new tree
     const { data: newTree } = await octokit.git.createTree({
       owner,
       repo,
@@ -74,16 +85,16 @@ exports.handler = async (event) => {
       tree,
     });
 
-    // 5. Create commit
+    // 6. Create commit
     const { data: newCommit } = await octokit.git.createCommit({
       owner,
       repo,
-      message: `Auto‑push from ${subdir || 'PackGames'} studio [skip ci]`,
+      message: `Add game: ${subdomain || 'unknown'} [skip ci]`,
       tree: newTree.sha,
       parents: [latestCommitSha],
     });
 
-    // 6. Update branch
+    // 7. Update branch
     await octokit.git.updateRef({
       owner,
       repo,
@@ -94,13 +105,18 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ success: true }),
+      headers,
+      body: JSON.stringify({ 
+        success: true, 
+        subdomain,
+        path: basePath
+      }),
     };
   } catch (error) {
     console.error('GitHub API error:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: error.message }),
     };
   }
