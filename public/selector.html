@@ -1947,26 +1947,85 @@
       }
     }
 
-    // ========== GET GAME SLUG FROM LINK ==========
-    function getGameSlugFromLink(link) {
-      // Try subdomain first
-      for (let [path, sub] of Object.entries(subdomainMap)) {
-        if (link.includes(path)) {
-          return sub;
-        }
-      }
-      
-      // Extract from path
-      const parts = link.split('/');
-      const file = parts[parts.length - 1];
-      const folder = parts[parts.length - 2];
-      
-      if (folder && folder !== 'imagine' && folder !== 'SimpleGames' && !folder.includes('.')) {
-        return folder;
-      }
-      
-      return file.replace('.html', '').replace('.simple', '').replace('.htm', '');
+   // ========== UPDATED GET GAME SLUG FROM LINK ==========
+function getGameSlugFromLink(link) {
+  console.log('Getting slug from link:', link); // Debug log
+  
+  // Try subdomain first
+  for (let [path, sub] of Object.entries(subdomainMap)) {
+    if (link.includes(path)) {
+      console.log(`Found subdomain match: ${path} -> ${sub}`);
+      return sub;
     }
+  }
+  
+  // Clean the link (remove any query params)
+  const cleanLink = link.split('?')[0].split('#')[0];
+  const parts = cleanLink.split('/');
+  const file = parts[parts.length - 1];
+  const folder = parts[parts.length - 2];
+  
+  console.log('Path parts:', { folder, file });
+  
+  // Check if it's in a named folder (like SpaceShooters2/, SuperMario/, etc.)
+  if (folder && folder !== 'imagine' && folder !== 'SimpleGames' && !folder.includes('.')) {
+    // Special case mappings for consistency
+    const folderMap = {
+      'SpaceShooters2': 'spaceshooters2',
+      'SuperMario': 'mario',
+      'PackMan': 'pacman',
+      'SubwaySufers': 'subway',
+      'MineCraft': 'minecraft',
+      'GeoMentry_Dash': 'geometry',
+      'FruitNinja': 'fruitninja',
+      'Run': 'run',
+      'Slope': 'slope',
+      'TinyFishing': 'tinyfishing'
+    };
+    
+    // Check if folder has a special mapping
+    if (folderMap[folder]) {
+      console.log(`Mapped folder ${folder} -> ${folderMap[folder]}`);
+      return folderMap[folder];
+    }
+    
+    console.log(`Using folder as slug: ${folder.toLowerCase()}`);
+    return folder.toLowerCase();
+  }
+  
+  // Extract from filename
+  let slug = file.replace('.html', '').replace('.simple', '').replace('.htm', '');
+  
+  // Map common filename patterns
+  const fileMap = {
+    'nebula-drifter': 'nebula',
+    'echoes-samurai': 'samurai',
+    'quantum-puzzles': 'quantum',
+    'luma-island': 'luma',
+    'SpaceShooters': 'space',
+    'sm64': 'mario',
+    'sm63': 'mario',
+    'tetris': 'tetris',
+    '2048': '2048',
+    'flappybird': 'flappy',
+    'cookieclicker': 'cookieclicker',
+    'bitlife': 'bitlife',
+    'bloonsTD': 'bloonstd',
+    'angrybirds': 'angrybirds',
+    'ageofwar': 'ageofwar',
+    'fruitninja': 'fruitninja',
+    'run': 'run',
+    'run3': 'run3'
+  };
+  
+  if (fileMap[slug]) {
+    console.log(`Mapped file ${slug} -> ${fileMap[slug]}`);
+    return fileMap[slug];
+  }
+  
+  console.log(`Using filename as slug: ${slug}`);
+  return slug.toLowerCase();
+}
 
     // ========== INJECT SCORE TRACKING INTO HTML GAMES ==========
     function injectScoreTracker(html, gameSlug) {
