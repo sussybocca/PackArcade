@@ -1819,526 +1819,559 @@
     highlight: false
   }
 ];
+    </script>
 
-      // ========== SUBDOMAIN MAPPING ==========
-      const subdomainMap = {
-        'nebula-drifter': 'nebula',
-        'echoes-samurai': 'samurai',
-        'quantum-puzzles': 'quantum',
-        'luma-island': 'luma',
-        'SpaceShooters': 'space',
-        'SuperMario': 'mario',
-        'tetris': 'tetris',
-        'PackMan': 'pacman',
-        '2048': '2048',
-        'flappybird': 'flappy',
-        'Slope': 'slope',
-        'SubwaySufers': 'subway',
-        'MineCraft': 'minecraft',
-        'GeoMentry_Dash': 'geometry',
-        'FruitNinja': 'fruitninja',
-        'cookieclicker': 'cookieclicker',
-        'bitlife': 'bitlife',
-        'bloonsTD': 'bloonstd',
-        'angrybirds': 'angrybirds',
-        'ageofwar': 'ageofwar',
-        'Run': 'run',
-        'run3': 'run3'
-      };
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-category="all">All</button>
+    </div>
 
-      // ========== AUTO-GENERATE USERNAME FUNCTION ==========
-      async function ensureUsername() {
-        let username = localStorage.getItem('packarcade_username');
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  
+  <div id="gameModal" class="game-modal">
+    <div class="game-canvas-container">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+    <div class="game-controls">
+      <button id="closeGame">Close</button>
+      <button id="restartGame">Restart</button>
+    </div>
+    <div id="gameErrors" class="game-errors"></div>
+  </div>
+
+  <div class="human-controls">
+    <button id="human-toggle" class="muted" title="Toggle human sound"><span>🔇</span> <span>Human</span></button>
+    <select id="human-select" title="Select a human sound"><option value="">Loading...</option></select>
+  </div>
+  
+  <div class="funny-controls">
+    <button id="funny-toggle" class="muted" title="Toggle funny sound"><span>🔇</span> <span>Funny</span></button>
+    <select id="funny-select" title="Select a funny sound"><option value="">Loading...</option></select>
+  </div>
+  
+  <div class="music-controls">
+    <button id="music-toggle" class="muted" title="Toggle lobby music"><span>🔇</span> <span>Music</span></button>
+    <select id="song-select" title="Select a song"><option value="">Loading...</option></select>
+  </div>
+  
+  <div class="fx-controls">
+    <button id="fx-toggle" class="muted" title="Toggle arcade sound effect"><span>🔇</span> <span>Arcade FX</span></button>
+    <select id="fx-select" title="Select an effect"><option value="">Loading...</option></select>
+  </div>
+
+  <script>
+    // ========== SUBDOMAIN MAPPING ==========
+    const subdomainMap = {
+      'nebula-drifter': 'nebula',
+      'echoes-samurai': 'samurai',
+      'quantum-puzzles': 'quantum',
+      'luma-island': 'luma',
+      'SpaceShooters': 'space',
+      'SuperMario': 'mario',
+      'tetris': 'tetris',
+      'PackMan': 'pacman',
+      '2048': '2048',
+      'flappybird': 'flappy',
+      'Slope': 'slope',
+      'SubwaySufers': 'subway',
+      'MineCraft': 'minecraft',
+      'GeoMentry_Dash': 'geometry',
+      'FruitNinja': 'fruitninja',
+      'cookieclicker': 'cookieclicker',
+      'bitlife': 'bitlife',
+      'bloonsTD': 'bloonstd',
+      'angrybirds': 'angrybirds',
+      'ageofwar': 'ageofwar',
+      'Run': 'run',
+      'run3': 'run3'
+    };
+
+    // ========== AUTO-GENERATE USERNAME FUNCTION ==========
+    async function ensureUsername() {
+      let username = localStorage.getItem('packarcade_username');
+      
+      if (!username) {
+        const adjectives = ['Swift', 'Silent', 'Mighty', 'Fierce', 'Shadow', 'Crimson', 'Azure', 'Phantom', 'Blazing', 'Frost', 'Neon', 'Cyber', 'Pixel', 'Quantum', 'Sonic'];
+        const nouns = ['Phoenix', 'Tiger', 'Eagle', 'Wolf', 'Dragon', 'Viper', 'Falcon', 'Raven', 'Shark', 'Panther', 'Hunter', 'Knight', 'Ninja', 'Samurai', 'Wizard'];
+        const numbers = Math.floor(1000 + Math.random() * 9000);
         
-        if (!username) {
-          const adjectives = ['Swift', 'Silent', 'Mighty', 'Fierce', 'Shadow', 'Crimson', 'Azure', 'Phantom', 'Blazing', 'Frost', 'Neon', 'Cyber', 'Pixel', 'Quantum', 'Sonic'];
-          const nouns = ['Phoenix', 'Tiger', 'Eagle', 'Wolf', 'Dragon', 'Viper', 'Falcon', 'Raven', 'Shark', 'Panther', 'Hunter', 'Knight', 'Ninja', 'Samurai', 'Wizard'];
-          const numbers = Math.floor(1000 + Math.random() * 9000);
-          
-          username = adjectives[Math.floor(Math.random() * adjectives.length)] + 
-                     nouns[Math.floor(Math.random() * nouns.length)] + 
-                     numbers;
-          
-          localStorage.setItem('packarcade_username', username);
-          
-          try {
-            await fetch('/.netlify/functions/register-player', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username })
-            });
-          } catch (error) {
-            console.warn('Failed to register username:', error);
-          }
-        }
+        username = adjectives[Math.floor(Math.random() * adjectives.length)] + 
+                   nouns[Math.floor(Math.random() * nouns.length)] + 
+                   numbers;
         
-        return username;
-      }
-
-      // ========== SUBMIT SCORE FUNCTION - FOR ALL GAMES ==========
-      async function submitScore(gameSlug, score) {
-        const username = localStorage.getItem('packarcade_username');
-        if (!username) {
-          await ensureUsername();
-        }
-
+        localStorage.setItem('packarcade_username', username);
+        
         try {
-          const response = await fetch('/.netlify/functions/submit-score', {
+          await fetch('/.netlify/functions/register-player', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              username: localStorage.getItem('packarcade_username'), 
-              game_slug: gameSlug, 
-              score: Math.floor(score) 
-            })
+            body: JSON.stringify({ username })
           });
-          
-          if (response.ok) {
-            console.log(`Score ${score} submitted for ${gameSlug}`);
-            return true;
-          } else {
-            console.warn('Score submission failed');
-            return false;
-          }
         } catch (error) {
-          console.error('Score submission error:', error);
+          console.warn('Failed to register username:', error);
+        }
+      }
+      
+      return username;
+    }
+
+    // ========== SUBMIT SCORE FUNCTION - FOR ALL GAMES ==========
+    async function submitScore(gameSlug, score) {
+      const username = localStorage.getItem('packarcade_username');
+      if (!username) {
+        await ensureUsername();
+      }
+
+      try {
+        const response = await fetch('/.netlify/functions/submit-score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            username: localStorage.getItem('packarcade_username'), 
+            game_slug: gameSlug, 
+            score: Math.floor(score) 
+          })
+        });
+        
+        if (response.ok) {
+          console.log(`Score ${score} submitted for ${gameSlug}`);
+          return true;
+        } else {
+          console.warn('Score submission failed');
           return false;
         }
+      } catch (error) {
+        console.error('Score submission error:', error);
+        return false;
       }
+    }
 
-      // ========== GET GAME SLUG FROM LINK ==========
-      function getGameSlugFromLink(link) {
-        // Try subdomain first
-        for (let [path, sub] of Object.entries(subdomainMap)) {
-          if (link.includes(path)) {
-            return sub;
-          }
+    // ========== GET GAME SLUG FROM LINK ==========
+    function getGameSlugFromLink(link) {
+      // Try subdomain first
+      for (let [path, sub] of Object.entries(subdomainMap)) {
+        if (link.includes(path)) {
+          return sub;
         }
-        
-        // Extract from path
-        const parts = link.split('/');
-        const file = parts[parts.length - 1];
-        const folder = parts[parts.length - 2];
-        
-        if (folder && folder !== 'imagine' && folder !== 'SimpleGames' && !folder.includes('.')) {
-          return folder;
-        }
-        
-        return file.replace('.html', '').replace('.simple', '').replace('.htm', '');
       }
+      
+      // Extract from path
+      const parts = link.split('/');
+      const file = parts[parts.length - 1];
+      const folder = parts[parts.length - 2];
+      
+      if (folder && folder !== 'imagine' && folder !== 'SimpleGames' && !folder.includes('.')) {
+        return folder;
+      }
+      
+      return file.replace('.html', '').replace('.simple', '').replace('.htm', '');
+    }
 
-      // ========== INJECT SCORE TRACKING INTO HTML GAMES ==========
-      function injectScoreTracker(html, gameSlug) {
-        const trackerScript = `
-          <script>
-            (function() {
-              let gameScore = 0;
-              let gameCompleted = false;
+    // ========== INJECT SCORE TRACKING INTO HTML GAMES ==========
+    function injectScoreTracker(html, gameSlug) {
+      const trackerScript = `
+        <script>
+          (function() {
+            let gameScore = 0;
+            let gameCompleted = false;
+            
+            window.updateGameScore = function(points) {
+              gameScore += points;
+              console.log('Game score:', gameScore);
+            };
+            
+            window.submitFinalScore = function() {
+              if (gameCompleted) return;
+              gameCompleted = true;
               
-              window.updateGameScore = function(points) {
-                gameScore += points;
-                console.log('Game score:', gameScore);
-              };
-              
-              window.submitFinalScore = function() {
-                if (gameCompleted) return;
-                gameCompleted = true;
-                
-                fetch('/.netlify/functions/submit-score', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
-                    username: localStorage.getItem('packarcade_username'), 
-                    game_slug: '${gameSlug}', 
-                    score: gameScore 
-                  })
-                }).then(() => {
-                  console.log('Final score submitted:', gameScore);
-                });
-              };
-              
-              window.addEventListener('beforeunload', function() {
-                if (gameScore > 0 && !gameCompleted) {
-                  window.submitFinalScore();
-                }
+              fetch('/.netlify/functions/submit-score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  username: localStorage.getItem('packarcade_username'), 
+                  game_slug: '${gameSlug}', 
+                  score: gameScore 
+                })
+              }).then(() => {
+                console.log('Final score submitted:', gameScore);
               });
-            })();
-          <\/script>
-        `;
-        
-        if (html.includes('</head>')) {
-          return html.replace('</head>', trackerScript + '</head>');
-        } else if (html.includes('</body>')) {
-          return html.replace('</body>', trackerScript + '</body>');
-        } else {
-          return trackerScript + html;
-        }
-      }
-
-      // ========== OPEN HTML GAME WITH SCORE TRACKING ==========
-      async function openHtmlGameWithTracking(link, gameSlug, gameTitle) {
-        try {
-          const response = await fetch(link);
-          if (!response.ok) throw new Error('Failed to load game');
-          let html = await response.text();
-          
-          html = injectScoreTracker(html, gameSlug);
-          
-          const gameWindow = window.open('', '_blank');
-          gameWindow.document.write(html);
-          gameWindow.document.close();
-          
-          console.log(`Game ${gameTitle} (${gameSlug}) opened with score tracking`);
-          
-        } catch (error) {
-          console.error('Error loading game:', error);
-          window.open(link, '_blank');
-        }
-      }
-
-      // ========== GAME CARDS RENDERING ==========
-      (function() {
-        const grid = document.getElementById('cardsGrid');
-        const filterBar = document.getElementById('filterBar');
-        const categories = ['all', ...new Set(cardsData.map(c => c.category).filter(Boolean))];
-        filterBar.innerHTML = '';
-        categories.forEach(cat => {
-          const btn = document.createElement('button');
-          btn.className = 'filter-btn' + (cat === 'all' ? ' active' : '');
-          btn.setAttribute('data-category', cat);
-          btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderCards(cat);
-          });
-          filterBar.appendChild(btn);
-        });
-
-        function renderCards(category = 'all') {
-          const filtered = category === 'all' ? cardsData : cardsData.filter(c => c.category === category);
-          if (filtered.length === 0) {
-            grid.innerHTML = `<div class="empty-message">✨ No games in this dimension yet ✨</div>`;
-            return;
-          }
-          let html = '';
-          filtered.forEach(card => {
-            const highlightClass = card.highlight ? 'highlight' : '';
-            const featuresHtml = card.features.map(f => `<span class="feature-tag">${f}</span>`).join('');
-            const link = card.link.startsWith('http') ? card.link : card.link;
-            const isSimple = card.link.includes('.simple');
-            html += `
-              <div class="card ${highlightClass}" data-link="${link}" data-issimple="${isSimple}" data-title="${card.title}">
-                <div class="card-icon">${card.icon || '📁'}</div>
-                <h3 class="card-title">${card.title}</h3>
-                <p class="card-desc">${card.description}</p>
-                <div class="features">${featuresHtml}</div>
-                <a href="#" class="card-link" onclick="event.preventDefault();"><span>▶</span> enter</a>
-                <span class="category-badge">${card.category || 'demos'}</span>
-              </div>
-            `;
-          });
-          grid.innerHTML = html;
-          document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('click', (e) => {
-              const link = card.dataset.link;
-              const isSimple = card.dataset.issimple === 'true';
-              const gameTitle = card.dataset.title;
-              
-              const gameSlug = getGameSlugFromLink(link);
-              
-              ensureUsername().then(() => {
-                if (isSimple) {
-                  e.preventDefault();
-                  openSimpleGame(link, gameSlug, gameTitle);
-                } else {
-                  e.preventDefault();
-                  openHtmlGameWithTracking(link, gameSlug, gameTitle);
-                }
-              });
-            });
-          });
-        }
-        renderCards('all');
-      })();
-
-      // ========== SIMPLE GAMES PLAYER WITH SCORE TRACKING ==========
-      const modal = document.getElementById('gameModal');
-      const canvas = document.getElementById('gameCanvas');
-      const ctx = canvas.getContext('2d');
-      const closeBtn = document.getElementById('closeGame');
-      const restartBtn = document.getElementById('restartGame');
-      const errorsDiv = document.getElementById('gameErrors');
-
-      let currentGameCode = '';
-      let gameState = {};
-      let currentGameSlug = '';
-      let currentGameTitle = '';
-
-      closeBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-        if (gameState.animationFrame) {
-          cancelAnimationFrame(gameState.animationFrame);
-        }
-      });
-
-      restartBtn.addEventListener('click', () => {
-        if (currentGameCode) {
-          runSimpleGame(currentGameCode);
-        }
-      });
-
-      async function openSimpleGame(link, gameSlug, gameTitle) {
-        modal.classList.add('active');
-        errorsDiv.textContent = 'Loading...';
-        currentGameSlug = gameSlug;
-        currentGameTitle = gameTitle;
-        
-        try {
-          const response = await fetch(link);
-          if (!response.ok) throw new Error('Failed to load game file');
-          const code = await response.text();
-          currentGameCode = code;
-          
-          runSimpleGame(code);
-        } catch (err) {
-          errorsDiv.textContent = 'Error: ' + err.message;
-        }
-      }
-
-      // ---------- SimpleGames Interpreter with Score Submission ----------
-      function runSimpleGame(code) {
-        if (gameState.animationFrame) cancelAnimationFrame(gameState.animationFrame);
-
-        gameState = {
-          vars: {},
-          objects: {},
-          physics: { gravity: 0.5, friction: 0.1, maxSpeed: 10 },
-          events: [],
-          animations: {},
-          particles: {},
-          behaviors: {},
-          camera: { follow: null, shake_on_hit: false, bounds: { x1:0, y1:0, x2:800, y2:600 } },
-          debug: false,
-          currentLevel: null,
-          keys: {},
-          score: 0,
-          lives: 3,
-          gameOver: false,
-          win: false,
-          frame: 0,
-          animationFrame: null,
-          finalScoreSubmitted: false
-        };
-
-        const lines = code.split('\n');
-        let currentSection = null;
-        let levelData = null;
-
-        function parseAtBlock(inner) {
-          const result = {};
-          const pairs = inner.split(',').map(s => s.trim()).filter(s => s);
-          for (let p of pairs) {
-            const eq = p.indexOf('=');
-            if (eq > -1) {
-              const key = p.substring(0, eq).trim();
-              const val = p.substring(eq+1).trim();
-              result[key] = val;
-            } else {
-              result[p] = true;
-            }
-          }
-          return result;
-        }
-
-        function parseDollarBlock(rest) {
-          const dirs = {};
-          const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
-          if (dollarMatches) {
-            dollarMatches.forEach(d => {
-              const eq = d.indexOf('=');
-              if (eq > -1) {
-                const key = d.substring(1, eq);
-                const val = d.substring(eq+1);
-                dirs[key] = val;
-              } else {
-                dirs[d.substring(1)] = true;
+            };
+            
+            window.addEventListener('beforeunload', function() {
+              if (gameScore > 0 && !gameCompleted) {
+                window.submitFinalScore();
               }
             });
-          }
-          return dirs;
-        }
+          })();
+        <\/script>
+      `;
+      
+      if (html.includes('</head>')) {
+        return html.replace('</head>', trackerScript + '</head>');
+      } else if (html.includes('</body>')) {
+        return html.replace('</body>', trackerScript + '</body>');
+      } else {
+        return trackerScript + html;
+      }
+    }
 
-        function evaluateExpr(expr) {
-          expr = expr.trim();
-          for (let [k, v] of Object.entries(gameState.vars)) {
-            const re = new RegExp('\\b' + k + '\\b', 'g');
-            expr = expr.replace(re, v);
+    // ========== OPEN HTML GAME WITH SCORE TRACKING ==========
+    async function openHtmlGameWithTracking(link, gameSlug, gameTitle) {
+      try {
+        const response = await fetch(link);
+        if (!response.ok) throw new Error('Failed to load game');
+        let html = await response.text();
+        
+        html = injectScoreTracker(html, gameSlug);
+        
+        const gameWindow = window.open('', '_blank');
+        gameWindow.document.write(html);
+        gameWindow.document.close();
+        
+        console.log(`Game ${gameTitle} (${gameSlug}) opened with score tracking`);
+        
+      } catch (error) {
+        console.error('Error loading game:', error);
+        window.open(link, '_blank');
+      }
+    }
+
+    // ========== GAME CARDS RENDERING ==========
+    (function() {
+      const grid = document.getElementById('cardsGrid');
+      const filterBar = document.getElementById('filterBar');
+
+      // SAFEGUARD: if elements are missing, don't crash
+      if (!grid || !filterBar) {
+        console.error('Required DOM elements not found – aborting card rendering.');
+        return;
+      }
+
+      const categories = ['all', ...new Set(cardsData.map(c => c.category).filter(Boolean))];
+      filterBar.innerHTML = '';
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn' + (cat === 'all' ? ' active' : '');
+        btn.setAttribute('data-category', cat);
+        btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderCards(cat);
+        });
+        filterBar.appendChild(btn);
+      });
+
+      function renderCards(category = 'all') {
+        const filtered = category === 'all' ? cardsData : cardsData.filter(c => c.category === category);
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div class="empty-message">✨ No games in this dimension yet ✨</div>`;
+          return;
+        }
+        let html = '';
+        filtered.forEach(card => {
+          const highlightClass = card.highlight ? 'highlight' : '';
+          const featuresHtml = card.features.map(f => `<span class="feature-tag">${f}</span>`).join('');
+          const link = card.link.startsWith('http') ? card.link : card.link;
+          const isSimple = card.link.includes('.simple');
+          html += `
+            <div class="card ${highlightClass}" data-link="${link}" data-issimple="${isSimple}" data-title="${card.title}">
+              <div class="card-icon">${card.icon || '📁'}</div>
+              <h3 class="card-title">${card.title}</h3>
+              <p class="card-desc">${card.description}</p>
+              <div class="features">${featuresHtml}</div>
+              <a href="#" class="card-link" onclick="event.preventDefault();"><span>▶</span> enter</a>
+              <span class="category-badge">${card.category || 'demos'}</span>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+        document.querySelectorAll('.card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            const link = card.dataset.link;
+            const isSimple = card.dataset.issimple === 'true';
+            const gameTitle = card.dataset.title;
+            
+            const gameSlug = getGameSlugFromLink(link);
+            
+            ensureUsername().then(() => {
+              if (isSimple) {
+                e.preventDefault();
+                openSimpleGameWithTracking(link, gameSlug, gameTitle);
+              } else {
+                e.preventDefault();
+                openHtmlGameWithTracking(link, gameSlug, gameTitle);
+              }
+            });
+          });
+        });
+      }
+      renderCards('all');
+    })();
+
+    // ========== SIMPLE GAMES PLAYER WITH SCORE TRACKING ==========
+    const modal = document.getElementById('gameModal');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const closeBtn = document.getElementById('closeGame');
+    const restartBtn = document.getElementById('restartGame');
+    const errorsDiv = document.getElementById('gameErrors');
+
+    let currentGameCode = '';
+    let gameState = {};
+    let currentGameSlug = '';
+    let currentGameTitle = '';
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+      if (gameState.animationFrame) {
+        cancelAnimationFrame(gameState.animationFrame);
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      if (currentGameCode) {
+        runSimpleGame(currentGameCode);
+      }
+    });
+
+    async function openSimpleGameWithTracking(link, gameSlug, gameTitle) {
+      modal.classList.add('active');
+      errorsDiv.textContent = 'Loading...';
+      currentGameSlug = gameSlug;
+      currentGameTitle = gameTitle;
+      
+      try {
+        const response = await fetch(link);
+        if (!response.ok) throw new Error('Failed to load game file');
+        const code = await response.text();
+        currentGameCode = code;
+        
+        runSimpleGame(code);
+      } catch (err) {
+        errorsDiv.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // ---------- SimpleGames Interpreter with Score Submission ----------
+    function runSimpleGame(code) {
+      if (gameState.animationFrame) cancelAnimationFrame(gameState.animationFrame);
+
+      gameState = {
+        vars: {},
+        objects: {},
+        physics: { gravity: 0.5, friction: 0.1, maxSpeed: 10 },
+        events: [],
+        animations: {},
+        particles: {},
+        behaviors: {},
+        camera: { follow: null, shake_on_hit: false, bounds: { x1:0, y1:0, x2:800, y2:600 } },
+        debug: false,
+        currentLevel: null,
+        keys: {},
+        score: 0,
+        lives: 3,
+        gameOver: false,
+        win: false,
+        frame: 0,
+        animationFrame: null,
+        finalScoreSubmitted: false
+      };
+
+      const lines = code.split('\n');
+      let currentSection = null;
+      let levelData = null;
+
+      function parseAtBlock(inner) {
+        const result = {};
+        const pairs = inner.split(',').map(s => s.trim()).filter(s => s);
+        for (let p of pairs) {
+          const eq = p.indexOf('=');
+          if (eq > -1) {
+            const key = p.substring(0, eq).trim();
+            const val = p.substring(eq+1).trim();
+            result[key] = val;
+          } else {
+            result[p] = true;
           }
-          try {
-            if (!/^[0-9+\-*/()., sin cos clamp random]+$/.test(expr)) {
-              return expr;
+        }
+        return result;
+      }
+
+      function parseDollarBlock(rest) {
+        const dirs = {};
+        const dollarMatches = rest.match(/\$([A-Za-z0-9_]+)(?:=([^@\s]*))?/g);
+        if (dollarMatches) {
+          dollarMatches.forEach(d => {
+            const eq = d.indexOf('=');
+            if (eq > -1) {
+              const key = d.substring(1, eq);
+              const val = d.substring(eq+1);
+              dirs[key] = val;
+            } else {
+              dirs[d.substring(1)] = true;
             }
-            expr = expr.replace(/sin/g, 'Math.sin')
-                       .replace(/cos/g, 'Math.cos')
-                       .replace(/clamp/g, 'Math.clamp')
-                       .replace(/random/g, 'Math.random');
-            expr = expr.replace(/Math\.clamp\(([^,]+),([^,]+),([^)]+)\)/g, 'Math.min(Math.max($1,$2),$3)');
-            return Function('"use strict"; return (' + expr + ')')();
-          } catch (e) {
+          });
+        }
+        return dirs;
+      }
+
+      function evaluateExpr(expr) {
+        expr = expr.trim();
+        for (let [k, v] of Object.entries(gameState.vars)) {
+          const re = new RegExp('\\b' + k + '\\b', 'g');
+          expr = expr.replace(re, v);
+        }
+        try {
+          if (!/^[0-9+\-*/()., sin cos clamp random]+$/.test(expr)) {
             return expr;
           }
+          expr = expr.replace(/sin/g, 'Math.sin')
+                     .replace(/cos/g, 'Math.cos')
+                     .replace(/clamp/g, 'Math.clamp')
+                     .replace(/random/g, 'Math.random');
+          expr = expr.replace(/Math\.clamp\(([^,]+),([^,]+),([^)]+)\)/g, 'Math.min(Math.max($1,$2),$3)');
+          return Function('"use strict"; return (' + expr + ')')();
+        } catch (e) {
+          return expr;
+        }
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line.startsWith('//') || line === '') continue;
+
+        if (line === 'Var:') {
+          currentSection = 'var';
+          continue;
+        }
+        if (line === 'Physics:') {
+          currentSection = 'physics';
+          continue;
+        }
+        if (line.startsWith('Level_')) {
+          currentSection = 'level';
+          const levelMatch = line.match(/^Level_(\d+):/i);
+          if (levelMatch) {
+            levelData = { id: levelMatch[1], width: null, height: null, tiles: [], props: {} };
+          }
+          continue;
+        }
+        if (line.startsWith('On')) {
+          const eventMatch = line.match(/^On([A-Z][a-z]+):\s*@([^@]+)@\s*(.*)$/);
+          if (eventMatch) {
+            gameState.events.push({
+              type: eventMatch[1],
+              params: eventMatch[2].split(',').map(s => s.trim()),
+              actions: parseDollarBlock(eventMatch[3])
+            });
+          }
+          continue;
+        }
+        if (line.startsWith('Anim_')) {
+          const animMatch = line.match(/^Anim_([A-Za-z0-9_]+):\s*frames:\s*@([^@]+)@\s*(.*)$/);
+          if (animMatch) {
+            const name = animMatch[1];
+            const frames = animMatch[2].split(',').map(f => f.trim());
+            const dirs = parseDollarBlock(animMatch[3]);
+            gameState.animations[name] = { frames, dirs, currentFrame: 0 };
+          }
+          continue;
+        }
+        if (line.startsWith('ParticleSystem')) {
+          const psMatch = line.match(/^ParticleSystem\s+([A-Za-z0-9_]+):\s*(.*)$/);
+          if (psMatch) {
+            const name = psMatch[1];
+            const rest = psMatch[2];
+            const dirs = parseDollarBlock(rest);
+            gameState.particles[name] = { dirs };
+          }
+          continue;
+        }
+        if (line.startsWith('Behavior')) {
+          const behMatch = line.match(/^Behavior\s+([A-Za-z0-9_]+):/);
+          if (behMatch) {
+            const name = behMatch[1];
+            gameState.behaviors[name] = { states: {}, on_see_player: null };
+            currentSection = 'behavior';
+          }
+          continue;
+        }
+        if (line === 'Camera:') {
+          currentSection = 'camera';
+          continue;
+        }
+        if (line.startsWith('If')) {
+          const ifMatch = line.match(/^If\s+(.+?)\s*-\s*True:/i);
+          if (ifMatch) {
+            const condition = ifMatch[1].trim();
+            if (condition === 'Debug_ENAbLE' || condition === 'cUsToM dRaWiNg pHySiCs') {
+              gameState.debug = true;
+            }
+          }
+          currentSection = 'if';
+          continue;
+        }
+        if (line.startsWith('WinCondition:')) {
+          const wcMatch = line.match(/^WinCondition:\s*@([^@]+)@/);
+          if (wcMatch) gameState.winCondition = wcMatch[1];
+          continue;
+        }
+        if (line.startsWith('LoseCondition:')) {
+          const lcMatch = line.match(/^LoseCondition:\s*@([^@]+)@/);
+          if (lcMatch) gameState.loseCondition = lcMatch[1];
+          continue;
+        }
+        if (line.startsWith('Sprites:') || line.startsWith('Music:') || line.startsWith('Sound:')) {
+          currentSection = 'resources';
+          continue;
         }
 
-        for (let i = 0; i < lines.length; i++) {
-          let line = lines[i].trim();
-          if (line.startsWith('//') || line === '') continue;
+        if (currentSection === 'var') {
+          const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+          for (let m of atMatches) {
+            const expr = m[1].trim();
+            const eq = expr.indexOf('=');
+            if (eq > -1) {
+              const key = expr.substring(0, eq).trim();
+              let val = expr.substring(eq+1).trim();
+              if (!isNaN(parseFloat(val))) val = parseFloat(val);
+              gameState.vars[key] = val;
+            }
+          }
+          continue;
+        }
 
-          if (line === 'Var:') {
-            currentSection = 'var';
-            continue;
+        if (currentSection === 'physics') {
+          const physMatch = line.match(/([a-z_]+)\s*=\s*@([^@]+)@/i);
+          if (physMatch) {
+            const key = physMatch[1];
+            const val = parseFloat(physMatch[2]);
+            if (!isNaN(val)) gameState.physics[key] = val;
           }
-          if (line === 'Physics:') {
-            currentSection = 'physics';
-            continue;
-          }
-          if (line.startsWith('Level_')) {
-            currentSection = 'level';
-            const levelMatch = line.match(/^Level_(\d+):/i);
-            if (levelMatch) {
-              levelData = { id: levelMatch[1], width: null, height: null, tiles: [], props: {} };
-            }
-            continue;
-          }
-          if (line.startsWith('On')) {
-            const eventMatch = line.match(/^On([A-Z][a-z]+):\s*@([^@]+)@\s*(.*)$/);
-            if (eventMatch) {
-              gameState.events.push({
-                type: eventMatch[1],
-                params: eventMatch[2].split(',').map(s => s.trim()),
-                actions: parseDollarBlock(eventMatch[3])
-              });
-            }
-            continue;
-          }
-          if (line.startsWith('Anim_')) {
-            const animMatch = line.match(/^Anim_([A-Za-z0-9_]+):\s*frames:\s*@([^@]+)@\s*(.*)$/);
-            if (animMatch) {
-              const name = animMatch[1];
-              const frames = animMatch[2].split(',').map(f => f.trim());
-              const dirs = parseDollarBlock(animMatch[3]);
-              gameState.animations[name] = { frames, dirs, currentFrame: 0 };
-            }
-            continue;
-          }
-          if (line.startsWith('ParticleSystem')) {
-            const psMatch = line.match(/^ParticleSystem\s+([A-Za-z0-9_]+):\s*(.*)$/);
-            if (psMatch) {
-              const name = psMatch[1];
-              const rest = psMatch[2];
-              const dirs = parseDollarBlock(rest);
-              gameState.particles[name] = { dirs };
-            }
-            continue;
-          }
-          if (line.startsWith('Behavior')) {
-            const behMatch = line.match(/^Behavior\s+([A-Za-z0-9_]+):/);
-            if (behMatch) {
-              const name = behMatch[1];
-              gameState.behaviors[name] = { states: {}, on_see_player: null };
-              currentSection = 'behavior';
-            }
-            continue;
-          }
-          if (line === 'Camera:') {
-            currentSection = 'camera';
-            continue;
-          }
-          if (line.startsWith('If')) {
-            const ifMatch = line.match(/^If\s+(.+?)\s*-\s*True:/i);
-            if (ifMatch) {
-              const condition = ifMatch[1].trim();
-              if (condition === 'Debug_ENAbLE' || condition === 'cUsToM dRaWiNg pHySiCs') {
-                gameState.debug = true;
+          continue;
+        }
+
+        if (currentSection === 'level' && levelData) {
+          const whMatch = line.match(/@width=(\d+)@.*@height=(\d+)@/);
+          if (whMatch) {
+            levelData.width = parseInt(whMatch[1]);
+            levelData.height = parseInt(whMatch[2]);
+          } else if (line.startsWith('tiles:')) {
+            let j = i+1;
+            while (j < lines.length) {
+              const tileLine = lines[j].trim();
+              if (tileLine === '' || tileLine.startsWith('//')) { j++; continue; }
+              if (tileLine.match(/^[01PE]+$/)) {
+                levelData.tiles.push(tileLine);
+                j++;
+              } else {
+                break;
               }
             }
-            currentSection = 'if';
-            continue;
-          }
-          if (line.startsWith('WinCondition:')) {
-            const wcMatch = line.match(/^WinCondition:\s*@([^@]+)@/);
-            if (wcMatch) gameState.winCondition = wcMatch[1];
-            continue;
-          }
-          if (line.startsWith('LoseCondition:')) {
-            const lcMatch = line.match(/^LoseCondition:\s*@([^@]+)@/);
-            if (lcMatch) gameState.loseCondition = lcMatch[1];
-            continue;
-          }
-          if (line.startsWith('Sprites:') || line.startsWith('Music:') || line.startsWith('Sound:')) {
-            currentSection = 'resources';
-            continue;
-          }
-
-          if (currentSection === 'var') {
-            const atMatches = [...line.matchAll(/@([^@]+)@/g)];
-            for (let m of atMatches) {
-              const expr = m[1].trim();
-              const eq = expr.indexOf('=');
-              if (eq > -1) {
-                const key = expr.substring(0, eq).trim();
-                let val = expr.substring(eq+1).trim();
-                if (!isNaN(parseFloat(val))) val = parseFloat(val);
-                gameState.vars[key] = val;
-              }
-            }
-            continue;
-          }
-
-          if (currentSection === 'physics') {
-            const physMatch = line.match(/([a-z_]+)\s*=\s*@([^@]+)@/i);
-            if (physMatch) {
-              const key = physMatch[1];
-              const val = parseFloat(physMatch[2]);
-              if (!isNaN(val)) gameState.physics[key] = val;
-            }
-            continue;
-          }
-
-          if (currentSection === 'level' && levelData) {
-            const whMatch = line.match(/@width=(\d+)@.*@height=(\d+)@/);
-            if (whMatch) {
-              levelData.width = parseInt(whMatch[1]);
-              levelData.height = parseInt(whMatch[2]);
-            } else if (line.startsWith('tiles:')) {
-              let j = i+1;
-              while (j < lines.length) {
-                const tileLine = lines[j].trim();
-                if (tileLine === '' || tileLine.startsWith('//')) { j++; continue; }
-                if (tileLine.match(/^[01PE]+$/)) {
-                  levelData.tiles.push(tileLine);
-                  j++;
-                } else {
-                  break;
-                }
-              }
-              i = j-1;
-            } else {
-              const atMatches = [...line.matchAll(/@([^@]+)@/g)];
-              for (let m of atMatches) {
-                const expr = m[1].trim();
-                const eq = expr.indexOf('=');
-                if (eq > -1) {
-                  const key = expr.substring(0, eq).trim();
-                  const val = expr.substring(eq+1).trim();
-                  levelData.props[key] = val;
-                }
-              }
-            }
-            continue;
-          }
-
-          if (currentSection === 'camera') {
+            i = j-1;
+          } else {
             const atMatches = [...line.matchAll(/@([^@]+)@/g)];
             for (let m of atMatches) {
               const expr = m[1].trim();
@@ -2346,363 +2379,382 @@
               if (eq > -1) {
                 const key = expr.substring(0, eq).trim();
                 const val = expr.substring(eq+1).trim();
-                if (key === 'follow') gameState.camera.follow = val;
-                else if (key === 'bounds') {
-                  const b = val.replace(/[()]/g,'').split(',').map(Number);
-                  if (b.length===4) gameState.camera.bounds = { x1:b[0], y1:b[1], x2:b[2], y2:b[3] };
-                }
-              }
-            }
-            const dollarDirs = parseDollarBlock(line);
-            if (dollarDirs.shake_on_hit) gameState.camera.shake_on_hit = true;
-            continue;
-          }
-
-          const objMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*@([^@]*)@(.*)$/);
-          if (objMatch) {
-            const name = objMatch[1];
-            const inner = objMatch[2];
-            const rest = objMatch[3];
-            const attrs = parseAtBlock(inner);
-            const dirs = parseDollarBlock(rest);
-            let x = 100, y = 100;
-            if (attrs.pos) {
-              const pos = attrs.pos.replace(/[()]/g, '').split(',');
-              if (pos.length === 2) { x = parseInt(pos[0]); y = parseInt(pos[1]); }
-            }
-            gameState.objects[name] = {
-              name, type: name, attrs, dirs,
-              x, y, vx: 0, vy: 0,
-              width: 20, height: 20
-            };
-            continue;
-          }
-        }
-
-        if (levelData && levelData.tiles.length > 0) {
-          gameState.currentLevel = levelData;
-          const tileW = 800 / levelData.width;
-          const tileH = 600 / levelData.height;
-          for (let row = 0; row < levelData.tiles.length; row++) {
-            for (let col = 0; col < levelData.tiles[row].length; col++) {
-              const ch = levelData.tiles[row][col];
-              if (ch === 'P' && gameState.objects['Player']) {
-                gameState.objects['Player'].x = col * tileW + tileW/2;
-                gameState.objects['Player'].y = row * tileH + tileH/2;
-              }
-              if (ch === 'E') {
-                if (!gameState.objects['Enemy']) {
-                  gameState.objects['Enemy'] = { name: 'Enemy', type: 'Enemy', attrs: {}, dirs: { move: 'sin' }, x: col * tileW + tileW/2, y: row * tileH + tileH/2, vx: 0, vy: 0, width: 20, height: 20 };
-                }
+                levelData.props[key] = val;
               }
             }
           }
+          continue;
         }
 
-        function checkCollisions(obj1, obj2) {
-          const dx = obj1.x - obj2.x;
-          const dy = obj1.y - obj2.y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          return dist < (obj1.width/2 + obj2.width/2);
+        if (currentSection === 'camera') {
+          const atMatches = [...line.matchAll(/@([^@]+)@/g)];
+          for (let m of atMatches) {
+            const expr = m[1].trim();
+            const eq = expr.indexOf('=');
+            if (eq > -1) {
+              const key = expr.substring(0, eq).trim();
+              const val = expr.substring(eq+1).trim();
+              if (key === 'follow') gameState.camera.follow = val;
+              else if (key === 'bounds') {
+                const b = val.replace(/[()]/g,'').split(',').map(Number);
+                if (b.length===4) gameState.camera.bounds = { x1:b[0], y1:b[1], x2:b[2], y2:b[3] };
+              }
+            }
+          }
+          const dollarDirs = parseDollarBlock(line);
+          if (dollarDirs.shake_on_hit) gameState.camera.shake_on_hit = true;
+          continue;
         }
 
-        function processEvents() {
-          for (let ev of gameState.events) {
-            if (ev.type === 'Collision') {
-              for (let i = 0; i < ev.params.length; i+=2) {
-                const a = ev.params[i];
-                const b = ev.params[i+1];
-                if (!a || !b) continue;
-                const objA = gameState.objects[a];
-                const objB = gameState.objects[b];
-                if (objA && objB && checkCollisions(objA, objB)) {
-                  for (let [action, val] of Object.entries(ev.actions)) {
-                    if (action === 'if') {
-                      const cond = val;
-                      if (!evaluateExpr(cond)) continue;
-                    } else if (action === 'score') {
-                      if (val.startsWith('+=')) gameState.score += parseInt(val.substring(2)) || 10;
-                      else if (val.startsWith('-=')) gameState.score -= parseInt(val.substring(2)) || 10;
-                      else gameState.score = parseInt(val) || gameState.score;
-                    } else if (action === 'lives') {
-                      if (val.startsWith('+=')) gameState.lives += parseInt(val.substring(2)) || 1;
-                      else if (val.startsWith('-=')) gameState.lives -= parseInt(val.substring(2)) || 1;
-                      else gameState.lives = parseInt(val) || gameState.lives;
-                    } else if (action === 'resetPos') {
-                      if (objA.name === 'Player') { objA.x = 100; objA.y = 300; }
-                    } else if (action === 'gameOver') {
-                      gameState.gameOver = true;
-                    }
+        const objMatch = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*@([^@]*)@(.*)$/);
+        if (objMatch) {
+          const name = objMatch[1];
+          const inner = objMatch[2];
+          const rest = objMatch[3];
+          const attrs = parseAtBlock(inner);
+          const dirs = parseDollarBlock(rest);
+          let x = 100, y = 100;
+          if (attrs.pos) {
+            const pos = attrs.pos.replace(/[()]/g, '').split(',');
+            if (pos.length === 2) { x = parseInt(pos[0]); y = parseInt(pos[1]); }
+          }
+          gameState.objects[name] = {
+            name, type: name, attrs, dirs,
+            x, y, vx: 0, vy: 0,
+            width: 20, height: 20
+          };
+          continue;
+        }
+      }
+
+      if (levelData && levelData.tiles.length > 0) {
+        gameState.currentLevel = levelData;
+        const tileW = 800 / levelData.width;
+        const tileH = 600 / levelData.height;
+        for (let row = 0; row < levelData.tiles.length; row++) {
+          for (let col = 0; col < levelData.tiles[row].length; col++) {
+            const ch = levelData.tiles[row][col];
+            if (ch === 'P' && gameState.objects['Player']) {
+              gameState.objects['Player'].x = col * tileW + tileW/2;
+              gameState.objects['Player'].y = row * tileH + tileH/2;
+            }
+            if (ch === 'E') {
+              if (!gameState.objects['Enemy']) {
+                gameState.objects['Enemy'] = { name: 'Enemy', type: 'Enemy', attrs: {}, dirs: { move: 'sin' }, x: col * tileW + tileW/2, y: row * tileH + tileH/2, vx: 0, vy: 0, width: 20, height: 20 };
+              }
+            }
+          }
+        }
+      }
+
+      function checkCollisions(obj1, obj2) {
+        const dx = obj1.x - obj2.x;
+        const dy = obj1.y - obj2.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        return dist < (obj1.width/2 + obj2.width/2);
+      }
+
+      function processEvents() {
+        for (let ev of gameState.events) {
+          if (ev.type === 'Collision') {
+            for (let i = 0; i < ev.params.length; i+=2) {
+              const a = ev.params[i];
+              const b = ev.params[i+1];
+              if (!a || !b) continue;
+              const objA = gameState.objects[a];
+              const objB = gameState.objects[b];
+              if (objA && objB && checkCollisions(objA, objB)) {
+                for (let [action, val] of Object.entries(ev.actions)) {
+                  if (action === 'if') {
+                    const cond = val;
+                    if (!evaluateExpr(cond)) continue;
+                  } else if (action === 'score') {
+                    if (val.startsWith('+=')) gameState.score += parseInt(val.substring(2)) || 10;
+                    else if (val.startsWith('-=')) gameState.score -= parseInt(val.substring(2)) || 10;
+                    else gameState.score = parseInt(val) || gameState.score;
+                  } else if (action === 'lives') {
+                    if (val.startsWith('+=')) gameState.lives += parseInt(val.substring(2)) || 1;
+                    else if (val.startsWith('-=')) gameState.lives -= parseInt(val.substring(2)) || 1;
+                    else gameState.lives = parseInt(val) || gameState.lives;
+                  } else if (action === 'resetPos') {
+                    if (objA.name === 'Player') { objA.x = 100; objA.y = 300; }
+                  } else if (action === 'gameOver') {
+                    gameState.gameOver = true;
                   }
                 }
               }
             }
           }
         }
+      }
 
-        function gameLoop() {
-          if (gameState.gameOver || gameState.win) {
-            if (!gameState.finalScoreSubmitted) {
-              gameState.finalScoreSubmitted = true;
-              submitScore(currentGameSlug || currentGameTitle, gameState.score);
-            }
+      function gameLoop() {
+        if (gameState.gameOver || gameState.win) {
+          if (!gameState.finalScoreSubmitted) {
+            gameState.finalScoreSubmitted = true;
+            submitScore(currentGameSlug || currentGameTitle, gameState.score);
           }
+        }
 
-          if (gameState.gameOver) {
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0,0,800,600);
-            ctx.fillStyle = 'red';
-            ctx.font = '40px monospace';
-            ctx.fillText('GAME OVER', 200, 300);
-            ctx.fillStyle = 'white';
-            ctx.font = '20px monospace';
-            ctx.fillText(`Final Score: ${gameState.score}`, 300, 400);
-            gameState.animationFrame = requestAnimationFrame(gameLoop);
-            return;
-          }
-          if (gameState.win) {
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0,0,800,600);
-            ctx.fillStyle = 'gold';
-            ctx.font = '40px monospace';
-            ctx.fillText('YOU WIN!', 250, 300);
-            ctx.fillStyle = 'white';
-            ctx.font = '20px monospace';
-            ctx.fillText(`Final Score: ${gameState.score}`, 300, 400);
-            gameState.animationFrame = requestAnimationFrame(gameLoop);
-            return;
-          }
-
-          gameState.frame++;
-
-          Object.values(gameState.objects).forEach(obj => {
-            obj.vy += gameState.physics.gravity;
-            obj.vx *= (1 - gameState.physics.friction);
-            const speed = Math.sqrt(obj.vx*obj.vx + obj.vy*obj.vy);
-            if (speed > gameState.physics.maxSpeed) {
-              obj.vx *= gameState.physics.maxSpeed / speed;
-              obj.vy *= gameState.physics.maxSpeed / speed;
-            }
-            obj.x += obj.vx;
-            obj.y += obj.vy;
-
-            if (obj.x < 0) { obj.x = 0; obj.vx *= -0.5; }
-            if (obj.x > 800) { obj.x = 800; obj.vx *= -0.5; }
-            if (obj.y < 0) { obj.y = 0; obj.vy *= -0.5; }
-            if (obj.y > 600) { obj.y = 600; obj.vy *= -0.5; }
-          });
-
-          const player = gameState.objects['Player'];
-          if (player) {
-            if (gameState.keys['ArrowLeft'] || gameState.keys['a']) player.vx -= 0.5;
-            if (gameState.keys['ArrowRight'] || gameState.keys['d']) player.vx += 0.5;
-            if (gameState.keys['ArrowUp'] || gameState.keys['w']) player.vy -= 0.5;
-            if (gameState.keys['ArrowDown'] || gameState.keys['s']) player.vy += 0.5;
-            if (player.dirs.speed) {
-              let sp = parseFloat(player.dirs.speed);
-              if (!isNaN(sp)) {
-                if (Math.abs(player.vx) > sp) player.vx = Math.sign(player.vx) * sp;
-                if (Math.abs(player.vy) > sp) player.vy = Math.sign(player.vy) * sp;
-              }
-            }
-          }
-
-          const enemy = gameState.objects['Enemy'];
-          if (enemy && enemy.dirs.move) {
-            if (enemy.dirs.move === 'sin') {
-              enemy.x += Math.sin(gameState.frame * 0.05) * 2;
-            } else if (enemy.dirs.move === 'random') {
-              if (gameState.frame % 60 === 0) {
-                enemy.vx = (Math.random() - 0.5) * 4;
-                enemy.vy = (Math.random() - 0.5) * 4;
-              }
-            }
-          }
-
-          processEvents();
-
-          if (gameState.winCondition) {
-            if (evaluateExpr(gameState.winCondition)) gameState.win = true;
-          }
-          if (gameState.loseCondition) {
-            if (evaluateExpr(gameState.loseCondition)) gameState.gameOver = true;
-          }
-
-          ctx.fillStyle = '#111';
-          ctx.fillRect(0, 0, 800, 600);
-
-          if (gameState.currentLevel && gameState.currentLevel.tiles.length) {
-            const level = gameState.currentLevel;
-            const tileW = 800 / level.width;
-            const tileH = 600 / level.height;
-            level.tiles.forEach((row, y) => {
-              for (let x = 0; x < row.length; x++) {
-                const ch = row[x];
-                if (ch === '1') {
-                  ctx.fillStyle = '#666';
-                  ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
-                } else if (ch === 'E') {
-                  ctx.fillStyle = '#f44';
-                  ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
-                }
-              }
-            });
-          }
-
-          Object.entries(gameState.objects).forEach(([name, obj]) => {
-            if (name === 'Player') {
-              ctx.fillStyle = '#0f0';
-              ctx.beginPath();
-              ctx.arc(obj.x, obj.y, 15, 0, 2*Math.PI);
-              ctx.fill();
-            } else {
-              ctx.fillStyle = '#f90';
-              ctx.fillRect(obj.x-10, obj.y-10, 20, 20);
-            }
-          });
-
-          if (gameState.debug) {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = '12px monospace';
-            ctx.fillText(`Objects: ${Object.keys(gameState.objects).length}`, 10, 90);
-            ctx.fillText(`Frame: ${gameState.frame}`, 10, 110);
-          }
-
-          ctx.fillStyle = '#fff';
+        if (gameState.gameOver) {
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(0,0,800,600);
+          ctx.fillStyle = 'red';
+          ctx.font = '40px monospace';
+          ctx.fillText('GAME OVER', 200, 300);
+          ctx.fillStyle = 'white';
           ctx.font = '20px monospace';
-          ctx.fillText(`Score: ${gameState.score}`, 10, 30);
-          ctx.fillText(`Lives: ${gameState.lives}`, 10, 60);
-
+          ctx.fillText(`Final Score: ${gameState.score}`, 300, 400);
           gameState.animationFrame = requestAnimationFrame(gameLoop);
+          return;
+        }
+        if (gameState.win) {
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(0,0,800,600);
+          ctx.fillStyle = 'gold';
+          ctx.font = '40px monospace';
+          ctx.fillText('YOU WIN!', 250, 300);
+          ctx.fillStyle = 'white';
+          ctx.font = '20px monospace';
+          ctx.fillText(`Final Score: ${gameState.score}`, 300, 400);
+          gameState.animationFrame = requestAnimationFrame(gameLoop);
+          return;
         }
 
-        window.addEventListener('keydown', (e) => {
-          if (modal.classList.contains('active')) {
-            gameState.keys[e.key] = true;
+        gameState.frame++;
+
+        Object.values(gameState.objects).forEach(obj => {
+          obj.vy += gameState.physics.gravity;
+          obj.vx *= (1 - gameState.physics.friction);
+          const speed = Math.sqrt(obj.vx*obj.vx + obj.vy*obj.vy);
+          if (speed > gameState.physics.maxSpeed) {
+            obj.vx *= gameState.physics.maxSpeed / speed;
+            obj.vy *= gameState.physics.maxSpeed / speed;
           }
+          obj.x += obj.vx;
+          obj.y += obj.vy;
+
+          if (obj.x < 0) { obj.x = 0; obj.vx *= -0.5; }
+          if (obj.x > 800) { obj.x = 800; obj.vx *= -0.5; }
+          if (obj.y < 0) { obj.y = 0; obj.vy *= -0.5; }
+          if (obj.y > 600) { obj.y = 600; obj.vy *= -0.5; }
         });
-        window.addEventListener('keyup', (e) => {
-          if (modal.classList.contains('active')) {
-            delete gameState.keys[e.key];
+
+        const player = gameState.objects['Player'];
+        if (player) {
+          if (gameState.keys['ArrowLeft'] || gameState.keys['a']) player.vx -= 0.5;
+          if (gameState.keys['ArrowRight'] || gameState.keys['d']) player.vx += 0.5;
+          if (gameState.keys['ArrowUp'] || gameState.keys['w']) player.vy -= 0.5;
+          if (gameState.keys['ArrowDown'] || gameState.keys['s']) player.vy += 0.5;
+          if (player.dirs.speed) {
+            let sp = parseFloat(player.dirs.speed);
+            if (!isNaN(sp)) {
+              if (Math.abs(player.vx) > sp) player.vx = Math.sign(player.vx) * sp;
+              if (Math.abs(player.vy) > sp) player.vy = Math.sign(player.vy) * sp;
+            }
           }
-        });
-
-        gameLoop();
-      }
-
-      // ========== AUDIO PLAYER SETUP (FULL Web Audio) ==========
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const audioCtx = new AudioContext();
-
-      document.body.addEventListener('click', () => {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-      }, { once: true });
-
-      const players = [
-        { id: 'lobby-music', name: 'Music', toggleId: 'music-toggle', selectId: 'song-select', apiPath: 'audio' },
-        { id: 'arcade-fx', name: 'Arcade FX', toggleId: 'fx-toggle', selectId: 'fx-select', apiPath: 'Arcade_FX' },
-        { id: 'funny-sounds', name: 'Funny', toggleId: 'funny-toggle', selectId: 'funny-select', apiPath: 'Funny_Sound_Effects' },
-        { id: 'human-sounds', name: 'Human', toggleId: 'human-toggle', selectId: 'human-select', apiPath: 'Human_Sounds' }
-      ];
-
-      const nodes = {};
-
-      const masterGain = audioCtx.createGain();
-      const masterCompressor = audioCtx.createDynamicsCompressor();
-      masterCompressor.threshold.value = -18;
-      masterCompressor.knee.value = 40;
-      masterCompressor.ratio.value = 12;
-      masterCompressor.attack.value = 0.003;
-      masterCompressor.release.value = 0.25;
-
-      const reverbNode = audioCtx.createConvolver();
-      const reverbReturnGain = audioCtx.createGain();
-      reverbReturnGain.gain.value = 0;
-      const sampleRate = audioCtx.sampleRate;
-      const length = sampleRate * 2;
-      const impulse = audioCtx.createBuffer(2, length, sampleRate);
-      for (let ch = 0; ch < 2; ch++) {
-        const data = impulse.getChannelData(ch);
-        for (let i = 0; i < length; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.3));
         }
+
+        const enemy = gameState.objects['Enemy'];
+        if (enemy && enemy.dirs.move) {
+          if (enemy.dirs.move === 'sin') {
+            enemy.x += Math.sin(gameState.frame * 0.05) * 2;
+          } else if (enemy.dirs.move === 'random') {
+            if (gameState.frame % 60 === 0) {
+              enemy.vx = (Math.random() - 0.5) * 4;
+              enemy.vy = (Math.random() - 0.5) * 4;
+            }
+          }
+        }
+
+        processEvents();
+
+        if (gameState.winCondition) {
+          if (evaluateExpr(gameState.winCondition)) gameState.win = true;
+        }
+        if (gameState.loseCondition) {
+          if (evaluateExpr(gameState.loseCondition)) gameState.gameOver = true;
+        }
+
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, 800, 600);
+
+        if (gameState.currentLevel && gameState.currentLevel.tiles.length) {
+          const level = gameState.currentLevel;
+          const tileW = 800 / level.width;
+          const tileH = 600 / level.height;
+          level.tiles.forEach((row, y) => {
+            for (let x = 0; x < row.length; x++) {
+              const ch = row[x];
+              if (ch === '1') {
+                ctx.fillStyle = '#666';
+                ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
+              } else if (ch === 'E') {
+                ctx.fillStyle = '#f44';
+                ctx.fillRect(x*tileW, y*tileH, tileW-1, tileH-1);
+              }
+            }
+          });
+        }
+
+        Object.entries(gameState.objects).forEach(([name, obj]) => {
+          if (name === 'Player') {
+            ctx.fillStyle = '#0f0';
+            ctx.beginPath();
+            ctx.arc(obj.x, obj.y, 15, 0, 2*Math.PI);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = '#f90';
+            ctx.fillRect(obj.x-10, obj.y-10, 20, 20);
+          }
+        });
+
+        if (gameState.debug) {
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.font = '12px monospace';
+          ctx.fillText(`Objects: ${Object.keys(gameState.objects).length}`, 10, 90);
+          ctx.fillText(`Frame: ${gameState.frame}`, 10, 110);
+        }
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px monospace';
+        ctx.fillText(`Score: ${gameState.score}`, 10, 30);
+        ctx.fillText(`Lives: ${gameState.lives}`, 10, 60);
+
+        gameState.animationFrame = requestAnimationFrame(gameLoop);
       }
-      reverbNode.buffer = impulse;
 
-      const delayNode = audioCtx.createDelay(2.0);
-      delayNode.delayTime.value = 0.3;
-      const delayReturnGain = audioCtx.createGain();
-      delayReturnGain.gain.value = 0;
-      const delayFeedback = audioCtx.createGain();
-      delayFeedback.gain.value = 0.3;
-      delayNode.connect(delayFeedback);
-      delayFeedback.connect(delayNode);
-
-      masterGain.connect(masterCompressor);
-      masterCompressor.connect(audioCtx.destination);
-      masterCompressor.connect(reverbNode);
-      reverbNode.connect(reverbReturnGain);
-      reverbReturnGain.connect(audioCtx.destination);
-      masterCompressor.connect(delayNode);
-      delayNode.connect(delayReturnGain);
-      delayReturnGain.connect(audioCtx.destination);
-
-      const masterNodes = { masterGain, masterCompressor, reverbReturnGain, delayReturnGain };
-
-      players.forEach(p => {
-        const audio = document.getElementById(p.id);
-        const source = audioCtx.createMediaElementSource(audio);
-
-        const gainNode = audioCtx.createGain();
-        const panNode = audioCtx.createStereoPanner();
-        const lowEQ = audioCtx.createBiquadFilter();
-        lowEQ.type = 'lowshelf';
-        lowEQ.frequency.value = 320;
-        lowEQ.gain.value = 0;
-        const midEQ = audioCtx.createBiquadFilter();
-        midEQ.type = 'peaking';
-        midEQ.frequency.value = 1000;
-        midEQ.Q.value = 1;
-        midEQ.gain.value = 0;
-        const highEQ = audioCtx.createBiquadFilter();
-        highEQ.type = 'highshelf';
-        highEQ.frequency.value = 3200;
-        highEQ.gain.value = 0;
-        const compressor = audioCtx.createDynamicsCompressor();
-        compressor.threshold.value = -24;
-        compressor.knee.value = 30;
-        compressor.ratio.value = 12;
-        compressor.attack.value = 0.003;
-        compressor.release.value = 0.25;
-        const gateGain = audioCtx.createGain();
-        gateGain.gain.value = 1;
-        const reverbSend = audioCtx.createGain();
-        reverbSend.gain.value = 0;
-        const delaySend = audioCtx.createGain();
-        delaySend.gain.value = 0;
-
-        source.connect(gateGain);
-        gateGain.connect(compressor);
-        compressor.connect(lowEQ);
-        lowEQ.connect(midEQ);
-        midEQ.connect(highEQ);
-        highEQ.connect(panNode);
-        panNode.connect(gainNode);
-        gainNode.connect(masterGain);
-        gainNode.connect(reverbSend);
-        gainNode.connect(delaySend);
-        reverbSend.connect(reverbNode);
-        delaySend.connect(delayNode);
-
-        nodes[p.id] = {
-          source, gainNode, panNode, lowEQ, midEQ, highEQ, compressor, gateGain,
-          reverbSend, delaySend,
-          audio, toggleBtn: document.getElementById(p.toggleId), selectEl: document.getElementById(p.selectId)
-        };
+      window.addEventListener('keydown', (e) => {
+        if (modal.classList.contains('active')) {
+          gameState.keys[e.key] = true;
+        }
+      });
+      window.addEventListener('keyup', (e) => {
+        if (modal.classList.contains('active')) {
+          delete gameState.keys[e.key];
+        }
       });
 
+      gameLoop();
+    }
+
+    // ========== AUDIO PLAYER SETUP (FULL Web Audio) ==========
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    document.body.addEventListener('click', () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }, { once: true });
+
+    const players = [
+      { id: 'lobby-music', name: 'Music', toggleId: 'music-toggle', selectId: 'song-select', apiPath: 'audio' },
+      { id: 'arcade-fx', name: 'Arcade FX', toggleId: 'fx-toggle', selectId: 'fx-select', apiPath: 'Arcade_FX' },
+      { id: 'funny-sounds', name: 'Funny', toggleId: 'funny-toggle', selectId: 'funny-select', apiPath: 'Funny_Sound_Effects' },
+      { id: 'human-sounds', name: 'Human', toggleId: 'human-toggle', selectId: 'human-select', apiPath: 'Human_Sounds' }
+    ];
+
+    const nodes = {};
+
+    const masterGain = audioCtx.createGain();
+    const masterCompressor = audioCtx.createDynamicsCompressor();
+    masterCompressor.threshold.value = -18;
+    masterCompressor.knee.value = 40;
+    masterCompressor.ratio.value = 12;
+    masterCompressor.attack.value = 0.003;
+    masterCompressor.release.value = 0.25;
+
+    const reverbNode = audioCtx.createConvolver();
+    const reverbReturnGain = audioCtx.createGain();
+    reverbReturnGain.gain.value = 0;
+    const sampleRate = audioCtx.sampleRate;
+    const length = sampleRate * 2;
+    const impulse = audioCtx.createBuffer(2, length, sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.3));
+      }
+    }
+    reverbNode.buffer = impulse;
+
+    const delayNode = audioCtx.createDelay(2.0);
+    delayNode.delayTime.value = 0.3;
+    const delayReturnGain = audioCtx.createGain();
+    delayReturnGain.gain.value = 0;
+    const delayFeedback = audioCtx.createGain();
+    delayFeedback.gain.value = 0.3;
+    delayNode.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+
+    masterGain.connect(masterCompressor);
+    masterCompressor.connect(audioCtx.destination);
+    masterCompressor.connect(reverbNode);
+    reverbNode.connect(reverbReturnGain);
+    reverbReturnGain.connect(audioCtx.destination);
+    masterCompressor.connect(delayNode);
+    delayNode.connect(delayReturnGain);
+    delayReturnGain.connect(audioCtx.destination);
+
+    const masterNodes = { masterGain, masterCompressor, reverbReturnGain, delayReturnGain };
+
+    players.forEach(p => {
+      const audio = document.getElementById(p.id);
+      const source = audioCtx.createMediaElementSource(audio);
+
+      const gainNode = audioCtx.createGain();
+      const panNode = audioCtx.createStereoPanner();
+      const lowEQ = audioCtx.createBiquadFilter();
+      lowEQ.type = 'lowshelf';
+      lowEQ.frequency.value = 320;
+      lowEQ.gain.value = 0;
+      const midEQ = audioCtx.createBiquadFilter();
+      midEQ.type = 'peaking';
+      midEQ.frequency.value = 1000;
+      midEQ.Q.value = 1;
+      midEQ.gain.value = 0;
+      const highEQ = audioCtx.createBiquadFilter();
+      highEQ.type = 'highshelf';
+      highEQ.frequency.value = 3200;
+      highEQ.gain.value = 0;
+      const compressor = audioCtx.createDynamicsCompressor();
+      compressor.threshold.value = -24;
+      compressor.knee.value = 30;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+      const gateGain = audioCtx.createGain();
+      gateGain.gain.value = 1;
+      const reverbSend = audioCtx.createGain();
+      reverbSend.gain.value = 0;
+      const delaySend = audioCtx.createGain();
+      delaySend.gain.value = 0;
+
+      source.connect(gateGain);
+      gateGain.connect(compressor);
+      compressor.connect(lowEQ);
+      lowEQ.connect(midEQ);
+      midEQ.connect(highEQ);
+      highEQ.connect(panNode);
+      panNode.connect(gainNode);
+      gainNode.connect(masterGain);
+      gainNode.connect(reverbSend);
+      gainNode.connect(delaySend);
+      reverbSend.connect(reverbNode);
+      delaySend.connect(delayNode);
+
+      nodes[p.id] = {
+        source, gainNode, panNode, lowEQ, midEQ, highEQ, compressor, gateGain,
+        reverbSend, delaySend,
+        audio, toggleBtn: document.getElementById(p.toggleId), selectEl: document.getElementById(p.selectId)
+      };
+    });
+
+    // ========== CREATE MIXER UI ==========
+    const mixerPanel = document.getElementById('mixerPanel');
+    if (mixerPanel) {
       function createChannelUI(playerId, playerName) {
         const n = nodes[playerId];
+        if (!n) return;
         const channelDiv = document.createElement('div');
         channelDiv.className = 'mixer-channel';
         channelDiv.innerHTML = `
@@ -2827,86 +2879,89 @@
           e.target.classList.add('active');
         }
       });
+    }
 
-      function createPlayer(audioId, toggleId, selectId, apiPath, defaultName = 'Default') {
-        const audio = document.getElementById(audioId);
-        const toggleBtn = document.getElementById(toggleId);
-        const selectEl = document.getElementById(selectId);
-        let isPlaying = false;
-        let playlist = [];
-        let currentIndex = 0;
+    // ========== PLAYER LOADING (FULL) ==========
+    function createPlayer(audioId, toggleId, selectId, apiPath, defaultName = 'Default') {
+      const audio = document.getElementById(audioId);
+      const toggleBtn = document.getElementById(toggleId);
+      const selectEl = document.getElementById(selectId);
+      if (!audio || !toggleBtn || !selectEl) return;
+      let isPlaying = false;
+      let playlist = [];
+      let currentIndex = 0;
 
-        const apiUrl = `https://api.github.com/repos/sussybocca/PackArcade/contents/public/${apiPath}`;
+      const apiUrl = `https://api.github.com/repos/sussybocca/PackArcade/contents/public/${apiPath}`;
 
-        async function loadPlaylist() {
-          try {
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('GitHub API error');
-            const data = await response.json();
-            const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
-            if (mp3Files.length === 0) throw new Error('No MP3 files found');
-            playlist = mp3Files.map(file => ({
-              name: file.name.replace(/\.mp3$/i, ''),
-              url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/${apiPath}/${encodeURIComponent(file.name)}`
-            }));
-            selectEl.innerHTML = '';
-            playlist.forEach((item, index) => {
-              const option = document.createElement('option');
-              option.value = index;
-              option.textContent = item.name;
-              selectEl.appendChild(option);
-            });
-            currentIndex = 0;
-            audio.src = playlist[0].url;
-            audio.load();
-            toggleBtn.disabled = false;
-            selectEl.disabled = false;
-          } catch (error) {
-            console.warn(`Failed to load ${apiPath}:`, error);
-            playlist = [{ name: defaultName, url: `${apiPath}/default.mp3` }];
-            selectEl.innerHTML = `<option value="0">${defaultName} (fallback)</option>`;
-            audio.src = playlist[0].url;
-            audio.load();
-          }
+      async function loadPlaylist() {
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error('GitHub API error');
+          const data = await response.json();
+          const mp3Files = data.filter(item => item.name.toLowerCase().endsWith('.mp3'));
+          if (mp3Files.length === 0) throw new Error('No MP3 files found');
+          playlist = mp3Files.map(file => ({
+            name: file.name.replace(/\.mp3$/i, ''),
+            url: `https://raw.githubusercontent.com/sussybocca/PackArcade/main/public/${apiPath}/${encodeURIComponent(file.name)}`
+          }));
+          selectEl.innerHTML = '';
+          playlist.forEach((item, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = item.name;
+            selectEl.appendChild(option);
+          });
+          currentIndex = 0;
+          audio.src = playlist[0].url;
+          audio.load();
+          toggleBtn.disabled = false;
+          selectEl.disabled = false;
+        } catch (error) {
+          console.warn(`Failed to load ${apiPath}:`, error);
+          playlist = [{ name: defaultName, url: `${apiPath}/default.mp3` }];
+          selectEl.innerHTML = `<option value="0">${defaultName} (fallback)</option>`;
+          audio.src = playlist[0].url;
+          audio.load();
         }
-
-        selectEl.addEventListener('change', () => {
-          const index = parseInt(selectEl.value, 10);
-          if (!isNaN(index) && playlist[index]) {
-            currentIndex = index;
-            audio.src = playlist[currentIndex].url;
-            audio.load();
-            if (isPlaying) {
-              audio.play().catch(e => console.warn('Play after change failed:', e));
-            }
-          }
-        });
-
-        toggleBtn.addEventListener('click', () => {
-          if (isPlaying) {
-            audio.pause();
-            toggleBtn.innerHTML = toggleBtn.innerHTML.replace('🔊', '🔇');
-            isPlaying = false;
-          } else {
-            audio.play()
-              .then(() => {
-                toggleBtn.innerHTML = toggleBtn.innerHTML.replace('🔇', '🔊');
-                isPlaying = true;
-              })
-              .catch(e => {
-                console.warn('Play failed:', e);
-                toggleBtn.style.display = 'none';
-              });
-          }
-        });
-
-        loadPlaylist();
       }
 
-      createPlayer('lobby-music', 'music-toggle', 'song-select', 'audio', 'LobbyMusic');
-      createPlayer('arcade-fx', 'fx-toggle', 'fx-select', 'Arcade_FX', 'DefaultFX');
-      createPlayer('funny-sounds', 'funny-toggle', 'funny-select', 'Funny_Sound_Effects', 'DefaultFunny');
-      createPlayer('human-sounds', 'human-toggle', 'human-select', 'Human_Sounds', 'DefaultHuman');
-    </script>
+      selectEl.addEventListener('change', () => {
+        const index = parseInt(selectEl.value, 10);
+        if (!isNaN(index) && playlist[index]) {
+          currentIndex = index;
+          audio.src = playlist[currentIndex].url;
+          audio.load();
+          if (isPlaying) {
+            audio.play().catch(e => console.warn('Play after change failed:', e));
+          }
+        }
+      });
+
+      toggleBtn.addEventListener('click', () => {
+        if (isPlaying) {
+          audio.pause();
+          toggleBtn.innerHTML = toggleBtn.innerHTML.replace('🔊', '🔇');
+          isPlaying = false;
+        } else {
+          audio.play()
+            .then(() => {
+              toggleBtn.innerHTML = toggleBtn.innerHTML.replace('🔇', '🔊');
+              isPlaying = true;
+            })
+            .catch(e => {
+              console.warn('Play failed:', e);
+              toggleBtn.style.display = 'none';
+            });
+        }
+      });
+
+      loadPlaylist();
+    }
+
+    createPlayer('lobby-music', 'music-toggle', 'song-select', 'audio', 'LobbyMusic');
+    createPlayer('arcade-fx', 'fx-toggle', 'fx-select', 'Arcade_FX', 'DefaultFX');
+    createPlayer('funny-sounds', 'funny-toggle', 'funny-select', 'Funny_Sound_Effects', 'DefaultFunny');
+    createPlayer('human-sounds', 'human-toggle', 'human-select', 'Human_Sounds', 'DefaultHuman');
+  </script>
 </body>
 </html>
