@@ -1,9 +1,45 @@
-/* TEAM */
-Name: Your Name
-Role: Game Developer & Site Creator
-Site: https://packarcade.com
-Twitter: @yourhandle
+/* ========== TEAM & CREDITS ========== */
 
-/* THANKS */
-Netlify for hosting
-Pack-Studio for inspiration
+/* 
+╔═══════════════════════════════════════════════════════════╗
+║                    PACKARCADE STUDIO                      ║
+║                    Created with ❤️ by                       ║
+╚═══════════════════════════════════════════════════════════╝
+*/
+
+/* LEAD DEVELOPER */
+/* ───────────────────────────────────────────────────── */
+Name: William Isaiah Jones
+Role: Lead Game Developer & Site Creator
+Studio: PackDevs / PackStudios
+Site: https://packarcade.xyz
+GitHub: @sussybocca
+
+/* DEVELOPMENT TEAM */
+/* ───────────────────────────────────────────────────── */
+Team Name: PackDevs / PackStudios
+Also Known As: PackDevs
+Role: Game Development & Platform Engineering
+
+/* SPECIAL THANKS */
+/* ───────────────────────────────────────────────────── */
+» Netlify         - For amazing hosting and serverless functions
+» Pack-Studio     - For inspiration and creative direction
+» Supabase        - For real-time database and authentication
+» GitHub Actions  - For automated workflows and CI/CD
+» Ace Editor      - For the incredible code editing experience
+» CodeMirror      - For additional editing capabilities
+» All Players     - For making PackArcade awesome!
+
+/* CONTACT & SOCIAL */
+/* ───────────────────────────────────────────────────── */
+» Website: https://packarcade.xyz
+» Studio: PackDevs
+» GitHub: https://github.com/sussybocca
+» Twitter/X: @packarcade (if applicable)
+
+/* VERSION */
+/* ───────────────────────────────────────────────────── */
+Current Version: 2.0.0
+Last Updated: 2026-03-15
+Build: Production
