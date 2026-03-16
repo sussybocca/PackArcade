@@ -190,6 +190,12 @@
 # === CREATIVE SUBDOMAINS (explicit redirects for portal, languages, secret, doorway, language versions) ===
 # These map the full subdomain to its folder under /public/ using :splat so assets load correctly.
 [[redirects]]
+  from = "https://portal.packarcade.xyz/"
+  to = "/public/portal/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "https://portal.packarcade.xyz/*"
   to = "/public/portal/:splat"
   status = 200
