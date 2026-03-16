@@ -1,6 +1,5 @@
 [build]
   publish = "."
- 
 
 # === FUNCTIONS FIRST - THIS IS CRITICAL ===
 [[redirects]]
@@ -9,6 +8,15 @@
   status = 200
   force = true
 
+# === DYNAMIC SUBDOMAIN HANDLER ===
+# This catches ANY subdomain not explicitly listed below
+# and serves from /public/imagine/[subdomain]/
+[[redirects]]
+  from = "https://*.packarcade.xyz/*"
+  to = "/public/imagine/:splat/index.html"
+  status = 200
+  force = true
+  conditions = {Path = ["/*"]}
 
 # === COLON-BASED ROUTING (:Root.LeaderBoard) ===
 [[redirects]]
@@ -28,6 +36,7 @@
   to = "/profile.html"
   status = 200
   force = true
+
 # === messed up url (.....messed.up.urls) ===
 [[redirects]]
   from = "https://root.foot.nut.cut.dut.fuck.index.packarcade.xyz/*"
@@ -54,7 +63,7 @@
   status = 200
   force = true
 
-# === GAME SUBDOMAINS ===
+# === GAME SUBDOMAINS (explicit overrides) ===
 [[redirects]]
   from = "https://nebula.packarcade.xyz/*"
   to = "/public/imagine/nebula-drifter.html"
@@ -187,8 +196,7 @@
   status = 200
   force = true
 
-# === CREATIVE SUBDOMAINS (explicit redirects for portal, languages, secret, doorway, language versions) ===
-# These map the full subdomain to its folder under /public/ using :splat so assets load correctly.
+# === CREATIVE SUBDOMAINS ===
 [[redirects]]
   from = "https://portal.packarcade.xyz/"
   to = "/public/portal/index.html"
@@ -200,8 +208,6 @@
   to = "/public/portal/:splat"
   status = 200
   force = true
-  
-
 
 [[redirects]]
   from = "https://languages.sites.packarcade.xyz/*"
@@ -221,7 +227,7 @@
   status = 200
   force = true
 
-# Language-specific subdomains (point to their respective folders)
+# === LANGUAGE-SPECIFIC SUBDOMAINS ===
 [[redirects]]
   from = "https://fr.packarcade.xyz/*"
   to = "/public/fr/:splat"
@@ -253,7 +259,7 @@
   status = 200
   force = true
 
-# === EDGE FUNCTIONS (keep as fallbacks for any unlisted subdomains) ===
+# === EDGE FUNCTIONS ===
 [[edge_functions]]
   path = "/*"
   function = "doorway-router"
