@@ -7,4 +7,16 @@ Disallow: /
 User-agent: CCBot
 Disallow: /
 
-Sitemap: https:/https://packarcade.netlify.app/sitemap.xml
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+Sitemap: https://packarcade.xyz/sitemap.xml
