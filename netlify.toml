@@ -30,10 +30,10 @@
   force = true
 # === messed up url (.....messed.up.urls) ===
 [[redirects]]
- from = "https://root.foot.nut.cut.dut.fuck.index.packarcade.xyz/*"
-  to = "/index.html"
-   status = 200
-     force = true
+  from = "https://root.foot.nut.cut.dut.fuck.index.packarcade.xyz/*"
+  to = "/public/root-index/:splat"
+  status = 200
+  force = true
 
 # === STANDARD SUBDOMAINS ===
 [[redirects]]
