@@ -2,15 +2,58 @@
   "name": "packgames-studio",
   "version": "1.0.0",
   "description": "PackGames studio backend functions for GitHub, Netlify API, and Supabase",
+  "main": "index.js",
   "dependencies": {
     "@octokit/rest": "^20.0.2",
     "@supabase/supabase-js": "^2.39.0",
-    "node-fetch": "^2.6.9"
+    "ace-builds": "^1.32.2",
+    "codemirror": "^6.0.1",
+    "express": "^4.18.2",
+    "netlify": "^13.1.10",
+    "node-fetch": "^2.6.9",
+    "supabase": "^1.92.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "netlify-cli": "^17.10.1",
+    "nodemon": "^3.0.1"
   },
   "scripts": {
-    "dev": "netlify functions:serve"
+    "dev": "netlify functions:serve",
+    "build": "netlify build",
+    "deploy": "netlify deploy --prod",
+    "start": "node index.js",
+    "functions:serve": "netlify functions:serve",
+    "functions:build": "netlify functions:build"
   },
-  "keywords": ["netlify", "functions", "github", "api", "supabase"],
-  "author": "Your Name",
-  "license": "MIT"
+  "keywords": [
+    "netlify", 
+    "functions", 
+    "github", 
+    "api", 
+    "supabase",
+    "game-builder",
+    "ace-editor",
+    "codemirror"
+  ],
+  "author": "PackArcade Studio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sussybocca/PackArcade.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sussybocca/PackArcade/issues"
+  },
+  "homepage": "https://packarcade.xyz",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "netlify": {
+    "functions": {
+      "source": "netlify/functions",
+      "node_bundler": "esbuild"
+    }
+  }
 }
