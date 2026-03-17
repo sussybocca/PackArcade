@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackArcade Studio Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .create-site {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .create-site h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+
+        .subdomain-preview {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 18px;
+            word-break: break-all;
+        }
+
+        .preview-url {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .sites-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .sites-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .sites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .site-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+        }
+
+        .site-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .site-card h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .site-url {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .site-url:hover {
+            text-decoration: underline;
+        }
+
+        .site-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .site-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .site-actions button:hover {
+            opacity: 0.9;
+        }
+
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PackArcade Studio</h1>
+            <p>Create, edit, and manage your custom subdomain websites</p>
+        </div>
+
+        <div class="create-site">
+            <h2><i class="fas fa-plus-circle"></i> Create New Site</h2>
+            <div class="form-group">
+                <label for="subdomainName">Choose a subdomain</label>
+                <input type="text" id="subdomainName" placeholder="my-awesome-game" pattern="[a-z0-9-]+" title="Lowercase letters, numbers, and hyphens only">
+            </div>
+            <div class="subdomain-preview">
+                Your site will be at: <span class="preview-url" id="previewUrl">https://<span id="previewName">my-awesome-game</span>.packarcade.xyz</span>
+            </div>
+            <button class="btn" id="createBtn" onclick="createSite()">Create Site & Open Editor</button>
+            <div id="createStatus" class="status-message"></div>
+        </div>
+
+        <div class="sites-section">
+            <h2><i class="fas fa-globe"></i> Your Sites</h2>
+            <div id="sitesLoading" style="text-align: center; padding: 20px;"><span class="loading"></span> Loading your sites...</div>
+            <div id="sitesGrid" class="sites-grid"></div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-folder-open"></i>
+                <p>You haven't created any sites yet. Create one above!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Session management
+        let sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+            sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('sessionId', sessionId);
+        }
+
+        // DOM elements
+        const subdomainInput = document.getElementById('subdomainName');
+        const previewNameSpan = document.getElementById('previewName');
+        const previewUrlSpan = document.getElementById('previewUrl');
+        const createBtn = document.getElementById('createBtn');
+        const createStatus = document.getElementById('createStatus');
+        const sitesLoading = document.getElementById('sitesLoading');
+        const sitesGrid = document.getElementById('sitesGrid');
+        const emptyState = document.getElementById('emptyState');
+
+        // Update preview as user types
+        subdomainInput.addEventListener('input', function(e) {
+            let value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            e.target.value = value; // sanitize input
+            previewNameSpan.textContent = value || 'my-awesome-game';
+        });
+
+        // Check availability on blur (optional)
+        subdomainInput.addEventListener('blur', function() {
+            const name = subdomainInput.value.trim();
+            if (name) {
+                checkAvailability(name);
+            }
+        });
+
+        async function checkAvailability(name) {
+            try {
+                const res = await fetch(`/.netlify/functions/check-subdomain?name=${encodeURIComponent(name)}`);
+                const data = await res.json();
+                if (data.exists) {
+                    createStatus.className = 'status-message error';
+                    createStatus.textContent = 'This subdomain is already taken. Please choose another.';
+                    createBtn.disabled = true;
+                } else {
+                    createStatus.className = 'status-message success';
+                    createStatus.textContent = 'Subdomain is available!';
+                    createBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error('Error checking subdomain:', err);
+            }
+        }
+
+        async function createSite() {
+            const name = subdomainInput.value.trim();
+            if (!name) {
+                alert('Please enter a subdomain name');
+                return;
+            }
+
+            createBtn.disabled = true;
+            createStatus.className = 'status-message';
+            createStatus.textContent = 'Creating...';
+
+            try {
+                // First check if it exists (double-check)
+                const checkRes = await fetch(`/.netlify/functions/check-subdomain?name=${encodeURIComponent(name)}`);
+                const checkData = await checkRes.json();
+                if (checkData.exists) {
+                    createStatus.className = 'status-message error';
+                    createStatus.textContent = 'This subdomain is already taken.';
+                    createBtn.disabled = false;
+                    return;
+                }
+
+                // No need to call create-subdomains yet, just redirect to editor
+                // The editor will create the site when user publishes
+                window.location.href = `/editor.html?subdomain=${encodeURIComponent(name)}`;
+            } catch (err) {
+                console.error('Error:', err);
+                createStatus.className = 'status-message error';
+                createStatus.textContent = 'Error checking subdomain. Please try again.';
+                createBtn.disabled = false;
+            }
+        }
+
+        // Load user's sites
+        async function loadUserSites() {
+            sitesLoading.style.display = 'block';
+            sitesGrid.innerHTML = '';
+            emptyState.style.display = 'none';
+
+            try {
+                const res = await fetch(`/.netlify/functions/get-user-sites?sessionId=${encodeURIComponent(sessionId)}`);
+                const data = await res.json();
+
+                sitesLoading.style.display = 'none';
+
+                if (data.sites && data.sites.length > 0) {
+                    renderSites(data.sites);
+                } else {
+                    emptyState.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Error loading sites:', err);
+                sitesLoading.style.display = 'none';
+                sitesGrid.innerHTML = '<div class="empty-state">Error loading sites. Please refresh.</div>';
+            }
+        }
+
+        function renderSites(sites) {
+            let html = '';
+            sites.forEach(site => {
+                const url = `https://${site.subdomain_name}.packarcade.xyz`;
+                html += `
+                    <div class="site-card" data-subdomain="${site.subdomain_name}">
+                        <h3>${site.subdomain_name}</h3>
+                        <a href="${url}" class="site-url" target="_blank">${url}</a>
+                        <div class="site-actions">
+                            <button class="edit-btn" onclick="editSite('${site.subdomain_name}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="delete-btn" onclick="deleteSite('${site.subdomain_name}')"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            sitesGrid.innerHTML = html;
+        }
+
+        window.editSite = function(subdomain) {
+            window.location.href = `/editor.html?subdomain=${encodeURIComponent(subdomain)}`;
+        };
+
+        window.deleteSite = async function(subdomain) {
+            if (!confirm(`Are you sure you want to delete "${subdomain}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/.netlify/functions/delete-site', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subdomain, sessionId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Remove card from DOM
+                    document.querySelector(`.site-card[data-subdomain="${subdomain}"]`).remove();
+                    // If no sites left, show empty state
+                    if (document.querySelectorAll('.site-card').length === 0) {
+                        emptyState.style.display = 'block';
+                    }
+                } else {
+                    alert('Delete failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error deleting site: ' + err.message);
+            }
+        };
+
+        // Initial load
+        loadUserSites();
+
+        // Optional: Add keyboard shortcut (Ctrl+Enter) to create
+        subdomainInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                createSite();
+            }
+        });
+    </script>
+</body>
+</html>
