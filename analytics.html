@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics // PackArcade</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            border: 2px solid white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            background: white;
+            color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-link.active {
+            background: white;
+            color: #764ba2;
+        }
+
+        .analytics-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .subdomain-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .subdomain-title {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .subdomain-title span {
+            color: #667eea;
+        }
+
+        .time-range {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-btn {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .time-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .realtime-badge {
+            background: #ff4757;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .chart-container {
+            margin-bottom: 30px;
+            height: 300px;
+        }
+
+        .realtime-section {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .realtime-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .active-users-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .active-user {
+            background: #e3f2fd;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .active-user i {
+            color: #4caf50;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .detail-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .breakdown-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breakdown-value {
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .event-log {
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .event-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .event-time {
+            color: #999;
+            min-width: 60px;
+        }
+
+        .event-type {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .explore-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Analytics</h1>
+            <p>Real-time insights for your sites</p>
+            <div class="nav-links">
+                <a href="/dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i> DASHBOARD</a>
+                <a href="/editor.html" class="nav-link"><i class="fas fa-code"></i> EDITOR</a>
+                <a href="/explore.html" class="nav-link"><i class="fas fa-compass"></i> EXPLORE</a>
+            </div>
+        </div>
+
+        <div class="analytics-panel">
+            <div class="subdomain-header">
+                <div class="subdomain-title">
+                    <span id="subdomainDisplay">Loading...</span>.packarcade.xyz
+                </div>
+                <div class="time-range" id="timeRange">
+                    <button class="time-btn active" onclick="setTimeRange('1h')">1H</button>
+                    <button class="time-btn" onclick="setTimeRange('24h')">24H</button>
+                    <button class="time-btn" onclick="setTimeRange('7d')">7D</button>
+                    <button class="time-btn" onclick="setTimeRange('30d')">30D</button>
+                </div>
+                <div class="realtime-badge" id="realtimeBadge">LIVE: 0</div>
+            </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <i class="fas fa-eye"></i>
+                    <div class="stat-value" id="totalViews">0</div>
+                    <div class="stat-label">Total Views</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div class="stat-value" id="uniqueVisitors">0</div>
+                    <div class="stat-label">Unique Visitors</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="stat-value" id="bounceRate">0%</div>
+                    <div class="stat-label">Bounce Rate</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-value" id="avgDuration">0s</div>
+                    <div class="stat-label">Avg. Duration</div>
+                </div>
+            </div>
+
+            <div class="realtime-section">
+                <div class="realtime-header">
+                    <h3><i class="fas fa-bolt"></i> Real-Time Active Users</h3>
+                    <span id="activeCount">0 active</span>
+                </div>
+                <div class="active-users-list" id="activeUsersList">
+                    <!-- Active users will appear here -->
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="trafficChart"></canvas>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-card">
+                    <div class="detail-title"><i class="fas fa-mobile-alt"></i> Devices</div>
+                    <div id="devicesBreakdown">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label"><i class="fas fa-desktop"></i> Desktop</span>
+                            <span class="breakdown-value" id="desktopCount">0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="desktopProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label"><i class="fas fa-mobile-alt"></i> Mobile</span>
+                            <span class="breakdown-value" id="mobileCount">0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="mobileProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label"><i class="fas fa-tablet-alt"></i> Tablet</span>
+                            <span class="breakdown-value" id="tabletCount">0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tabletProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-title"><i class="fas fa-globe"></i> Browsers</div>
+                    <div id="browsersBreakdown">
+                        <!-- Browser data will be populated -->
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-title"><i class="fas fa-file"></i> Top Pages</div>
+                    <div id="topPagesList">
+                        <!-- Top pages will appear here -->
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-title"><i class="fas fa-history"></i> Live Events</div>
+                    <div class="event-log" id="eventLog">
+                        <!-- Events will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="explore-toggle">
+                <span><i class="fas fa-compass"></i> Show in Explore page</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="exploreToggle" onchange="toggleExplore()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const subdomain = urlParams.get('subdomain');
+        const sessionId = localStorage.getItem('sessionId') || 'session_' + Math.random().toString(36).substr(2, 9);
+
+        document.getElementById('subdomainDisplay').textContent = subdomain || 'unknown';
+
+        let analyticsChart;
+        let currentRange = '24h';
+        let updateInterval;
+
+        // Initialize
+        if (subdomain) {
+            loadAnalytics(currentRange);
+            startRealtimeUpdates();
+        }
+
+        function setTimeRange(range) {
+            currentRange = range;
+            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadAnalytics(range);
+        }
+
+        async function loadAnalytics(range) {
+            try {
+                const res = await fetch(`/.netlify/functions/get-analytics?subdomain=${subdomain}&range=${range}&sessionId=${sessionId}`);
+                const data = await res.json();
+
+                updateStats(data);
+                updateChart(data.hourlyData);
+                updateDevices(data.devices);
+                updateBrowsers(data.browsers);
+                updateTopPages(data.topPages);
+                updateEventLog(data.events);
+                updateRealtime(data.realtime);
+                
+                // Update explore toggle state
+                if (data.exploreStatus) {
+                    document.getElementById('exploreToggle').checked = data.exploreStatus.is_public;
+                }
+            } catch (err) {
+                console.error('Error loading analytics:', err);
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalViews').textContent = data.summary.totalViews;
+            document.getElementById('uniqueVisitors').textContent = data.summary.uniqueVisitors;
+            document.getElementById('bounceRate').textContent = data.summary.bounceRate + '%';
+            document.getElementById('avgDuration').textContent = data.summary.avgDuration + 's';
+        }
+
+        function updateChart(hourlyData) {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+            
+            if (analyticsChart) {
+                analyticsChart.destroy();
+            }
+
+            analyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hourlyData.map(d => d.hour),
+                    datasets: [{
+                        label: 'Page Views',
+                        data: hourlyData.map(d => d.views),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDevices(devices) {
+            const total = (devices.desktop || 0) + (devices.mobile || 0) + (devices.tablet || 0);
+            
+            document.getElementById('desktopCount').textContent = devices.desktop || 0;
+            document.getElementById('mobileCount').textContent = devices.mobile || 0;
+            document.getElementById('tabletCount').textContent = devices.tablet || 0;
+            
+            document.getElementById('desktopProgress').style.width = ((devices.desktop || 0) / total * 100) + '%';
+            document.getElementById('mobileProgress').style.width = ((devices.mobile || 0) / total * 100) + '%';
+            document.getElementById('tabletProgress').style.width = ((devices.tablet || 0) / total * 100) + '%';
+        }
+
+        function updateBrowsers(browsers) {
+            const container = document.getElementById('browsersBreakdown');
+            const total = Object.values(browsers).reduce((a, b) => a + b, 0);
+            
+            let html = '';
+            for (const [browser, count] of Object.entries(browsers)) {
+                const percentage = (count / total * 100).toFixed(1);
+                html += `
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">${browser}</span>
+                        <span class="breakdown-value">${count} (${percentage}%)</span>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html || '<div class="breakdown-item">No data</div>';
+        }
+
+        function updateTopPages(pages) {
+            const container = document.getElementById('topPagesList');
+            
+            let html = '';
+            pages.forEach(page => {
+                html += `
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">${page.path}</span>
+                        <span class="breakdown-value">${page.views}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div class="breakdown-item">No data</div>';
+        }
+
+        function updateEventLog(events) {
+            const container = document.getElementById('eventLog');
+            
+            let html = '';
+            events.slice(0, 20).forEach(event => {
+                const time = new Date(event.timestamp).toLocaleTimeString();
+                html += `
+                    <div class="event-item">
+                        <span class="event-time">${time}</span>
+                        <span class="event-type">${event.event_type}</span>
+                        <span>${event.page_path || '/'}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div class="event-item">No recent events</div>';
+        }
+
+        function updateRealtime(realtime) {
+            document.getElementById('realtimeBadge').textContent = `LIVE: ${realtime.activeNow}`;
+            document.getElementById('activeCount').textContent = `${realtime.activeNow} active`;
+            
+            const usersList = document.getElementById('activeUsersList');
+            let html = '';
+            
+            realtime.activeUsers.forEach(user => {
+                const timeAgo = Math.floor((Date.now() - new Date(user.last_activity)) / 1000 / 60);
+                html += `
+                    <div class="active-user">
+                        <i class="fas fa-circle"></i>
+                        <span>${user.current_page || '/'}</span>
+                        <span style="color: #999; font-size: 11px;">${timeAgo}m ago</span>
+                    </div>
+                `;
+            });
+            
+            usersList.innerHTML = html || '<div style="color: #999;">No active users</div>';
+        }
+
+        async function toggleExplore() {
+            const isPublic = document.getElementById('exploreToggle').checked;
+            
+            try {
+                await fetch('/.netlify/functions/explore-sites', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subdomain,
+                        isPublic,
+                        sessionId
+                    })
+                });
+            } catch (err) {
+                console.error('Error toggling explore:', err);
+            }
+        }
+
+        function startRealtimeUpdates() {
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(() => {
+                loadAnalytics(currentRange);
+            }, 10000); // Update every 10 seconds
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) clearInterval(updateInterval);
+        });
+    </script>
+</body>
+</html>
