@@ -11,7 +11,7 @@
 # === USER-CREATED SUBDOMAINS (EDITOR/DASHBOARD) ===
 [[redirects]]
   from = "https://editor.packarcade.xyz/*"
-  to = "public/editor.html"
+  to = "/public/editor.html"
   status = 200
   force = true
 
