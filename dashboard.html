@@ -41,6 +41,53 @@
             opacity: 0.9;
         }
 
+        .nav-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            border: 2px solid white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            background: white;
+            color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-link.pass-wall {
+            background: #0f0;
+            border-color: #0f0;
+            color: #000;
+            text-shadow: 0 0 5px #0f0;
+            animation: glow 2s infinite;
+        }
+
+        .nav-link.pass-wall:hover {
+            background: #00ff00;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px #0f0; }
+            50% { box-shadow: 0 0 20px #0f0; }
+            100% { box-shadow: 0 0 5px #0f0; }
+        }
+
         .create-site {
             background: white;
             border-radius: 15px;
@@ -174,6 +221,7 @@
         .site-actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .site-actions button {
@@ -184,6 +232,7 @@
             cursor: pointer;
             font-weight: 500;
             transition: opacity 0.2s;
+            min-width: 70px;
         }
 
         .site-actions button:hover {
@@ -198,6 +247,17 @@
         .delete-btn {
             background: #ff4757;
             color: white;
+        }
+
+        .versions-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .pass-btn {
+            background: #0f0;
+            color: #000;
+            font-weight: bold;
         }
 
         .loading {
@@ -255,6 +315,11 @@
         <div class="header">
             <h1>PackArcade Studio</h1>
             <p>Create, edit, and manage your custom subdomain websites</p>
+            <div class="nav-links">
+                <a href="/editor.html" class="nav-link"><i class="fas fa-code"></i> EDITOR</a>
+                <a href="/passes.html" class="nav-link pass-wall"><i class="fas fa-key"></i> PASS WALL</a>
+                <a href="/" class="nav-link"><i class="fas fa-home"></i> HOME</a>
+            </div>
         </div>
 
         <div class="create-site">
@@ -285,14 +350,13 @@
         // Session management
         let sessionId = localStorage.getItem('sessionId');
         if (!sessionId) {
-            sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+            sessionId = 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
             localStorage.setItem('sessionId', sessionId);
         }
 
         // DOM elements
         const subdomainInput = document.getElementById('subdomainName');
         const previewNameSpan = document.getElementById('previewName');
-        const previewUrlSpan = document.getElementById('previewUrl');
         const createBtn = document.getElementById('createBtn');
         const createStatus = document.getElementById('createStatus');
         const sitesLoading = document.getElementById('sitesLoading');
@@ -302,11 +366,11 @@
         // Update preview as user types
         subdomainInput.addEventListener('input', function(e) {
             let value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-            e.target.value = value; // sanitize input
+            e.target.value = value;
             previewNameSpan.textContent = value || 'my-awesome-game';
         });
 
-        // Check availability on blur (optional)
+        // Check availability on blur
         subdomainInput.addEventListener('blur', function() {
             const name = subdomainInput.value.trim();
             if (name) {
@@ -344,7 +408,6 @@
             createStatus.textContent = 'Creating...';
 
             try {
-                // First check if it exists (double-check)
                 const checkRes = await fetch(`/.netlify/functions/check-subdomain?name=${encodeURIComponent(name)}`);
                 const checkData = await checkRes.json();
                 if (checkData.exists) {
@@ -354,8 +417,6 @@
                     return;
                 }
 
-                // No need to call create-subdomains yet, just redirect to editor
-                // The editor will create the site when user publishes
                 window.location.href = `/editor.html?subdomain=${encodeURIComponent(name)}`;
             } catch (err) {
                 console.error('Error:', err);
@@ -365,7 +426,6 @@
             }
         }
 
-        // Load user's sites
         async function loadUserSites() {
             sitesLoading.style.display = 'block';
             sitesGrid.innerHTML = '';
@@ -399,7 +459,9 @@
                         <a href="${url}" class="site-url" target="_blank">${url}</a>
                         <div class="site-actions">
                             <button class="edit-btn" onclick="editSite('${site.subdomain_name}')"><i class="fas fa-edit"></i> Edit</button>
-                            <button class="delete-btn" onclick="deleteSite('${site.subdomain_name}')"><i class="fas fa-trash"></i> Delete</button>
+                            <button class="versions-btn" onclick="showVersions('${site.subdomain_name}')"><i class="fas fa-code-branch"></i> Versions</button>
+                            <button class="pass-btn" onclick="getPass('${site.subdomain_name}')"><i class="fas fa-key"></i> Get Pass</button>
+                            <button class="delete-btn" onclick="deleteSite('${site.subdomain_name}')"><i class="fas fa-trash"></i> Del</button>
                         </div>
                     </div>
                 `;
@@ -409,6 +471,14 @@
 
         window.editSite = function(subdomain) {
             window.location.href = `/editor.html?subdomain=${encodeURIComponent(subdomain)}`;
+        };
+
+        window.showVersions = function(subdomain) {
+            window.location.href = `/versions.html?subdomain=${encodeURIComponent(subdomain)}`;
+        };
+
+        window.getPass = function(subdomain) {
+            window.location.href = `/passes.html?subdomain=${encodeURIComponent(subdomain)}`;
         };
 
         window.deleteSite = async function(subdomain) {
@@ -424,9 +494,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    // Remove card from DOM
                     document.querySelector(`.site-card[data-subdomain="${subdomain}"]`).remove();
-                    // If no sites left, show empty state
                     if (document.querySelectorAll('.site-card').length === 0) {
                         emptyState.style.display = 'block';
                     }
@@ -438,10 +506,8 @@
             }
         };
 
-        // Initial load
         loadUserSites();
 
-        // Optional: Add keyboard shortcut (Ctrl+Enter) to create
         subdomainInput.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
