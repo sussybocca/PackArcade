@@ -73,17 +73,66 @@ exports.handler = async (event) => {
 
     if (subdomainError) throw subdomainError;
 
-    // Insert files into Supabase
+    // Process files - inject function reference into HTML files
     if (files && files.length > 0) {
-      const fileRecords = files.map(file => ({
-        subdomain_id: subdomainData.id,
-        file_path: file.path || '/',
-        file_name: file.name,
-        file_content: file.content,
-        file_type: file.type,
-        parent_folder: file.parentFolder,
-        is_folder: file.isFolder || false
-      }));
+      const fileRecords = files.map(file => {
+        let fileContent = file.content || '';
+        
+        // If it's an HTML file, inject the function path
+        if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+          const functionPath = `/.netlify/functions/serve-user-site?subdomain=${subdomain}`;
+          
+          // Create injection script that loads content from the function
+          const injection = `
+<!-- Auto-injected by PackArcade -->
+<script>
+  (function() {
+    // Store function path for later use
+    window.__PACKARCADE = window.__PACKARCADE || {};
+    window.__PACKARCADE.functionPath = '/.netlify/functions/serve-user-site';
+    window.__PACKARCADE.subdomain = '${subdomain}';
+    
+    // If this is the main page and content is empty, load from function
+    if (document.body.children.length === 0 || document.body.innerText.trim() === '') {
+      fetch('/.netlify/functions/serve-user-site')
+        .then(res => res.text())
+        .then(html => {
+          // Parse and inject the content
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          document.body.innerHTML = doc.body.innerHTML;
+          
+          // Update title if needed
+          if (doc.title) {
+            document.title = doc.title;
+          }
+        })
+        .catch(err => console.error('Failed to load content:', err));
+    }
+  })();
+</script>
+`;
+          
+          // Inject after <head> or at beginning
+          if (fileContent.includes('</head>')) {
+            fileContent = fileContent.replace('</head>', injection + '</head>');
+          } else if (fileContent.includes('<head>')) {
+            fileContent = fileContent.replace('<head>', '<head>' + injection);
+          } else {
+            fileContent = '<!DOCTYPE html>\n<html>\n<head>' + injection + '</head>\n<body>\n' + fileContent + '\n</body>\n</html>';
+          }
+        }
+        
+        return {
+          subdomain_id: subdomainData.id,
+          file_path: file.path || '/',
+          file_name: file.name,
+          file_content: fileContent,
+          file_type: file.type,
+          parent_folder: file.parentFolder,
+          is_folder: file.isFolder || false
+        };
+      });
 
       const { error: filesError } = await supabase
         .from('files')
@@ -111,7 +160,6 @@ exports.handler = async (event) => {
       if (netlifySiteId && netlifyToken) {
         const newDomain = `${subdomain}.packarcade.xyz`;
         
-        // Get current site info from Netlify
         const getResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
           method: 'GET',
           headers: {
@@ -124,9 +172,7 @@ exports.handler = async (event) => {
           const siteInfo = await getResponse.json();
           const currentDomainAliases = siteInfo.domain_aliases || [];
           
-          // Check if subdomain already exists in Netlify
           if (!currentDomainAliases.includes(newDomain)) {
-            // Add the new subdomain to domain_aliases
             const updateResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
               method: 'PATCH',
               headers: {
@@ -147,7 +193,6 @@ exports.handler = async (event) => {
         }
       }
     } catch (netlifyError) {
-      // Log error but don't fail the whole request
       console.error('Error adding subdomain to Netlify:', netlifyError);
     }
 
