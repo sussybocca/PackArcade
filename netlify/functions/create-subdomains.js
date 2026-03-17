@@ -60,7 +60,7 @@ exports.handler = async (event) => {
       userId = newUser.id;
     }
 
-    // Create subdomain entry
+    // Create subdomain entry in Supabase
     const { data: subdomainData, error: subdomainError } = await supabase
       .from('subdomains')
       .insert([{
@@ -73,7 +73,7 @@ exports.handler = async (event) => {
 
     if (subdomainError) throw subdomainError;
 
-    // Insert files
+    // Insert files into Supabase
     if (files && files.length > 0) {
       const fileRecords = files.map(file => ({
         subdomain_id: subdomainData.id,
@@ -101,6 +101,54 @@ exports.handler = async (event) => {
           config_name: 'supabase_config',
           config_data: config
         }]);
+    }
+
+    // === ADD SUBDOMAIN TO NETLIFY AUTOMATICALLY ===
+    try {
+      const netlifySiteId = process.env.NETLIFY_SITE_ID;
+      const netlifyToken = process.env.NETLIFY_TOKEN;
+      
+      if (netlifySiteId && netlifyToken) {
+        const newDomain = `${subdomain}.packarcade.xyz`;
+        
+        // Get current site info from Netlify
+        const getResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${netlifyToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (getResponse.ok) {
+          const siteInfo = await getResponse.json();
+          const currentDomainAliases = siteInfo.domain_aliases || [];
+          
+          // Check if subdomain already exists in Netlify
+          if (!currentDomainAliases.includes(newDomain)) {
+            // Add the new subdomain to domain_aliases
+            const updateResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
+              method: 'PATCH',
+              headers: {
+                'Authorization': `Bearer ${netlifyToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                domain_aliases: [...currentDomainAliases, newDomain]
+              })
+            });
+
+            if (updateResponse.ok) {
+              console.log(`Successfully added ${newDomain} to Netlify`);
+            } else {
+              console.error('Failed to update Netlify:', await updateResponse.text());
+            }
+          }
+        }
+      }
+    } catch (netlifyError) {
+      // Log error but don't fail the whole request
+      console.error('Error adding subdomain to Netlify:', netlifyError);
     }
 
     return {
