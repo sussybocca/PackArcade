@@ -22,17 +22,12 @@ exports.handler = async (event) => {
     // Check if subdomain exists
     const { data: existing } = await supabase
       .from('subdomains')
-      .select('id')
+      .select('id, user_id, config')
       .eq('subdomain_name', subdomain)
       .single();
 
-    if (existing) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Subdomain already exists' })
-      };
-    }
+    let subdomainId;
+    let isNew = false;
 
     // Get or create anonymous user
     let userId;
@@ -60,18 +55,49 @@ exports.handler = async (event) => {
       userId = newUser.id;
     }
 
-    // Create subdomain entry in Supabase
-    const { data: subdomainData, error: subdomainError } = await supabase
-      .from('subdomains')
-      .insert([{
-        subdomain_name: subdomain,
-        user_id: userId,
-        config: config || {}
-      }])
-      .select()
-      .single();
+    if (existing) {
+      // === UPDATE EXISTING SUBDOMAIN ===
+      console.log(`Updating existing subdomain: ${subdomain}`);
+      subdomainId = existing.id;
+      isNew = false;
+      
+      // Update subdomain config
+      await supabase
+        .from('subdomains')
+        .update({ 
+          config: config || existing.config || {},
+          last_updated: new Date()
+        })
+        .eq('id', subdomainId);
 
-    if (subdomainError) throw subdomainError;
+      // Delete existing files
+      const { error: deleteError } = await supabase
+        .from('files')
+        .delete()
+        .eq('subdomain_id', subdomainId);
+
+      if (deleteError) {
+        console.error('Error deleting existing files:', deleteError);
+        throw deleteError;
+      }
+    } else {
+      // === CREATE NEW SUBDOMAIN ===
+      console.log(`Creating new subdomain: ${subdomain}`);
+      isNew = true;
+      
+      const { data: subdomainData, error: subdomainError } = await supabase
+        .from('subdomains')
+        .insert([{
+          subdomain_name: subdomain,
+          user_id: userId,
+          config: config || {}
+        }])
+        .select()
+        .single();
+
+      if (subdomainError) throw subdomainError;
+      subdomainId = subdomainData.id;
+    }
 
     // Process files - inject function reference into HTML files
     if (files && files.length > 0) {
@@ -124,7 +150,7 @@ exports.handler = async (event) => {
         }
         
         return {
-          subdomain_id: subdomainData.id,
+          subdomain_id: subdomainId,
           file_path: file.path || '/',
           file_name: file.name,
           file_content: fileContent,
@@ -143,57 +169,123 @@ exports.handler = async (event) => {
 
     // Save config to dev_table if provided
     if (config) {
-      await supabase
+      // Check if config already exists
+      const { data: existingConfig } = await supabase
         .from('dev_table')
-        .insert([{
-          subdomain_id: subdomainData.id,
-          config_name: 'supabase_config',
-          config_data: config
-        }]);
+        .select('id')
+        .eq('subdomain_id', subdomainId)
+        .eq('config_name', 'supabase_config')
+        .single();
+
+      if (existingConfig) {
+        // Update existing config
+        await supabase
+          .from('dev_table')
+          .update({ config_data: config, updated_at: new Date() })
+          .eq('id', existingConfig.id);
+      } else {
+        // Insert new config
+        await supabase
+          .from('dev_table')
+          .insert([{
+            subdomain_id: subdomainId,
+            config_name: 'supabase_config',
+            config_data: config
+          }]);
+      }
     }
 
-    // === ADD SUBDOMAIN TO NETLIFY AUTOMATICALLY ===
-    try {
-      const netlifySiteId = process.env.NETLIFY_SITE_ID;
-      const netlifyToken = process.env.NETLIFY_TOKEN;
-      
-      if (netlifySiteId && netlifyToken) {
-        const newDomain = `${subdomain}.packarcade.xyz`;
+    // === ADD SUBDOMAIN TO NETLIFY AUTOMATICALLY (only for new subdomains) ===
+    if (isNew) {
+      try {
+        const netlifySiteId = process.env.NETLIFY_SITE_ID;
+        const netlifyToken = process.env.NETLIFY_TOKEN;
         
-        const getResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${netlifyToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (getResponse.ok) {
-          const siteInfo = await getResponse.json();
-          const currentDomainAliases = siteInfo.domain_aliases || [];
+        if (netlifySiteId && netlifyToken) {
+          const newDomain = `${subdomain}.packarcade.xyz`;
           
-          if (!currentDomainAliases.includes(newDomain)) {
-            const updateResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
-              method: 'PATCH',
-              headers: {
-                'Authorization': `Bearer ${netlifyToken}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                domain_aliases: [...currentDomainAliases, newDomain]
-              })
-            });
+          const getResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${netlifyToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
 
-            if (updateResponse.ok) {
-              console.log(`Successfully added ${newDomain} to Netlify`);
-            } else {
-              console.error('Failed to update Netlify:', await updateResponse.text());
+          if (getResponse.ok) {
+            const siteInfo = await getResponse.json();
+            const currentDomainAliases = siteInfo.domain_aliases || [];
+            
+            if (!currentDomainAliases.includes(newDomain)) {
+              const updateResponse = await fetch(`https://api.netlify.com/api/v1/sites/${netlifySiteId}`, {
+                method: 'PATCH',
+                headers: {
+                  'Authorization': `Bearer ${netlifyToken}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  domain_aliases: [...currentDomainAliases, newDomain]
+                })
+              });
+
+              if (updateResponse.ok) {
+                console.log(`Successfully added ${newDomain} to Netlify`);
+              } else {
+                console.error('Failed to update Netlify:', await updateResponse.text());
+              }
             }
           }
         }
+      } catch (netlifyError) {
+        console.error('Error adding subdomain to Netlify:', netlifyError);
       }
-    } catch (netlifyError) {
-      console.error('Error adding subdomain to Netlify:', netlifyError);
+    }
+
+    // Create a version record
+    try {
+      // Get the next version number
+      const { data: lastVersion } = await supabase
+        .from('versions')
+        .select('number')
+        .eq('subdomain_id', subdomainId)
+        .order('number', { ascending: false })
+        .limit(1)
+        .single();
+
+      const nextVersionNumber = lastVersion ? lastVersion.number + 1 : 1;
+
+      // Create new version
+      const { data: versionData, error: versionError } = await supabase
+        .from('versions')
+        .insert([{
+          subdomain_id: subdomainId,
+          number: nextVersionNumber,
+          name: isNew ? 'Initial version' : `Update ${new Date().toLocaleString()}`,
+          created_by_session: sessionId,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (!versionError && versionData && files && files.length > 0) {
+        // Save files to version
+        const versionFileRecords = files.map(file => ({
+          version_id: versionData.id,
+          file_path: file.path || '/',
+          file_name: file.name,
+          file_content: file.content,
+          file_type: file.type,
+          parent_folder: file.parentFolder,
+          is_folder: file.isFolder || false
+        }));
+
+        await supabase
+          .from('version_files')
+          .insert(versionFileRecords);
+      }
+    } catch (versionError) {
+      console.error('Error creating version:', versionError);
+      // Don't fail the whole request if versioning fails
     }
 
     return {
@@ -201,8 +293,10 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({ 
         success: true, 
-        subdomain: subdomainData,
-        url: `https://${subdomain}.packarcade.xyz`
+        subdomain: subdomain,
+        isNew: isNew,
+        url: `https://${subdomain}.packarcade.xyz`,
+        message: isNew ? 'Subdomain created successfully' : 'Subdomain updated successfully'
       })
     };
 
