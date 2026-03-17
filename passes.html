@@ -24,7 +24,6 @@
             height: 100vh;
         }
 
-        /* Matrix rain effect */
         .matrix-bg {
             position: fixed;
             top: 0;
@@ -218,7 +217,6 @@
             box-shadow: 0 0 15px #0f0;
         }
 
-        /* THE BIG SCROLLING GREEN WALL */
         .pass-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -231,7 +229,6 @@
             position: relative;
         }
 
-        /* Matrix-like columns */
         .pass-grid::before {
             content: '';
             position: absolute;
@@ -267,7 +264,6 @@
             animation: glitch 5s infinite;
         }
 
-        /* Random glitch effects */
         @keyframes glitch {
             0% { opacity: 1; }
             95% { opacity: 1; }
@@ -310,7 +306,6 @@
             white-space: nowrap;
         }
 
-        /* Copy indicator */
         .pass-item.copied {
             background: #0f0;
             color: #000;
@@ -477,7 +472,6 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Scrollbar styling */
         .pass-grid::-webkit-scrollbar {
             width: 12px;
         }
@@ -511,7 +505,7 @@
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-label">PASSES</div>
-                    <div class="stat-value" id="passCount">100</div>
+                    <div class="stat-value" id="passCount">0</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">SESSION</div>
@@ -527,21 +521,22 @@
         <div class="subdomain-input">
             <label>> TARGET_SUBDOMAIN:</label>
             <input type="text" id="subdomainInput" placeholder="enter subdomain to hack" value="">
-            <button onclick="fetchPassWall()">⟳ GENERATE WALL</button>
+            <button onclick="generatePasses()">⟳ GENERATE 100 PASSES</button>
         </div>
 
         <div class="pass-wall">
             <div class="wall-header">
-                <div class="wall-title">> AVAILABLE_PASSES [100]</div>
+                <div class="wall-title">> ACTIVE PASSES [<span id="activeCount">0</span>]</div>
                 <div class="wall-controls">
                     <button class="wall-btn" onclick="copyAllPasses()">📋 COPY ALL</button>
-                    <button class="wall-btn" onclick="fetchPassWall()">🔄 REFRESH</button>
+                    <button class="wall-btn" onclick="refreshPasses()">🔄 REFRESH</button>
                 </div>
             </div>
             
-            <!-- THE BIG SCROLLING GREEN WALL -->
             <div class="pass-grid" id="passGrid">
-                <!-- 100 passes will be injected here -->
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #666;">
+                    Enter a subdomain and click GENERATE to create passes
+                </div>
             </div>
 
             <div class="selected-pass">
@@ -564,7 +559,7 @@
         }
         document.getElementById('sessionId').textContent = sessionId.substr(0, 8) + '...';
 
-        let currentPasses = [];
+        let activePasses = [];
         let selectedPass = null;
         let selectedIndex = -1;
         let currentSubdomain = '';
@@ -575,10 +570,10 @@
         if (urlSubdomain) {
             document.getElementById('subdomainInput').value = urlSubdomain;
             currentSubdomain = urlSubdomain;
-            fetchPassWall();
+            loadExistingPasses();
         }
 
-        async function fetchPassWall() {
+        async function generatePasses() {
             const subdomain = document.getElementById('subdomainInput').value.trim();
             if (!subdomain) {
                 showStatus('> ERROR: NO TARGET SPECIFIED', 'error');
@@ -586,62 +581,54 @@
             }
 
             currentSubdomain = subdomain;
-            showStatus('> GENERATING PASS WALL...', 'success');
+            showStatus('> GENERATING 100 PASSES...', 'success');
             
             const grid = document.getElementById('passGrid');
-            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><span class="loading"></span><br><br>DECRYPTING WALL...</div>';
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><span class="loading"></span><br><br>GENERATING PASSES...</div>';
             
             try {
-                // Generate 100 random passes client-side for the wall
+                // Generate 100 passes by calling the function 100 times
                 const passes = [];
-                const prefixes = ['DEV', 'ROOT', 'SYS', 'CORE', 'NET', 'WEB', 'DATA', 'CODE', 'BASE', 'HACK', 'NULL', 'ZERO', 'LIVE', 'DARK', 'BLUE', 'RED', 'GOLD', 'IRON', 'ZINC', 'ATOM'];
-                const suffixes = ['PASS', 'KEY', 'CODE', 'TOKEN', 'HASH', 'CHIP', 'LINK', 'PORT', 'NODE', 'PATH', 'GATE', 'DOOR', 'VAULT', 'SAFE', 'LOCK', 'KEY', 'CARD', 'TAG', 'BIT', 'BYTE'];
                 
                 for (let i = 0; i < 100; i++) {
-                    const randomHex = Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0').toUpperCase();
-                    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-                    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-                    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-                    const randomChars = Math.random().toString(36).substr(2, 4).toUpperCase();
-                    
-                    // Make some passes look "used" (30% chance)
-                    const used = Math.random() > 0.7;
-                    
-                    // Different pass formats for variety
-                    const formats = [
-                        `${prefix}.${suffix}.${randomHex}`,
-                        `${prefix}_${randomChars}_${suffix}`,
-                        `0x${randomHex}::${suffix}`,
-                        `${prefix}-${randomNum}-${suffix}`,
-                        `[${randomChars}]${suffix}`,
-                        `${prefix}#${randomNum}#${suffix}`,
-                        `{${randomHex}}${prefix}`,
-                        `!${suffix}_${randomChars}_${randomNum}!`
-                    ];
-                    
-                    const pass = formats[Math.floor(Math.random() * formats.length)];
-                    
-                    passes.push({
-                        pass: pass,
-                        used: used,
-                        raw: pass
+                    const res = await fetch('/.netlify/functions/generate-pass', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            subdomain: subdomain,
+                            sessionId: sessionId
+                        })
                     });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        passes.push({
+                            pass: data.pass,
+                            used: false,
+                            expires: new Date(data.expires).toLocaleString()
+                        });
+                    }
+                    
+                    // Update progress every 10 passes
+                    if (i % 10 === 0) {
+                        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><span class="loading"></span><br><br>GENERATING PASSES... ${i+1}/100</div>`;
+                    }
                 }
                 
-                // Shuffle for good measure
-                for (let i = passes.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [passes[i], passes[j]] = [passes[j], passes[i]];
-                }
-                
-                currentPasses = passes;
+                activePasses = passes;
                 renderPassGrid(passes);
-                showStatus('> WALL GENERATED - SELECT A PASS TO COPY OR VALIDATE', 'success');
+                showStatus(`> SUCCESS: 100 PASSES GENERATED FOR ${subdomain}`, 'success');
                 
             } catch (err) {
                 showStatus('> ERROR: ' + err.message, 'error');
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #f00;">FAILED TO GENERATE WALL</div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #f00;">FAILED TO GENERATE PASSES</div>';
             }
+        }
+
+        async function loadExistingPasses() {
+            // This would need a get-passes function to load existing unused passes
+            // For now, just prompt to generate new ones
+            showStatus('> NO PASSES FOUND. CLICK GENERATE TO CREATE 100 NEW PASSES.', 'error');
         }
 
         function renderPassGrid(passes) {
@@ -650,12 +637,11 @@
             
             passes.forEach((pass, index) => {
                 const usedClass = pass.used ? 'used' : '';
-                const isSelected = (selectedIndex === index) ? 'selected' : '';
                 html += `
-                    <div class="pass-item ${usedClass} ${isSelected}" 
+                    <div class="pass-item ${usedClass}" 
                          onclick="selectPass('${pass.pass.replace(/'/g, "\\'")}', ${index})"
                          ondblclick="copyPass('${pass.pass.replace(/'/g, "\\'")}')"
-                         title="Click to select | Double-click to copy">
+                         title="Click to select | Double-click to copy | Expires: ${pass.expires}">
                         ${pass.pass}
                     </div>
                 `;
@@ -663,11 +649,12 @@
             
             grid.innerHTML = html;
             document.getElementById('passCount').textContent = passes.length;
+            document.getElementById('activeCount').textContent = passes.filter(p => !p.used).length;
         }
 
         function selectPass(pass, index) {
-            if (currentPasses[index] && currentPasses[index].used) {
-                showStatus('> PASS ALREADY EXPIRED', 'error');
+            if (activePasses[index] && activePasses[index].used) {
+                showStatus('> PASS ALREADY USED', 'error');
                 return;
             }
             
@@ -677,16 +664,11 @@
             document.getElementById('validateBtn').disabled = false;
             document.getElementById('copySelectedBtn').disabled = false;
             showStatus(`> PASS SELECTED: ${pass.substr(0, 20)}...`, 'success');
-            
-            // Highlight selected
-            document.querySelectorAll('.pass-item').forEach(el => el.classList.remove('selected'));
-            event.currentTarget.classList.add('selected');
         }
 
         async function copyPass(pass) {
             try {
                 await navigator.clipboard.writeText(pass);
-                showCopyNotification();
                 
                 // Visual feedback
                 const notification = document.getElementById('copyNotification');
@@ -708,7 +690,7 @@
         }
 
         function copyAllPasses() {
-            const allPasses = currentPasses.map(p => p.pass).join('\n');
+            const allPasses = activePasses.map(p => p.pass).join('\n');
             copyPass(allPasses);
             showStatus('> ALL 100 PASSES COPIED', 'success');
         }
@@ -719,7 +701,7 @@
                 return;
             }
 
-            if (currentPasses[selectedIndex] && currentPasses[selectedIndex].used) {
+            if (activePasses[selectedIndex] && activePasses[selectedIndex].used) {
                 showStatus('> CANNOT USE EXPIRED PASS', 'error');
                 return;
             }
@@ -745,8 +727,8 @@
                     
                     // Mark as used in UI
                     if (selectedIndex !== -1) {
-                        currentPasses[selectedIndex].used = true;
-                        renderPassGrid(currentPasses);
+                        activePasses[selectedIndex].used = true;
+                        renderPassGrid(activePasses);
                     }
                     
                     // Store edit token
@@ -766,12 +748,12 @@
             }
         }
 
-        function showCopyNotification() {
-            const notification = document.getElementById('copyNotification');
-            notification.style.display = 'block';
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 2000);
+        function refreshPasses() {
+            if (currentSubdomain) {
+                generatePasses();
+            } else {
+                showStatus('> ENTER A SUBDOMAIN FIRST', 'error');
+            }
         }
 
         function showStatus(message, type) {
@@ -790,7 +772,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'r') {
                 e.preventDefault();
-                fetchPassWall();
+                refreshPasses();
             }
             if (e.ctrlKey && e.key === 'c' && selectedPass) {
                 e.preventDefault();
@@ -801,11 +783,6 @@
                 validatePass();
             }
         });
-
-        // Initial fetch if subdomain in URL
-        if (urlSubdomain) {
-            fetchPassWall();
-        }
     </script>
 </body>
 </html>
