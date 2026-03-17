@@ -8,11 +8,10 @@
   status = 200
   force = true
 
-# === USER-CREATED SUBDOMAINS (MUST COME FIRST) ===
-# These need to be served from the database, not static files
+# === USER-CREATED SUBDOMAINS (EDITOR/DASHBOARD) ===
 [[redirects]]
   from = "https://editor.packarcade.xyz/*"
-  to = "/editor.html"
+  to = "public/editor.html"
   status = 200
   force = true
 
@@ -27,15 +26,6 @@
   to = "/dashboard.html"
   status = 200
   force = true
-
-# === DYNAMIC USER SUBDOMAINS - THESE WILL BE CHECKED BY EDGE FUNCTION ===
-# This catches ALL subdomains and lets the edge function decide
-[[redirects]]
-  from = "https://*.packarcade.xyz/*"
-  to = "/.netlify/functions/serve-user-site"
-  status = 200
-  force = true
-  conditions = {Path = ["/*"]}
 
 # === COLON-BASED ROUTING (:Root.LeaderBoard) ===
 [[redirects]]
@@ -82,7 +72,7 @@
   status = 200
   force = true
 
-# === GAME SUBDOMAINS (explicit overrides) ===
+# === GAME SUBDOMAINS (explicit overrides - MUST COME BEFORE DYNAMIC) ===
 [[redirects]]
   from = "https://nebula.packarcade.xyz/*"
   to = "/public/imagine/nebula-drifter.html"
@@ -268,6 +258,13 @@
 [[redirects]]
   from = "https://de.packarcade.xyz/*"
   to = "/public/de/:splat"
+  status = 200
+  force = true
+
+# === DYNAMIC USER SUBDOMAINS - THIS CATCHES ALL OTHER SUBDOMAINS ===
+[[redirects]]
+  from = "https://*.packarcade.xyz/*"
+  to = "/.netlify/functions/serve-user-site"
   status = 200
   force = true
 
