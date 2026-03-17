@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
     <style>
-        /* === YOUR ORIGINAL CSS (unchanged) === */
+        /* === YOUR ORIGINAL CSS (exactly as you had it) === */
         * {
             margin: 0;
             padding: 0;
@@ -71,7 +71,7 @@
             color: #fff;
         }
 
-        /* NEW: publish button style */
+        /* NEW BUTTON STYLES - ADDED SAFELY */
         .publish-btn {
             background: #4caf50 !important;
             color: white !important;
@@ -82,6 +82,26 @@
 
         .publish-btn:hover {
             background: #45a049 !important;
+        }
+
+        .versions-btn {
+            background: #007acc !important;
+            color: white !important;
+            padding: 5px 10px !important;
+            border-radius: 4px !important;
+        }
+
+        .versions-btn:hover {
+            background: #005999 !important;
+        }
+
+        .version-badge {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
         }
 
         .file-tree {
@@ -213,6 +233,20 @@
             font-size: 12px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .version-info {
+            background: #094771;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
         }
 
         /* Modal Styles */
@@ -289,7 +323,6 @@
             background: #094771 !important;
         }
 
-        /* New styles for publish success */
         .publish-success {
             color: #4caf50;
             font-weight: bold;
@@ -298,6 +331,54 @@
             color: #f44336;
             font-weight: bold;
         }
+
+        /* NEW MODAL STYLES */
+        .versions-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #3e3e42;
+        }
+
+        .version-item {
+            padding: 10px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .version-item:hover {
+            background: #2a2d2e;
+        }
+
+        .version-item.current {
+            background: #094771;
+        }
+
+        .version-number {
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .version-date {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .version-actions button {
+            background: none;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 3px 8px;
+            margin-left: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .version-actions button:hover {
+            background: #3e3e42;
+        }
     </style>
 </head>
 <body>
@@ -305,13 +386,13 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h3>EXPLORER</h3>
+                <h3>EXPLORER <span class="version-badge" id="versionBadge">v1</span></h3>
                 <div class="file-actions">
                     <button onclick="showNewFileModal()" title="New File"><i class="fas fa-file"></i></button>
                     <button onclick="showNewFolderModal()" title="New Folder"><i class="fas fa-folder"></i></button>
                     <button onclick="saveAllFiles()" title="Save All"><i class="fas fa-save"></i></button>
-                    <!-- ADDED: Publish button -->
-                    <button onclick="publishWebsite()" class="publish-btn" title="Publish Website"><i class="fas fa-globe"></i> Publish</button>
+                    <button onclick="showVersionsModal()" class="versions-btn" title="Versions"><i class="fas fa-code-branch"></i> v</button>
+                    <button onclick="publishWebsite()" class="publish-btn" title="Publish Website"><i class="fas fa-globe"></i> Pub</button>
                 </div>
             </div>
             <div class="file-tree" id="fileTree"></div>
@@ -324,13 +405,16 @@
                 <textarea id="code-editor"></textarea>
             </div>
             <div class="status-bar">
-                <span id="statusMessage">Ready</span>
+                <div class="status-left">
+                    <span id="statusMessage">Ready</span>
+                    <span class="version-info" id="versionInfo">Version 1</span>
+                </div>
                 <span id="cursorPosition">Ln 1, Col 1</span>
             </div>
         </div>
     </div>
 
-    <!-- Modals (keep your original modals) -->
+    <!-- New Item Modal -->
     <div class="modal" id="newItemModal">
         <div class="modal-content">
             <h3 id="modalTitle">New File</h3>
@@ -348,6 +432,7 @@
         </div>
     </div>
 
+    <!-- Config Modal -->
     <div class="modal" id="configModal">
         <div class="modal-content">
             <h3>Supabase Config</h3>
@@ -366,7 +451,24 @@
         </div>
     </div>
 
-    <!-- NEW: Publish Success Modal -->
+    <!-- Versions Modal -->
+    <div class="modal" id="versionsModal">
+        <div class="modal-content" style="width: 500px;">
+            <h3><i class="fas fa-code-branch"></i> Version History</h3>
+            <div class="versions-list" id="versionsList">
+                <!-- Versions will be loaded here -->
+            </div>
+            <div>
+                <input type="text" id="versionName" placeholder="Version name (optional)" style="width: 100%;">
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeVersionsModal()">Close</button>
+                <button class="primary" onclick="createVersion()">Create Version</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publish Success Modal -->
     <div class="modal" id="publishSuccessModal">
         <div class="modal-content">
             <h3><i class="fas fa-check-circle" style="color: #4caf50;"></i> Published Successfully!</h3>
@@ -388,13 +490,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
     <script>
-        // === YOUR ORIGINAL JAVASCRIPT (exactly as you had it) ===
+        // === YOUR ORIGINAL JAVASCRIPT (preserved exactly) ===
         // State
         let files = [];
         let currentFile = null;
         let editor = null;
         let sessionId = localStorage.getItem('sessionId') || generateSessionId();
         let subdomain = new URLSearchParams(window.location.search).get('subdomain') || '';
+        
+        // NEW: Version state
+        let versions = [];
+        let currentVersion = 1;
 
         // Initialize CodeMirror
         window.onload = function() {
@@ -427,7 +533,12 @@
             });
 
             localStorage.setItem('sessionId', sessionId);
-            loadUserFiles();
+            
+            // Load files and versions
+            if (subdomain) {
+                loadUserFiles();
+                loadVersions();
+            }
         };
 
         function generateSessionId() {
@@ -669,7 +780,6 @@
         function saveConfig() {
             try {
                 const config = JSON.parse(document.getElementById('configJson').value);
-                // Save config to Supabase
                 fetch('/.netlify/functions/save-config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -705,10 +815,143 @@
             }
         }
 
-        // === NEW: Publish function (add this at the end, before keyboard shortcuts) ===
+        // === NEW VERSIONING FUNCTIONS (added safely) ===
+        async function loadVersions() {
+            if (!subdomain) return;
+            
+            try {
+                const res = await fetch(`/.netlify/functions/get-versions?subdomain=${subdomain}&sessionId=${sessionId}`);
+                const data = await res.json();
+                if (data.versions) {
+                    versions = data.versions;
+                    currentVersion = data.currentVersion || 1;
+                    updateVersionDisplay();
+                }
+            } catch (err) {
+                console.error('Error loading versions:', err);
+            }
+        }
+
+        function updateVersionDisplay() {
+            document.getElementById('versionBadge').textContent = `v${currentVersion}`;
+            document.getElementById('versionInfo').textContent = `Version ${currentVersion}`;
+        }
+
+        function showVersionsModal() {
+            const list = document.getElementById('versionsList');
+            let html = '';
+            
+            if (versions.length === 0) {
+                html = '<div style="padding: 20px; text-align: center; color: #999;">No versions yet</div>';
+            } else {
+                versions.sort((a, b) => b.number - a.number).forEach(version => {
+                    const isCurrent = version.number === currentVersion;
+                    const date = version.created_at ? new Date(version.created_at).toLocaleString() : 'Unknown date';
+                    
+                    html += `
+                        <div class="version-item ${isCurrent ? 'current' : ''}">
+                            <div>
+                                <span class="version-number">v${version.number}</span>
+                                <span style="margin-left: 10px;">${version.name || 'Unnamed'}</span>
+                                <div class="version-date">${date}</div>
+                            </div>
+                            <div class="version-actions">
+                                ${!isCurrent ? `<button onclick="loadVersion(${version.number})">Load</button>` : ''}
+                                ${!isCurrent ? `<button onclick="deleteVersion(${version.number})" style="color: #ff6b6b;">Del</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            list.innerHTML = html;
+            document.getElementById('versionsModal').classList.add('active');
+        }
+
+        function closeVersionsModal() {
+            document.getElementById('versionsModal').classList.remove('active');
+        }
+
+        async function createVersion() {
+            const versionName = document.getElementById('versionName').value || `Version ${versions.length + 1}`;
+            
+            const filesData = files.map(f => ({
+                name: f.name,
+                path: f.path || '/',
+                content: f.content || '',
+                type: f.name.split('.').pop(),
+                isFolder: f.isFolder || false,
+                parentFolder: f.parent
+            }));
+
+            try {
+                const res = await fetch('/.netlify/functions/create-version', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subdomain,
+                        files: filesData,
+                        sessionId,
+                        versionName
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    versions = data.versions;
+                    currentVersion = data.version;
+                    updateVersionDisplay();
+                    closeVersionsModal();
+                    updateStatus(`Version ${currentVersion} created`);
+                    document.getElementById('versionName').value = '';
+                }
+            } catch (err) {
+                alert('Error creating version: ' + err.message);
+            }
+        }
+
+        async function loadVersion(versionNumber) {
+            try {
+                const res = await fetch(`/.netlify/functions/get-version?subdomain=${subdomain}&version=${versionNumber}&sessionId=${sessionId}`);
+                const data = await res.json();
+                if (data.files) {
+                    files = data.files;
+                    currentVersion = versionNumber;
+                    renderFileTree();
+                    updateVersionDisplay();
+                    closeVersionsModal();
+                    updateStatus(`Loaded version ${versionNumber}`);
+                    
+                    const indexFile = files.find(f => f.name === 'index.html');
+                    if (indexFile) openFile(indexFile);
+                }
+            } catch (err) {
+                alert('Error loading version: ' + err.message);
+            }
+        }
+
+        async function deleteVersion(versionNumber) {
+            if (!confirm(`Delete version ${versionNumber}?`)) return;
+            
+            try {
+                const res = await fetch('/.netlify/functions/delete-version', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subdomain, version: versionNumber, sessionId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    versions = versions.filter(v => v.number !== versionNumber);
+                    showVersionsModal();
+                }
+            } catch (err) {
+                alert('Error deleting version: ' + err.message);
+            }
+        }
+
+        // Publish function
         function publishWebsite() {
             if (!subdomain) {
-                alert('No subdomain specified. Please create a site from the dashboard first.');
+                alert('No subdomain specified.');
                 return;
             }
 
@@ -717,10 +960,9 @@
                 return;
             }
 
-            // Check if index.html exists
             const hasIndex = files.some(f => f.name === 'index.html');
             if (!hasIndex) {
-                if (!confirm('No index.html found. Your site might not work properly. Continue anyway?')) {
+                if (!confirm('No index.html found. Continue anyway?')) {
                     return;
                 }
             }
@@ -736,8 +978,6 @@
                 parentFolder: f.parent
             }));
 
-            const config = {}; // You can optionally include config from modal
-
             fetch('/.netlify/functions/create-subdomains', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -745,7 +985,7 @@
                     subdomain: subdomain,
                     files: filesData,
                     sessionId: sessionId,
-                    config: config
+                    config: {}
                 })
             })
             .then(res => res.json())
@@ -754,9 +994,11 @@
                     const url = `https://${subdomain}.packarcade.xyz`;
                     updateStatus(`Published successfully!`);
                     
-                    // Show success modal
                     document.getElementById('publishedUrl').textContent = url;
                     document.getElementById('publishSuccessModal').classList.add('active');
+                    
+                    // Create a version after publish
+                    createVersion();
                 } else {
                     updateStatus('Publish failed: ' + (data.error || 'Unknown error'));
                     alert('Publish failed: ' + (data.error || 'Unknown error'));
@@ -772,11 +1014,43 @@
             document.getElementById('publishSuccessModal').classList.remove('active');
         }
 
-        // Add keyboard shortcuts (keep your original)
+        function renameItem(item) {
+            const newName = prompt('Enter new name:', item.name);
+            if (newName && newName !== item.name) {
+                item.name = newName;
+                renderFileTree();
+                if (currentFile && currentFile.id === item.id) {
+                    updateTabs();
+                }
+            }
+        }
+
+        function deleteItem(item) {
+            if (confirm(`Delete ${item.name}?`)) {
+                const index = files.findIndex(f => f.id === item.id);
+                if (index !== -1) {
+                    files.splice(index, 1);
+                    if (currentFile && currentFile.id === item.id) {
+                        closeFile();
+                    }
+                    renderFileTree();
+                }
+            }
+        }
+
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 saveCurrentFile();
+            }
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                publishWebsite();
+            }
+            if (e.ctrlKey && e.key === 'v') {
+                e.preventDefault();
+                showVersionsModal();
             }
         });
     </script>
