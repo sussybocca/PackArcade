@@ -70,6 +70,18 @@
             color: #fff;
         }
 
+        .publish-btn {
+            background: #4caf50 !important;
+            color: white !important;
+            padding: 5px 10px !important;
+            border-radius: 4px !important;
+            font-weight: bold;
+        }
+
+        .publish-btn:hover {
+            background: #45a049 !important;
+        }
+
         .file-tree {
             flex: 1;
             overflow-y: auto;
@@ -199,6 +211,21 @@
             font-size: 12px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-bar button {
+            background: #4caf50;
+            border: none;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .status-bar button:hover {
+            background: #45a049;
         }
 
         /* Modal Styles */
@@ -233,7 +260,8 @@
         }
 
         .modal-content input,
-        .modal-content select {
+        .modal-content select,
+        .modal-content textarea {
             width: 100%;
             padding: 8px;
             margin-bottom: 15px;
@@ -243,7 +271,9 @@
             border-radius: 3px;
         }
 
-        .modal-content input:focus {
+        .modal-content input:focus,
+        .modal-content select:focus,
+        .modal-content textarea:focus {
             outline: none;
             border-color: #007acc;
         }
@@ -271,8 +301,38 @@
             color: #fff;
         }
 
+        .modal-actions button.success {
+            background: #4caf50;
+            color: #fff;
+        }
+
         .drag-over {
             background: #094771 !important;
+        }
+
+        .publish-success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .publish-error {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -286,6 +346,8 @@
                     <button onclick="showNewFileModal()" title="New File"><i class="fas fa-file"></i></button>
                     <button onclick="showNewFolderModal()" title="New Folder"><i class="fas fa-folder"></i></button>
                     <button onclick="saveAllFiles()" title="Save All"><i class="fas fa-save"></i></button>
+                    <button onclick="showConfigModal()" title="Config"><i class="fas fa-cog"></i></button>
+                    <button onclick="publishWebsite()" class="publish-btn" title="Publish Website"><i class="fas fa-globe"></i> Publish</button>
                 </div>
             </div>
             <div class="file-tree" id="fileTree"></div>
@@ -299,17 +361,20 @@
             </div>
             <div class="status-bar">
                 <span id="statusMessage">Ready</span>
-                <span id="cursorPosition">Ln 1, Col 1</span>
+                <div>
+                    <span id="cursorPosition">Ln 1, Col 1</span>
+                    <button onclick="publishWebsite()" style="margin-left: 15px;"><i class="fas fa-globe"></i> Publish</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- New Item Modal -->
     <div class="modal" id="newItemModal">
         <div class="modal-content">
             <h3 id="modalTitle">New File</h3>
             <input type="text" id="itemName" placeholder="Enter name...">
-            <select id="fileType" style="display: none;">
+            <select id="fileType">
                 <option value="html">HTML</option>
                 <option value="css">CSS</option>
                 <option value="js">JavaScript</option>
@@ -322,20 +387,37 @@
         </div>
     </div>
 
+    <!-- Config Modal -->
     <div class="modal" id="configModal">
         <div class="modal-content">
             <h3>Supabase Config</h3>
-            <textarea id="configJson" rows="10" style="width: 100%; background: #3e3e42; color: #fff; border: 1px solid #555; padding: 8px; margin-bottom: 15px;">{
+            <textarea id="configJson" rows="10" style="font-family: monospace;">{
   "name": "My Website",
   "template": "basic",
   "settings": {
     "theme": "dark",
-    "analytics": true
+    "analytics": true,
+    "description": "My awesome site"
   }
 }</textarea>
             <div class="modal-actions">
                 <button class="secondary" onclick="closeConfigModal()">Cancel</button>
                 <button class="primary" onclick="saveConfig()">Save Config</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publish Success Modal -->
+    <div class="modal" id="publishSuccessModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-check-circle" style="color: #4caf50;"></i> Published Successfully!</h3>
+            <p>Your site is now live at:</p>
+            <p><strong id="publishedUrl" style="color: #4caf50; word-break: break-all;"></strong></p>
+            <div class="modal-actions">
+                <button class="success" onclick="window.open(document.getElementById('publishedUrl').textContent, '_blank')">
+                    <i class="fas fa-external-link-alt"></i> Visit Site
+                </button>
+                <button class="primary" onclick="closePublishModal()">Close</button>
             </div>
         </div>
     </div>
@@ -353,6 +435,7 @@
         let editor = null;
         let sessionId = localStorage.getItem('sessionId') || generateSessionId();
         let subdomain = new URLSearchParams(window.location.search).get('subdomain') || '';
+        let currentConfig = {};
 
         // Initialize CodeMirror
         window.onload = function() {
@@ -385,11 +468,52 @@
             });
 
             localStorage.setItem('sessionId', sessionId);
-            loadUserFiles();
+            
+            if (subdomain) {
+                document.title = `Editing: ${subdomain}.packarcade.xyz`;
+                loadUserFiles();
+                loadConfig();
+            } else {
+                // Create default files for new site
+                createDefaultFiles();
+            }
         };
 
         function generateSessionId() {
             return 'session_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function createDefaultFiles() {
+            // Create index.html
+            const indexFile = {
+                id: 'file_' + Date.now(),
+                name: 'index.html',
+                content: '<!DOCTYPE html>\n<html>\n<head>\n    <title>My PackArcade Site</title>\n    <link rel="stylesheet" href="style.css">\n</head>\n<body>\n    <h1>Welcome to my site!</h1>\n    <script src="script.js"></script>\n</body>\n</html>',
+                isFolder: false,
+                path: '/'
+            };
+            
+            const cssFile = {
+                id: 'file_' + (Date.now() + 1),
+                name: 'style.css',
+                content: 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n    color: white;\n}\n\nh1 {\n    text-align: center;\n}',
+                isFolder: false,
+                path: '/'
+            };
+            
+            const jsFile = {
+                id: 'file_' + (Date.now() + 2),
+                name: 'script.js',
+                content: 'console.log("Hello from PackArcade!");\n\ndocument.addEventListener("DOMContentLoaded", function() {\n    // Your code here\n});',
+                isFolder: false,
+                path: '/'
+            };
+
+            files = [indexFile, cssFile, jsFile];
+            renderFileTree();
+            
+            // Open index.html by default
+            openFile(indexFile);
         }
 
         // File Tree Functions
@@ -401,12 +525,18 @@
             rootItems.forEach(item => renderTreeItem(item, tree));
         }
 
-        function renderTreeItem(item, container, level = 0) {
+        function renderTreeItem(item, container) {
             const li = document.createElement('li');
             li.className = 'tree-item';
             li.setAttribute('data-id', item.id);
-            li.setAttribute('data-path', item.path || '');
+            li.setAttribute('data-path', item.path || '/');
             li.setAttribute('draggable', !item.isFolder);
+            
+            // Drag and drop events
+            li.addEventListener('dragstart', handleDragStart);
+            li.addEventListener('dragover', handleDragOver);
+            li.addEventListener('dragleave', handleDragLeave);
+            li.addEventListener('drop', handleDrop);
             
             const div = document.createElement('div');
             div.className = `tree-item-content ${currentFile && currentFile.id === item.id ? 'selected' : ''}`;
@@ -437,6 +567,11 @@
                 deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteBtn.onclick = (e) => { e.stopPropagation(); deleteItem(item); };
                 actions.appendChild(deleteBtn);
+            } else {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.onclick = (e) => { e.stopPropagation(); deleteFolder(item); };
+                actions.appendChild(deleteBtn);
             }
             
             div.appendChild(actions);
@@ -449,7 +584,7 @@
                 children.style.display = item.expanded ? 'block' : 'none';
                 
                 const folderChildren = files.filter(f => f.parent === item.id);
-                folderChildren.forEach(child => renderTreeItem(child, children, level + 1));
+                folderChildren.forEach(child => renderTreeItem(child, children));
                 
                 li.appendChild(children);
             }
@@ -457,15 +592,63 @@
             container.appendChild(li);
         }
 
+        // Drag and drop handlers
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = {
+                id: e.target.closest('.tree-item').dataset.id,
+                path: e.target.closest('.tree-item').dataset.path
+            };
+            e.dataTransfer.setData('text/plain', draggedItem.id);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.target.closest('.tree-item-content')?.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.closest('.tree-item-content')?.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const target = e.target.closest('.tree-item');
+            if (!target) return;
+            
+            const targetId = target.dataset.id;
+            const targetItem = files.find(f => f.id === targetId);
+            const sourceItem = files.find(f => f.id === draggedItem.id);
+            
+            if (!targetItem || !sourceItem || sourceItem.id === targetItem.id) return;
+            
+            e.target.closest('.tree-item-content')?.classList.remove('drag-over');
+            
+            // Move file/folder
+            if (targetItem.isFolder) {
+                sourceItem.parent = targetItem.id;
+                sourceItem.path = targetItem.path + '/' + sourceItem.name;
+                renderFileTree();
+                updateStatus(`Moved ${sourceItem.name} to ${targetItem.name}`);
+            }
+        }
+
         function getFileIcon(filename) {
-            const ext = filename.split('.').pop();
+            const ext = filename.split('.').pop().toLowerCase();
             const icons = {
                 html: 'fab fa-html5',
+                htm: 'fab fa-html5',
                 css: 'fab fa-css3-alt',
                 js: 'fab fa-js',
                 json: 'fas fa-code',
                 txt: 'fas fa-file-alt',
-                md: 'fas fa-markdown'
+                md: 'fas fa-markdown',
+                png: 'fas fa-file-image',
+                jpg: 'fas fa-file-image',
+                jpeg: 'fas fa-file-image',
+                gif: 'fas fa-file-image',
+                svg: 'fas fa-file-image'
             };
             return icons[ext] || 'fas fa-file';
         }
@@ -492,8 +675,11 @@
         }
 
         function createItem() {
-            const name = document.getElementById('itemName').value;
-            if (!name) return;
+            const name = document.getElementById('itemName').value.trim();
+            if (!name) {
+                alert('Please enter a name');
+                return;
+            }
 
             if (window.currentAction === 'file') {
                 const type = document.getElementById('fileType').value;
@@ -506,19 +692,27 @@
         }
 
         function createFile(name, type) {
+            // Check if file already exists
+            const exists = files.some(f => f.name === name + '.' + type && !f.isFolder);
+            if (exists) {
+                alert('A file with this name already exists');
+                return;
+            }
+
             const templates = {
-                html: '<!DOCTYPE html>\n<html>\n<head>\n    <title>My Page</title>\n</head>\n<body>\n    \n</body>\n</html>',
-                css: '/* Styles */\n',
-                js: '// JavaScript\n',
-                json: '{\n    \n}'
+                html: '<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>My Page</title>\n    <link rel="stylesheet" href="style.css">\n</head>\n<body>\n    <h1>Hello World!</h1>\n    <script src="script.js"></script>\n</body>\n</html>',
+                css: '/* Styles */\n\nbody {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n    background: #f0f0f0;\n}',
+                js: '// JavaScript\n\nconsole.log("Hello World!");\n\ndocument.addEventListener("DOMContentLoaded", function() {\n    // Your code here\n});',
+                json: '{\n    "name": "My App",\n    "version": "1.0.0",\n    "description": "My PackArcade app"\n}'
             };
 
             const file = {
-                id: 'file_' + Date.now(),
+                id: 'file_' + Date.now() + Math.random(),
                 name: name + '.' + type,
-                content: templates[type],
+                content: templates[type] || '',
                 isFolder: false,
-                expanded: false
+                path: '/',
+                parent: null
             };
 
             files.push(file);
@@ -527,19 +721,76 @@
             if (!currentFile) {
                 openFile(file);
             }
+            
+            updateStatus(`Created ${file.name}`);
         }
 
         function createFolder(name) {
+            // Check if folder already exists
+            const exists = files.some(f => f.name === name && f.isFolder);
+            if (exists) {
+                alert('A folder with this name already exists');
+                return;
+            }
+
             const folder = {
-                id: 'folder_' + Date.now(),
+                id: 'folder_' + Date.now() + Math.random(),
                 name: name,
                 isFolder: true,
                 expanded: true,
+                path: '/' + name,
+                parent: null,
                 children: []
             };
 
             files.push(folder);
             renderFileTree();
+            updateStatus(`Created folder ${name}`);
+        }
+
+        function deleteItem(item) {
+            if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+                const index = files.findIndex(f => f.id === item.id);
+                if (index !== -1) {
+                    files.splice(index, 1);
+                    
+                    if (currentFile && currentFile.id === item.id) {
+                        closeFile();
+                    }
+                    
+                    renderFileTree();
+                    updateStatus(`Deleted ${item.name}`);
+                }
+            }
+        }
+
+        function deleteFolder(folder) {
+            if (confirm(`Are you sure you want to delete the folder "${folder.name}" and all its contents?`)) {
+                // Delete folder and all children
+                const folderIds = [folder.id];
+                const childrenToDelete = files.filter(f => f.parent === folder.id);
+                
+                files = files.filter(f => f.id !== folder.id && f.parent !== folder.id);
+                
+                if (currentFile && folderIds.includes(currentFile.id)) {
+                    closeFile();
+                }
+                
+                renderFileTree();
+                updateStatus(`Deleted folder ${folder.name}`);
+            }
+        }
+
+        function renameItem(item) {
+            const newName = prompt('Enter new name:', item.name);
+            if (newName && newName !== item.name) {
+                item.name = newName;
+                renderFileTree();
+                if (currentFile && currentFile.id === item.id) {
+                    updateTabs();
+                }
+                updateStatus(`Renamed to ${newName}`);
+            }
         }
 
         function openFile(file) {
@@ -559,13 +810,15 @@
         }
 
         function getModeFromFile(filename) {
-            const ext = filename.split('.').pop();
+            const ext = filename.split('.').pop().toLowerCase();
             const modes = {
                 html: 'htmlmixed',
+                htm: 'htmlmixed',
                 css: 'css',
                 js: 'javascript',
                 json: 'application/json',
-                md: 'markdown'
+                md: 'markdown',
+                xml: 'xml'
             };
             return modes[ext] || 'text/plain';
         }
@@ -603,11 +856,13 @@
 
         function saveCurrentFile() {
             if (currentFile) {
+                // Content is already saved on change, just update status
                 updateStatus(`Saved ${currentFile.name}`);
             }
         }
 
         function saveAllFiles() {
+            // All files are already saved on change
             updateStatus('All files saved');
         }
 
@@ -615,8 +870,9 @@
             document.getElementById('statusMessage').textContent = message;
         }
 
-        // Supabase Config
+        // Config Functions
         function showConfigModal() {
+            document.getElementById('configJson').value = JSON.stringify(currentConfig, null, 2);
             document.getElementById('configModal').classList.add('active');
         }
 
@@ -626,55 +882,114 @@
 
         function saveConfig() {
             try {
-                const config = JSON.parse(document.getElementById('configJson').value);
-                // Save config to Supabase
-                fetch('/.netlify/functions/save-config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        subdomain: subdomain,
-                        config: config,
-                        sessionId: sessionId
+                currentConfig = JSON.parse(document.getElementById('configJson').value);
+                
+                if (subdomain) {
+                    fetch('/.netlify/functions/save-config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            subdomain: subdomain,
+                            config: currentConfig,
+                            sessionId: sessionId
+                        })
                     })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        updateStatus('Config saved successfully');
-                        closeConfigModal();
-                    }
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateStatus('Config saved successfully');
+                            closeConfigModal();
+                        } else {
+                            alert('Error saving config: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error saving config: ' + err.message);
+                    });
+                } else {
+                    updateStatus('Config saved locally');
+                    closeConfigModal();
+                }
             } catch (e) {
-                alert('Invalid JSON');
+                alert('Invalid JSON: ' + e.message);
             }
         }
 
-        // Load user files from Supabase
-        function loadUserFiles() {
+        function loadConfig() {
             if (subdomain) {
-                fetch(`/.netlify/functions/get-files?subdomain=${subdomain}&sessionId=${sessionId}`)
+                fetch(`/.netlify/functions/get-config?subdomain=${subdomain}&sessionId=${sessionId}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.files) {
-                        files = data.files;
-                        renderFileTree();
+                    if (data.config) {
+                        currentConfig = data.config;
                     }
+                })
+                .catch(err => {
+                    console.error('Error loading config:', err);
                 });
             }
+        }
+
+        // File operations
+        function loadUserFiles() {
+            updateStatus('Loading files...');
+            
+            fetch(`/.netlify/functions/get-files?subdomain=${subdomain}&sessionId=${sessionId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.files && data.files.length > 0) {
+                    files = data.files;
+                    renderFileTree();
+                    
+                    // Open index.html if it exists
+                    const indexFile = files.find(f => f.name === 'index.html');
+                    if (indexFile) {
+                        openFile(indexFile);
+                    } else if (files.length > 0) {
+                        openFile(files[0]);
+                    }
+                    
+                    updateStatus('Files loaded');
+                } else {
+                    createDefaultFiles();
+                }
+            })
+            .catch(err => {
+                console.error('Error loading files:', err);
+                createDefaultFiles();
+            });
         }
 
         // Publish website
         function publishWebsite() {
+            if (!subdomain) {
+                alert('No subdomain specified. Please create a site from the dashboard first.');
+                return;
+            }
+
+            if (files.length === 0) {
+                alert('No files to publish');
+                return;
+            }
+
+            // Check if index.html exists
+            const hasIndex = files.some(f => f.name === 'index.html');
+            if (!hasIndex) {
+                if (!confirm('No index.html found. Your site might not work properly. Continue anyway?')) {
+                    return;
+                }
+            }
+
+            updateStatus('Publishing...');
+            
             const filesData = files.map(f => ({
                 name: f.name,
                 path: f.path || '/',
-                content: f.content,
+                content: f.content || '',
                 type: f.name.split('.').pop(),
                 isFolder: f.isFolder || false,
                 parentFolder: f.parent
             }));
-
-            const config = {}; // Get from config modal
 
             fetch('/.netlify/functions/create-subdomains', {
                 method: 'POST',
@@ -683,15 +998,31 @@
                     subdomain: subdomain,
                     files: filesData,
                     sessionId: sessionId,
-                    config: config
+                    config: currentConfig
                 })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    updateStatus(`Published at https://${subdomain}.packarcade.xyz`);
+                    const url = `https://${subdomain}.packarcade.xyz`;
+                    updateStatus(`Published successfully!`);
+                    
+                    // Show success modal
+                    document.getElementById('publishedUrl').textContent = url;
+                    document.getElementById('publishSuccessModal').classList.add('active');
+                } else {
+                    updateStatus('Publish failed: ' + (data.error || 'Unknown error'));
+                    alert('Publish failed: ' + (data.error || 'Unknown error'));
                 }
+            })
+            .catch(err => {
+                updateStatus('Publish error');
+                alert('Error publishing: ' + err.message);
             });
+        }
+
+        function closePublishModal() {
+            document.getElementById('publishSuccessModal').classList.remove('active');
         }
 
         // Add keyboard shortcuts
@@ -699,6 +1030,10 @@
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 saveCurrentFile();
+            }
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                publishWebsite();
             }
         });
     </script>
