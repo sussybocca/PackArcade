@@ -8,12 +8,31 @@
   status = 200
   force = true
 
-# === DYNAMIC SUBDOMAIN HANDLER ===
-# This catches ANY subdomain not explicitly listed below
-# and serves from /public/imagine/[subdomain]/
+# === USER-CREATED SUBDOMAINS (MUST COME FIRST) ===
+# These need to be served from the database, not static files
+[[redirects]]
+  from = "https://editor.packarcade.xyz/*"
+  to = "/editor.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://dashboard.packarcade.xyz/*"
+  to = "/dashboard.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://studio.packarcade.xyz/*"
+  to = "/dashboard.html"
+  status = 200
+  force = true
+
+# === DYNAMIC USER SUBDOMAINS - THESE WILL BE CHECKED BY EDGE FUNCTION ===
+# This catches ALL subdomains and lets the edge function decide
 [[redirects]]
   from = "https://*.packarcade.xyz/*"
-  to = "/public/imagine/:splat/index.html"
+  to = "/.netlify/functions/serve-user-site"
   status = 200
   force = true
   conditions = {Path = ["/*"]}
@@ -258,23 +277,6 @@
   to = "/index.html"
   status = 200
   force = true
-
-# === EDGE FUNCTIONS ===
-[[edge_functions]]
-  path = "/*"
-  function = "doorway-router"
-
-[[edge_functions]]
-  path = "/*"
-  function = "language-router"
-
-[[edge_functions]]
-  path = "/*"
-  function = "game-version-router"
-
-[[edge_functions]]
-  path = "/*"
-  function = "creative-router"
 
 # === ERROR PAGES (must be last) ===
 [[redirects]]
