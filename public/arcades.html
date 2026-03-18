@@ -486,6 +486,18 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* NEW: status indicator (subtle) */
+        .status-indicator {
+            display: inline-block;
+            margin-left: 15px;
+            font-size: 13px;
+            color: #9bb6ff;
+            background: #1a274a;
+            padding: 4px 12px;
+            border-radius: 40px;
+            border: 1px solid #3f5a9f;
+        }
     </style>
 </head>
 <body>
@@ -522,6 +534,10 @@
                         <button class="canvas-btn save-btn" onclick="saveArcade()"><i class="fas fa-save"></i> save</button>
                         <button class="canvas-btn publish-btn" onclick="publishArcade()"><i class="fas fa-globe"></i> publish</button>
                     </div>
+                </div>
+                <!-- subtle status line (added) -->
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                    <span id="statusMessage" class="status-indicator">Ready</span>
                 </div>
                 <div id="gameCanvas" class="game-grid-canvas" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)"></div>
             </div>
@@ -696,6 +712,53 @@
             <iframe id="previewFrame" class="preview-iframe"></iframe>
         </div>
     </div>
+
+    <!-- NEW: Publish Success Modal (exactly from your editor) -->
+    <div class="modal" id="publishSuccessModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-check-circle" style="color: #4caf50;"></i> Published Successfully!</h3>
+            <p>Your arcade is now live at:</p>
+            <p><strong id="publishedUrl" style="color: #4caf50; word-break: break-all;"></strong></p>
+            <div class="modal-actions">
+                <button class="primary" onclick="window.open(document.getElementById('publishedUrl').textContent, '_blank')">
+                    <i class="fas fa-external-link-alt"></i> Visit Arcade
+                </button>
+                <button class="secondary" onclick="document.getElementById('publishSuccessModal').classList.remove('active')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- minimal style for new modal (matches your theme) -->
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 20000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal .modal-content {
+            background: #1a2545;
+            border-radius: 36px;
+            padding: 30px;
+            max-width: 450px;
+            border: 1px solid #4f6ab0;
+            box-shadow: 0 30px 50px #00000080;
+        }
+        .modal-actions { display: flex; gap: 15px; justify-content: flex-end; margin-top: 25px; }
+        .modal-actions button {
+            padding: 10px 22px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .modal-actions .primary { background: #4caf50; color: white; }
+        .modal-actions .secondary { background: #3a4a7a; color: white; }
+    </style>
 
     <script>
         // FULL GAME LIBRARY (unchanged + more)
@@ -964,122 +1027,134 @@
             alert('✨ arcade draft saved locally!');
         }
 
-       async function publishArcade() {
-    const subdomain = prompt('Enter a subdomain for your arcade (e.g., my-arcade):');
-    if (!subdomain) return;
-
-    const arcadeName = document.getElementById('arcadeTitle').value;
-    
-    // Generate the HTML content from your arcade data
-    const htmlContent = generateArcadeHTML(currentArcade);
-    
-    // Create files array just like your working editor
-    const filesData = [
-        {
-            name: 'index.html',
-            path: '/',
-            content: htmlContent,
-            type: 'html',
-            isFolder: false
-        },
-        {
-            name: 'arcade-config.json',
-            path: '/',
-            content: JSON.stringify({
-                title: arcadeName,
-                description: document.getElementById('arcadeDescription').value,
-                background_color: currentArcade.colors.bg,
-                text_color: currentArcade.colors.text,
-                accent_color: currentArcade.colors.accent,
-                defaultGames: currentArcade.games,
-                template: currentArcade.template,
-                headerStyle: currentArcade.headerStyle,
-                tileSize: currentArcade.tileSize,
-                is_public: true
-            }, null, 2),
-            type: 'json',
-            isFolder: false
+        // NEW: updateStatus function (called during publish)
+        function updateStatus(message) {
+            const statusEl = document.getElementById('statusMessage');
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+            console.log('Status:', message);
         }
-    ];
 
-    // Add CSS file if you have custom styles
-    if (currentArcade.customCss) {
-        filesData.push({
-            name: 'styles.css',
-            path: '/',
-            content: currentArcade.customCss,
-            type: 'css',
-            isFolder: false
-        });
-    }
+        async function publishArcade() {
+            const subdomain = prompt('Enter a subdomain for your arcade (e.g., my-arcade):');
+            if (!subdomain) return;
 
-    try {
-        updateStatus('Publishing...'); // Add a status element if you have one
-        
-        // Use the SAME endpoint as your working editor
-        const res = await fetch('/.netlify/functions/create-subdomains', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                subdomain: subdomain,
-                files: filesData,  // Now with actual file content!
-                sessionId: sessionId,
-                config: {
-                    title: arcadeName,
-                    template: currentArcade.template,
-                    is_public: true
+            const arcadeName = document.getElementById('arcadeTitle').value;
+            
+            // Generate the HTML content from your arcade data
+            const htmlContent = generateArcadeHTML(currentArcade);
+            
+            // Create files array just like your working editor
+            const filesData = [
+                {
+                    name: 'index.html',
+                    path: '/',
+                    content: htmlContent,
+                    type: 'html',
+                    isFolder: false
+                },
+                {
+                    name: 'arcade-config.json',
+                    path: '/',
+                    content: JSON.stringify({
+                        title: arcadeName,
+                        description: document.getElementById('arcadeDescription').value,
+                        background_color: currentArcade.colors.bg,
+                        text_color: currentArcade.colors.text,
+                        accent_color: currentArcade.colors.accent,
+                        defaultGames: currentArcade.games,
+                        template: currentArcade.template,
+                        headerStyle: currentArcade.headerStyle,
+                        tileSize: currentArcade.tileSize,
+                        is_public: true
+                    }, null, 2),
+                    type: 'json',
+                    isFolder: false
                 }
-            })
-        });
+            ];
 
-        const data = await res.json();
+            // Add CSS file if you have custom styles
+            if (currentArcade.customCss) {
+                filesData.push({
+                    name: 'styles.css',
+                    path: '/',
+                    content: currentArcade.customCss,
+                    type: 'css',
+                    isFolder: false
+                });
+            }
 
-        if (data.success) {
-            const url = `https://${subdomain}.packarcade.xyz`;
-            alert(`✅ Arcade published! Visit at ${url}`);
-            
-            // Show success message like your editor does
-            document.getElementById('publishedUrl').textContent = url;
-            document.getElementById('publishSuccessModal').classList.add('active');
-            
-            loadArcades(); // Refresh your arcades list
-        } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
+            try {
+                updateStatus('Publishing...');
+                
+                // Use the SAME endpoint as your working editor
+                const res = await fetch('/.netlify/functions/create-subdomains', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subdomain: subdomain,
+                        files: filesData,
+                        sessionId: sessionId,
+                        config: {
+                            title: arcadeName,
+                            template: currentArcade.template,
+                            is_public: true
+                        }
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const url = `https://${subdomain}.packarcade.xyz`;
+                    updateStatus('Published!');
+                    alert(`✅ Arcade published! Visit at ${url}`);
+                    
+                    // Show success message like your editor does
+                    document.getElementById('publishedUrl').textContent = url;
+                    document.getElementById('publishSuccessModal').classList.add('active');
+                    
+                    loadArcades(); // Refresh your arcades list
+                } else {
+                    updateStatus('Publish failed');
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                updateStatus('Error');
+                alert('Error: ' + err.message);
+            }
         }
-    } catch (err) {
-        alert('Error: ' + err.message);
-    }
-}
 
-// Helper function to generate HTML from arcade data (copy from your preview)
-function generateArcadeHTML(arcade) {
-    const title = arcade.title || 'My Arcade';
-    const description = arcade.description || '';
-    const bgColor = arcade.colors?.bg || '#0d1428';
-    const textColor = arcade.colors?.text || '#ffffff';
-    const accentColor = arcade.colors?.accent || '#5f7cff';
-    const template = arcade.template || 'grid-3x3';
-    
-    let gamesHtml = '';
-    
-    if (template === 'grid-3x3') {
-        gamesHtml = '<div class="games-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">';
-        arcade.games.forEach(game => {
-            gamesHtml += `
-                <div class="game-card" style="background: ${accentColor}20; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid ${accentColor}40;">
-                    <i class="fas ${game.icon}" style="font-size: 48px; color: ${game.color}; margin-bottom: 10px;"></i>
-                    <h3 style="color: ${textColor};">${game.name}</h3>
-                    <a href="https://${game.subdomain}.packarcade.xyz" style="display: inline-block; background: ${accentColor}; color: white; text-decoration: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px;">Play</a>
-                </div>
-            `;
-        });
-        gamesHtml += '</div>';
-    } else {
-        // Add other template layouts here
-        gamesHtml = '<div>Template: ' + template + '</div>';
-    }
-    
-    return `<!DOCTYPE html>
+        // Helper function to generate HTML from arcade data (copy from your preview)
+        function generateArcadeHTML(arcade) {
+            const title = arcade.title || 'My Arcade';
+            const description = arcade.description || '';
+            const bgColor = arcade.colors?.bg || '#0d1428';
+            const textColor = arcade.colors?.text || '#ffffff';
+            const accentColor = arcade.colors?.accent || '#5f7cff';
+            const template = arcade.template || 'grid-3x3';
+            
+            let gamesHtml = '';
+            
+            if (template === 'grid-3x3') {
+                gamesHtml = '<div class="games-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">';
+                arcade.games.forEach(game => {
+                    gamesHtml += `
+                        <div class="game-card" style="background: ${accentColor}20; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid ${accentColor}40;">
+                            <i class="fas ${game.icon}" style="font-size: 48px; color: ${game.color}; margin-bottom: 10px;"></i>
+                            <h3 style="color: ${textColor};">${game.name}</h3>
+                            <a href="https://${game.subdomain}.packarcade.xyz" style="display: inline-block; background: ${accentColor}; color: white; text-decoration: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px;">Play</a>
+                        </div>
+                    `;
+                });
+                gamesHtml += '</div>';
+            } else {
+                // Add other template layouts here
+                gamesHtml = '<div>Template: ' + template + '</div>';
+            }
+            
+            return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1115,7 +1190,7 @@ function generateArcadeHTML(arcade) {
     </div>
 </body>
 </html>`;
-}
+        }
         // loadArcades (preserved)
         async function loadArcades() {
             try {
