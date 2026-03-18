@@ -22,6 +22,7 @@
   let deferredPrompt;                // Stores the beforeinstallprompt event
   let isStandalone = false;          // Whether app runs in standalone mode
   let settingsVisible = false;       // Tracks settings panel visibility
+  let installAttempted = false;      // Track if installation was attempted
 
   // ==================== UTILITY FUNCTIONS ====================
   function isStandaloneMode() {
@@ -39,6 +40,7 @@
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();                 // Prevent the default mini-infobar
     deferredPrompt = e;                  // Save for later
+    console.log('[AWA] Install prompt captured');
 
     // Show a custom install button on launcher.html if it exists
     const installContainer = $(CONFIG.installContainerSelector);
@@ -47,33 +49,77 @@
     }
 
     // Also, if we're on any page and not installed, we could show a floating install button
-    if (!isStandaloneMode()) {
+    if (!isStandaloneMode() && !window.location.pathname.includes('launcher.html')) {
       showFloatingInstallButton();
     }
   });
 
-  // 2. Handle clicks on the custom install button (works on launcher.html and floating button)
+  // 2. Handle clicks on the custom install button
   document.addEventListener('click', async (event) => {
-    const isInstallButton = event.target.matches('#installButton, .awa-floating-install');
+    const isInstallButton = event.target.matches('#installButton, .awa-floating-install, #chromebook-install-btn');
     if (isInstallButton && deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`[AWA] User install choice: ${outcome}`);
+      event.preventDefault();
+      installAttempted = true;
+      console.log('[AWA] Triggering installation prompt');
+      
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`[AWA] User install choice: ${outcome}`);
+        
+        if (outcome === 'accepted') {
+          // Don't redirect - let the app stay on launcher.html
+          // The appinstalled event will handle any UI updates
+          console.log('[AWA] Installation accepted');
+          
+          // Update UI to show installed state
+          const installContainer = $(CONFIG.installContainerSelector);
+          if (installContainer) {
+            installContainer.style.display = 'none';
+          }
+          
+          // Show success message
+          const statusMsg = $(CONFIG.statusMessageSelector);
+          if (statusMsg) {
+            statusMsg.textContent = '✓ App installed successfully! You can now launch it from your home screen.';
+            statusMsg.style.color = '#4caf50';
+          }
+          
+          // Hide floating button if it exists
+          const floatingBtn = document.querySelector('.awa-floating-install');
+          if (floatingBtn) floatingBtn.remove();
+        }
+      } catch (err) {
+        console.error('[AWA] Installation error:', err);
+      }
+      
       deferredPrompt = null;  // Can only be used once
-
-      // Hide the floating button after install
-      const floatingBtn = document.querySelector('.awa-floating-install');
-      if (floatingBtn) floatingBtn.remove();
     }
   });
 
   // 3. Listen for successful installation
   window.addEventListener('appinstalled', (evt) => {
-    console.log('[AWA] App was installed.');
-    // If we're on launcher.html, redirect to main app
-    if (window.location.pathname.includes('launcher.html')) {
-      window.location.href = '/';
+    console.log('[AWA] App was successfully installed.');
+    
+    // Update UI to show installed state
+    const installContainer = $(CONFIG.installContainerSelector);
+    if (installContainer) {
+      installContainer.style.display = 'none';
     }
+    
+    const statusMsg = $(CONFIG.statusMessageSelector);
+    if (statusMsg) {
+      statusMsg.textContent = '✓ App is now installed! Launch from your home screen.';
+      statusMsg.style.color = '#4caf50';
+    }
+    
+    // Hide floating button
+    const floatingBtn = document.querySelector('.awa-floating-install');
+    if (floatingBtn) floatingBtn.remove();
+    
+    // Hide Chromebook badge if present
+    const chromeBadge = document.getElementById('chromebook-badge-container');
+    if (chromeBadge) chromeBadge.style.display = 'none';
   });
 
   // 4. Show a floating install button on any page if the app is not installed
@@ -103,15 +149,15 @@
     `;
     btn.addEventListener('mouseenter', () => { btn.style.transform = 'scale(1.05)'; });
     btn.addEventListener('mouseleave', () => { btn.style.transform = 'scale(1)'; });
-    btn.addEventListener('click', () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-      } else {
-        alert('To install, use the browser menu (Add to Home Screen).');
-      }
-    });
     document.body.appendChild(btn);
   }
+
+  // 5. Manual install trigger for Chromebook badge
+  window.triggerInstall = function() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+    }
+  };
 
   // ==================== STANDALONE ENHANCEMENTS ====================
   if (isStandaloneMode()) {
@@ -143,7 +189,7 @@
         <button id="awa-close" class="awa-header-btn" title="Close">🗙</button>
       </div>
     `;
-    // Add a small style for header buttons
+    
     const style = document.createElement('style');
     style.textContent = `
       .awa-header-btn {
@@ -197,52 +243,44 @@
       <p><strong>Instructions:</strong></p>
       <ul style="padding-left:20px;">
         <li><strong>Settings</strong> – opens this panel</li>
-        <li><strong>Minimize</strong> – hides the content (click the AWA icon in taskbar to restore)</li>
+        <li><strong>Minimize</strong> – hides the content</li>
         <li><strong>Close</strong> – closes the app (if supported)</li>
       </ul>
       <p style="font-size:0.9rem; color:#666;">Version 2.0 | Made with ⚡</p>
     `;
     document.body.appendChild(settingsPanel);
 
-    // 3. Event listeners for header buttons (using delegation to avoid missing elements)
+    // 3. Event listeners for header buttons
     document.addEventListener('click', (e) => {
-      // Settings button
       if (e.target.id === 'awa-settings' || e.target.closest('#awa-settings')) {
         e.preventDefault();
         settingsVisible = !settingsVisible;
         settingsPanel.style.display = settingsVisible ? 'block' : 'none';
       }
-      // Close settings button
       if (e.target.id === 'awa-close-settings' || e.target.closest('#awa-close-settings')) {
         settingsVisible = false;
         settingsPanel.style.display = 'none';
       }
-      // Minimize button – we can't truly minimize, but we can hide the main content
       if (e.target.id === 'awa-minimize' || e.target.closest('#awa-minimize')) {
         e.preventDefault();
-        // Toggle visibility of everything except the header and settings panel
         const allChildren = document.body.children;
         for (let child of allChildren) {
           if (child.id !== 'awa-header' && child.id !== 'awa-settings-panel') {
             child.style.display = child.style.display === 'none' ? '' : 'none';
           }
         }
-        // Show a message that content is hidden
-        alert('Content minimized. Click the AWA icon in your taskbar to restore the window.');
       }
-      // Close button – attempt to close window
       if (e.target.id === 'awa-close' || e.target.closest('#awa-close')) {
         e.preventDefault();
         if (confirm('Close Arcade Web App?')) {
-          window.close(); // May not work in all browsers
+          window.close();
         }
       }
     });
 
-    // 4. Theme toggle (example of persistent setting)
+    // 4. Theme toggle
     const themeToggle = document.getElementById('awa-theme-toggle');
     if (themeToggle) {
-      // Load saved preference
       const savedTheme = localStorage.getItem('awa-dark-theme');
       if (savedTheme === 'true') {
         document.body.classList.add('awa-dark-theme');
@@ -261,7 +299,6 @@
 
     // 5. Performance improvements
     if (CONFIG.enableLazyLoading) {
-      // Lazy load images with data-src
       const lazyImages = document.querySelectorAll('img[data-src]');
       if ('IntersectionObserver' in window) {
         const observer = new IntersectionObserver((entries) => {
@@ -280,9 +317,6 @@
     }
 
     if (CONFIG.enablePreload) {
-      // Preload critical resources (example: if you have a known next page)
-      // You can add <link rel="preload"> dynamically based on user behavior.
-      // For now, we preload the manifest and any large hero images.
       const preloadLinks = [
         { rel: 'preload', as: 'image', href: '/icons/favicon.png' }
       ];
@@ -295,23 +329,20 @@
       });
     }
 
-    // 6. Add a custom CSS class to body for AWA-specific styling
     document.body.classList.add('awa-enhanced');
   } else {
     // Not installed – show message on launcher.html if needed
     const statusMsg = $(CONFIG.statusMessageSelector);
-    if (statusMsg) {
+    if (statusMsg && !installAttempted) {
       statusMsg.textContent = 'Click "Install AWA" to add this app to your device.';
     }
   }
 
   // ==================== ADDITIONAL FEATURES ====================
-  // Detect if the app was launched from the home screen (useful for analytics)
   if (document.referrer === '' && isStandalone) {
     console.log('[AWA] Launched from home screen.');
   }
 
-  // Handle visibility change to maybe pause/resume games
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       console.log('[AWA] App hidden – you could pause game logic here.');
@@ -320,11 +351,12 @@
     }
   });
 
-  // Expose API for other scripts (optional)
+  // Expose API for other scripts
   window.AWA = {
     isStandalone: () => isStandalone,
     showSettings: () => { if (settingsPanel) settingsPanel.style.display = 'block'; },
     hideSettings: () => { if (settingsPanel) settingsPanel.style.display = 'none'; },
+    triggerInstall: () => { if (deferredPrompt) deferredPrompt.prompt(); },
     config: CONFIG
   };
 
