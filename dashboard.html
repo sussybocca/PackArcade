@@ -82,6 +82,18 @@
             box-shadow: 0 0 20px #0f0;
         }
 
+        .nav-link.analytics-link {
+            background: #ff9800;
+            border-color: #ff9800;
+            color: #fff;
+        }
+
+        .nav-link.analytics-link:hover {
+            background: #ff5722;
+            border-color: #ff5722;
+            color: white;
+        }
+
         @keyframes glow {
             0% { box-shadow: 0 0 5px #0f0; }
             50% { box-shadow: 0 0 20px #0f0; }
@@ -260,6 +272,11 @@
             font-weight: bold;
         }
 
+        .analytics-btn {
+            background: #ff9800;
+            color: white;
+        }
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -308,10 +325,19 @@
             margin-bottom: 15px;
             color: #ddd;
         }
-        .analytics-btn {
-    background: #ff9800;
-    color: white;
-}
+
+        .explore-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .explore-link a {
+            color: white;
+            font-size: 18px;
+            text-decoration: none;
+            border-bottom: 2px solid white;
+            padding-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -320,8 +346,10 @@
             <h1>PackArcade Studio</h1>
             <p>Create, edit, and manage your custom subdomain websites</p>
             <div class="nav-links">
-                <a href="/editor.html" class="nav-link"><i class="fas fa-code"></i> EDITOR</a>
+                <a href="/public/editor.html" class="nav-link"><i class="fas fa-code"></i> EDITOR</a>
                 <a href="/passes.html" class="nav-link pass-wall"><i class="fas fa-key"></i> PASS WALL</a>
+                <a href="/explore.html" class="nav-link"><i class="fas fa-compass"></i> EXPLORE</a>
+                <a href="/analytics.html" class="nav-link analytics-link"><i class="fas fa-chart-line"></i> ANALYTICS</a>
                 <a href="/" class="nav-link"><i class="fas fa-home"></i> HOME</a>
             </div>
         </div>
@@ -338,7 +366,6 @@
             <button class="btn" id="createBtn" onclick="createSite()">Create Site & Open Editor</button>
             <div id="createStatus" class="status-message"></div>
         </div>
-        <a href="/analytics.html?subdomain=YOUR_SUBDOMAIN" class="nav-link"><i class="fas fa-chart-line"></i> ANALYTICS</a>
 
         <div class="sites-section">
             <h2><i class="fas fa-globe"></i> Your Sites</h2>
@@ -347,14 +374,11 @@
             <div id="emptyState" class="empty-state" style="display: none;">
                 <i class="fas fa-folder-open"></i>
                 <p>You haven't created any sites yet. Create one above!</p>
-                // Add this button in the site-actions div
-<button class="analytics-btn" onclick="showAnalytics('${site.subdomain_name}')"><i class="fas fa-chart-line"></i> Stats</button>
-
-// Add this function
-window.showAnalytics = function(subdomain) {
-    window.location.href = `/analytics.html?subdomain=${encodeURIComponent(subdomain)}`;
-};
             </div>
+        </div>
+        
+        <div class="explore-link">
+            <a href="/explore.html"><i class="fas fa-compass"></i> Discover amazing sites in Explore</a>
         </div>
     </div>
 
@@ -472,7 +496,8 @@ window.showAnalytics = function(subdomain) {
                         <div class="site-actions">
                             <button class="edit-btn" onclick="editSite('${site.subdomain_name}')"><i class="fas fa-edit"></i> Edit</button>
                             <button class="versions-btn" onclick="showVersions('${site.subdomain_name}')"><i class="fas fa-code-branch"></i> Versions</button>
-                            <button class="pass-btn" onclick="getPass('${site.subdomain_name}')"><i class="fas fa-key"></i> Get Pass</button>
+                            <button class="analytics-btn" onclick="showAnalytics('${site.subdomain_name}')"><i class="fas fa-chart-line"></i> Stats</button>
+                            <button class="pass-btn" onclick="getPass('${site.subdomain_name}')"><i class="fas fa-key"></i> Pass</button>
                             <button class="delete-btn" onclick="deleteSite('${site.subdomain_name}')"><i class="fas fa-trash"></i> Del</button>
                         </div>
                     </div>
@@ -482,7 +507,7 @@ window.showAnalytics = function(subdomain) {
         }
 
         window.editSite = function(subdomain) {
-            window.location.href = `/editor.html?subdomain=${encodeURIComponent(subdomain)}`;
+            window.location.href = `/public/editor.html?subdomain=${encodeURIComponent(subdomain)}`;
         };
 
         window.showVersions = function(subdomain) {
@@ -491,6 +516,10 @@ window.showAnalytics = function(subdomain) {
 
         window.getPass = function(subdomain) {
             window.location.href = `/passes.html?subdomain=${encodeURIComponent(subdomain)}`;
+        };
+
+        window.showAnalytics = function(subdomain) {
+            window.location.href = `/analytics.html?subdomain=${encodeURIComponent(subdomain)}`;
         };
 
         window.deleteSite = async function(subdomain) {
