@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore • PackArcade Universe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 30px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .header h1 {
+            font-size: 64px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, #a8b4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: bold;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-link:hover {
+            background: white;
+            color: #302b63;
+            border-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Search Section */
+        .search-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 10px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 15px 25px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Category Pills */
+        .categories {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+
+        .category-pill {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 25px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .category-pill:hover,
+        .category-pill.active {
+            background: white;
+            color: #302b63;
+            border-color: white;
+        }
+
+        /* Featured Section */
+        .featured-section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title i {
+            color: #ffd700;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .featured-main {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 30px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .featured-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M20 20 L80 20 L50 80 Z" fill="white"/></svg>');
+            background-size: 50px;
+        }
+
+        .featured-badge {
+            background: #ffd700;
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .featured-main h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .featured-stats {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .featured-stat {
+            text-align: center;
+        }
+
+        .featured-stat .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .featured-stat .label {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .featured-side {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .featured-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Tabs */
+        .explore-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab.active {
+            background: white;
+            color: #302b63;
+        }
+
+        /* Content Grids */
+        .content-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .content-grid.active {
+            display: grid;
+        }
+
+        /* Arcade Card */
+        .arcade-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s;
+        }
+
+        .arcade-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .arcade-preview {
+            height: 150px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            position: relative;
+        }
+
+        .arcade-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .arcade-content {
+            padding: 20px;
+        }
+
+        .arcade-title {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .arcade-meta {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .game-tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .game-tag {
+            background: rgba(255,255,255,0.1);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        /* Leaderboard Card */
+        .leaderboard-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-rankings {
+            margin-top: 15px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .rank-number {
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .rank-1 .rank-number {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .rank-2 .rank-number {
+            background: #c0c0c0;
+            color: #000;
+        }
+
+        .rank-3 .rank-number {
+            background: #cd7f32;
+            color: #000;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 40px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .activity-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        /* Edit Controls */
+        .edit-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #302b63;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .edit-controls:hover {
+            transform: scale(1.05);
+        }
+
+        .edit-controls.edit-mode {
+            background: #4caf50;
+            color: white;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-compass"></i> Explore PackArcade</h1>
+            <p>Discover amazing arcades, compete on leaderboards, and join the community</p>
+            <div class="nav-links">
+                <a href="/dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="/arcades.html" class="nav-link"><i class="fas fa-arcade"></i> Arcades</a>
+                <a href="/editor.html" class="nav-link"><i class="fas fa-code"></i> Editor</a>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-section">
+            <input type="text" class="search-input" placeholder="Search arcades, games, players..." id="searchInput">
+            <button class="search-btn" onclick="search()"><i class="fas fa-search"></i> Search</button>
+        </div>
+
+        <!-- Categories -->
+        <div class="categories">
+            <span class="category-pill active" onclick="filterCategory('all')">All</span>
+            <span class="category-pill" onclick="filterCategory('arcades')">Arcades</span>
+            <span class="category-pill" onclick="filterCategory('games')">Games</span>
+            <span class="category-pill" onclick="filterCategory('leaderboards')">Leaderboards</span>
+            <span class="category-pill" onclick="filterCategory('trending')">Trending 🔥</span>
+            <span class="category-pill" onclick="filterCategory('new')">New ✨</span>
+        </div>
+
+        <!-- Featured Section -->
+        <div class="featured-section">
+            <div class="section-title">
+                <i class="fas fa-crown"></i> Featured This Week
+            </div>
+            <div class="featured-grid">
+                <div class="featured-main">
+                    <span class="featured-badge"><i class="fas fa-star"></i> FEATURED ARCADE</span>
+                    <h2>Neon Galaxy Arcade</h2>
+                    <p>The ultimate gaming experience with 50+ retro and modern games. Compete for the top spot on our global leaderboards!</p>
+                    <div class="featured-stats">
+                        <div class="featured-stat">
+                            <div class="number">12.5k</div>
+                            <div class="label">weekly players</div>
+                        </div>
+                        <div class="featured-stat">
+                            <div class="number">156</div>
+                            <div class="label">games</div>
+                        </div>
+                        <div class="featured-stat">
+                            <div class="number">4.8</div>
+                            <div class="label">rating</div>
+                        </div>
+                    </div>
+                    <button class="nav-link" style="margin-top: 20px; display: inline-block;" onclick="visitArcade('neon-galaxy')">Visit Arcade →</button>
+                </div>
+                <div class="featured-side">
+                    <div class="featured-card">
+                        <i class="fas fa-trophy" style="font-size: 24px; color: #ffd700; margin-bottom: 10px;"></i>
+                        <h3>Global Leaderboard</h3>
+                        <p>Top players competing across all arcades</p>
+                        <div id="globalLeaderboardPreview">
+                            <div class="loading"></div>
+                        </div>
+                    </div>
+                    <div class="featured-card">
+                        <i class="fas fa-fire" style="font-size: 24px; color: #ff6b6b; margin-bottom: 10px;"></i>
+                        <h3>Trending Games</h3>
+                        <p>Most played right now</p>
+                        <div id="trendingGames">
+                            <div class="loading"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-arcade"></i></div>
+                <div class="stat-number" id="totalArcades">0</div>
+                <div class="stat-label">Arcades</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-gamepad"></i></div>
+                <div class="stat-number" id="totalGames">0</div>
+                <div class="stat-label">Games</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                <div class="stat-number" id="totalPlayers">0</div>
+                <div class="stat-label">Players</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-number" id="totalPlaytime">0</div>
+                <div class="stat-label">Hours Played</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="explore-tabs">
+            <div class="tab active" onclick="switchTab('arcades')"><i class="fas fa-arcade"></i> Arcades</div>
+            <div class="tab" onclick="switchTab('leaderboards')"><i class="fas fa-trophy"></i> Leaderboards</div>
+            <div class="tab" onclick="switchTab('games')"><i class="fas fa-gamepad"></i> Games</div>
+            <div class="tab" onclick="switchTab('players')"><i class="fas fa-users"></i> Players</div>
+            <div class="tab" onclick="switchTab('activity')"><i class="fas fa-history"></i> Activity</div>
+        </div>
+
+        <!-- Arcades Grid -->
+        <div id="arcadesGrid" class="content-grid active">
+            <div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>
+        </div>
+
+        <!-- Leaderboards Grid -->
+        <div id="leaderboardsGrid" class="content-grid">
+            <div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>
+        </div>
+
+        <!-- Games Grid -->
+        <div id="gamesGrid" class="content-grid">
+            <div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>
+        </div>
+
+        <!-- Players Grid -->
+        <div id="playersGrid" class="content-grid">
+            <div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div id="activityGrid" class="content-grid">
+            <div class="activity-feed" style="grid-column: 1/-1;">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Session management
+        let sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+            sessionId = 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+            localStorage.setItem('sessionId', sessionId);
+        }
+
+        const API_BASE = 'https://packarcade.xyz/.netlify/functions';
+
+        // Load all data on page load
+        window.onload = function() {
+            loadArcades();
+            loadLeaderboards();
+            loadGlobalLeaderboardPreview();
+            loadTrendingGames();
+            loadStats();
+            loadActivity();
+        };
+
+        // Load global leaderboard preview
+        async function loadGlobalLeaderboardPreview() {
+            try {
+                // Get top 3 from global leaderboard
+                const res = await fetch(`${API_BASE}/leaderboard?global=true&limit=3`);
+                const data = await res.json();
+                
+                const container = document.getElementById('globalLeaderboardPreview');
+                
+                if (data.entries && data.entries.length > 0) {
+                    let html = '';
+                    data.entries.forEach((entry, index) => {
+                        const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                        html += `
+                            <div class="rank-item ${rankClass}">
+                                <span class="rank-number">${index + 1}</span>
+                                <span>${entry.player_name}</span>
+                                <span style="margin-left: auto;">${entry.score.toLocaleString()}</span>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p>No leaderboard data yet</p>';
+                }
+            } catch (err) {
+                console.error('Error loading leaderboard preview:', err);
+                document.getElementById('globalLeaderboardPreview').innerHTML = '<p>Failed to load leaderboard</p>';
+            }
+        }
+
+        // Load trending games
+        async function loadTrendingGames() {
+            try {
+                const res = await fetch(`${API_BASE}/trending-games`);
+                const data = await res.json();
+                
+                const container = document.getElementById('trendingGames');
+                
+                if (data.games && data.games.length > 0) {
+                    let html = '<div style="margin-top: 10px;">';
+                    data.games.forEach((game, index) => {
+                        html += `<div>${index + 1}. ${game.name} 🔥</div>`;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p>No trending games yet</p>';
+                }
+            } catch (err) {
+                console.error('Error loading trending games:', err);
+                document.getElementById('trendingGames').innerHTML = '<p>Failed to load trending games</p>';
+            }
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats`);
+                const data = await res.json();
+                
+                document.getElementById('totalArcades').textContent = data.arcades || 247;
+                document.getElementById('totalGames').textContent = data.games || 1892;
+                document.getElementById('totalPlayers').textContent = data.players || '45.2k';
+                document.getElementById('totalPlaytime').textContent = data.playtime || '12.4M';
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // Load arcades
+        async function loadArcades() {
+            const grid = document.getElementById('arcadesGrid');
+            grid.innerHTML = '<div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/get-arcades?public=true`);
+                const data = await res.json();
+                
+                if (data.arcades && data.arcades.length > 0) {
+                    renderArcades(data.arcades);
+                } else {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;">No arcades found</div>';
+                }
+            } catch (err) {
+                console.error('Error loading arcades:', err);
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;">Failed to load arcades</div>';
+            }
+        }
+
+        function renderArcades(arcades) {
+            const grid = document.getElementById('arcadesGrid');
+            let html = '';
+            
+            arcades.forEach(arcade => {
+                const url = `https://${arcade.subdomain}.packarcade.xyz`;
+                html += `
+                    <div class="arcade-card">
+                        <div class="arcade-preview" style="background: linear-gradient(135deg, ${arcade.accent_color || '#667eea'}, ${arcade.background_color || '#764ba2'})">
+                            ${arcade.trending ? '<div class="arcade-overlay"><i class="fas fa-fire" style="color: #ff6b6b;"></i> Trending</div>' : ''}
+                        </div>
+                        <div class="arcade-content">
+                            <h3 class="arcade-title">${arcade.title || arcade.arcade_name}</h3>
+                            <p style="opacity: 0.8; font-size: 14px; margin: 10px 0;">${arcade.description || 'No description'}</p>
+                            <div class="arcade-meta">
+                                <span><i class="fas fa-gamepad"></i> ${arcade.arcade_games?.length || 0} games</span>
+                                <span><i class="fas fa-users"></i> ${arcade.players || '0'} players</span>
+                                <span><i class="fas fa-star" style="color: #ffd700;"></i> ${arcade.rating || '4.5'}</span>
+                            </div>
+                            <div class="game-tags">
+                                ${arcade.arcade_games?.slice(0, 3).map(game => 
+                                    `<span class="game-tag">${game.display_name || game.game_subdomain}</span>`
+                                ).join('') || ''}
+                            </div>
+                            <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="window.open('${url}', '_blank')">Explore Arcade</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Load leaderboards
+        async function loadLeaderboards() {
+            const grid = document.getElementById('leaderboardsGrid');
+            grid.innerHTML = '<div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/leaderboards?popular=true`);
+                const data = await res.json();
+                
+                if (data.leaderboards && data.leaderboards.length > 0) {
+                    renderLeaderboards(data.leaderboards);
+                } else {
+                    // Show sample if no data
+                    renderSampleLeaderboards();
+                }
+            } catch (err) {
+                console.error('Error loading leaderboards:', err);
+                renderSampleLeaderboards();
+            }
+        }
+
+        function renderLeaderboards(leaderboards) {
+            const grid = document.getElementById('leaderboardsGrid');
+            let html = '';
+            
+            leaderboards.forEach(board => {
+                html += `
+                    <div class="leaderboard-card">
+                        <div class="leaderboard-header">
+                            <h3>${board.name}</h3>
+                            <span class="game-tag">${board.game || board.game_subdomain}</span>
+                        </div>
+                        <div class="leaderboard-rankings" id="leaderboard-${board.id}">
+                            <div class="loading"></div>
+                        </div>
+                        <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="viewFullLeaderboard('${board.id}')">View Full Leaderboard</button>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+            
+            // Load entries for each leaderboard
+            leaderboards.forEach(board => {
+                loadLeaderboardEntries(board.id);
+            });
+        }
+
+        async function loadLeaderboardEntries(leaderboardId) {
+            try {
+                const res = await fetch(`${API_BASE}/leaderboard?id=${leaderboardId}&limit=5`);
+                const data = await res.json();
+                
+                const container = document.getElementById(`leaderboard-${leaderboardId}`);
+                
+                if (data.entries && data.entries.length > 0) {
+                    let html = '';
+                    data.entries.forEach((entry, index) => {
+                        const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                        html += `
+                            <div class="rank-item ${rankClass}">
+                                <span class="rank-number">${index + 1}</span>
+                                <span>${entry.player_name}</span>
+                                <span style="margin-left: auto;">${entry.score.toLocaleString()}</span>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p>No entries yet</p>';
+                }
+            } catch (err) {
+                console.error('Error loading leaderboard entries:', err);
+            }
+        }
+
+        function renderSampleLeaderboards() {
+            const grid = document.getElementById('leaderboardsGrid');
+            grid.innerHTML = `
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h3>Global All-Time</h3>
+                        <span class="game-tag">Nebula Drifter</span>
+                    </div>
+                    <div class="leaderboard-rankings">
+                        <div class="rank-item rank-1">
+                            <span class="rank-number">1</span>
+                            <span>PlayerOne</span>
+                            <span style="margin-left: auto;">1,234,567</span>
+                        </div>
+                        <div class="rank-item rank-2">
+                            <span class="rank-number">2</span>
+                            <span>GameMaster</span>
+                            <span style="margin-left: auto;">1,198,432</span>
+                        </div>
+                        <div class="rank-item rank-3">
+                            <span class="rank-number">3</span>
+                            <span>ArcadeKing</span>
+                            <span style="margin-left: auto;">1,145,890</span>
+                        </div>
+                    </div>
+                    <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="viewFullLeaderboard('global')">View Full Leaderboard</button>
+                </div>
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h3>Weekly Rankings</h3>
+                        <span class="game-tag">Quantum Puzzles</span>
+                    </div>
+                    <div class="leaderboard-rankings">
+                        <div class="rank-item rank-1">
+                            <span class="rank-number">1</span>
+                            <span>PuzzleMaster</span>
+                            <span style="margin-left: auto;">98,765</span>
+                        </div>
+                        <div class="rank-item rank-2">
+                            <span class="rank-number">2</span>
+                            <span>Brainiac</span>
+                            <span style="margin-left: auto;">95,432</span>
+                        </div>
+                        <div class="rank-item rank-3">
+                            <span class="rank-number">3</span>
+                            <span>Thinker</span>
+                            <span style="margin-left: auto;">92,341</span>
+                        </div>
+                    </div>
+                    <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="viewFullLeaderboard('weekly')">View Full Leaderboard</button>
+                </div>
+            `;
+        }
+
+        // Load games
+        async function loadGames() {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '<div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/games?popular=true`);
+                const data = await res.json();
+                
+                if (data.games && data.games.length > 0) {
+                    renderGames(data.games);
+                } else {
+                    renderSampleGames();
+                }
+            } catch (err) {
+                console.error('Error loading games:', err);
+                renderSampleGames();
+            }
+        }
+
+        function renderGames(games) {
+            const grid = document.getElementById('gamesGrid');
+            let html = '';
+            
+            games.forEach(game => {
+                html += `
+                    <div class="arcade-card">
+                        <div class="arcade-preview" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-gamepad" style="font-size: 48px; opacity: 0.5;"></i>
+                        </div>
+                        <div class="arcade-content">
+                            <h3 class="arcade-title">${game.name}</h3>
+                            <p style="opacity: 0.8; font-size: 14px;">${game.description || 'No description'}</p>
+                            <div class="arcade-meta">
+                                <span><i class="fas fa-trophy"></i> ${game.players || '1.2k'} players</span>
+                                <span><i class="fas fa-star" style="color: #ffd700;"></i> ${game.rating || '4.5'}</span>
+                            </div>
+                            <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="playGame('${game.subdomain}')">Play Now</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function renderSampleGames() {
+            const grid = document.getElementById('gamesGrid');
+            let html = '';
+            
+            const games = ['Nebula Drifter', 'Quantum Puzzles', 'Space Shooters', 'Mario', 'Tetris', 'Pac-Man'];
+            games.forEach((game, i) => {
+                html += `
+                    <div class="arcade-card">
+                        <div class="arcade-preview" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-gamepad" style="font-size: 48px; opacity: 0.5;"></i>
+                        </div>
+                        <div class="arcade-content">
+                            <h3 class="arcade-title">${game}</h3>
+                            <p style="opacity: 0.8; font-size: 14px;">Play ${game} and compete for high scores!</p>
+                            <div class="arcade-meta">
+                                <span><i class="fas fa-trophy"></i> 1.2k players</span>
+                                <span><i class="fas fa-star" style="color: #ffd700;"></i> 4.5</span>
+                            </div>
+                            <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="playGame('${game.toLowerCase().replace(/\s+/g, '-')}')">Play Now</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Load players
+        async function loadPlayers() {
+            const grid = document.getElementById('playersGrid');
+            grid.innerHTML = '<div class="loading" style="grid-column: 1/-1; margin: 50px auto;"></div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/top-players`);
+                const data = await res.json();
+                
+                if (data.players && data.players.length > 0) {
+                    renderPlayers(data.players);
+                } else {
+                    renderSamplePlayers();
+                }
+            } catch (err) {
+                console.error('Error loading players:', err);
+                renderSamplePlayers();
+            }
+        }
+
+        function renderPlayers(players) {
+            const grid = document.getElementById('playersGrid');
+            let html = '';
+            
+            players.forEach(player => {
+                const winRate = player.wins && player.games ? Math.round(player.wins/player.games*100) : 75;
+                html += `
+                    <div class="arcade-card">
+                        <div class="arcade-preview" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user" style="font-size: 48px; opacity: 0.5;"></i>
+                        </div>
+                        <div class="arcade-content">
+                            <h3 class="arcade-title">${player.name}</h3>
+                            <div class="arcade-meta">
+                                <span><i class="fas fa-level-up-alt"></i> Level ${player.level || 50}</span>
+                                <span><i class="fas fa-gamepad"></i> ${player.games || 100} games</span>
+                                <span><i class="fas fa-trophy"></i> ${player.wins || 75} wins</span>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <div style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 5px;">
+                                    <div style="width: ${winRate}%; height: 100%; background: #ffd700; border-radius: 5px;"></div>
+                                </div>
+                                <div style="font-size: 12px; margin-top: 5px;">Win Rate: ${winRate}%</div>
+                            </div>
+                            <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="viewPlayer('${player.id}')">View Profile</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function renderSamplePlayers() {
+            const grid = document.getElementById('playersGrid');
+            const players = [
+                { name: 'PlayerOne', level: 99, games: 156, wins: 142 },
+                { name: 'GameMaster', level: 87, games: 134, wins: 118 },
+                { name: 'ArcadeKing', level: 82, games: 128, wins: 109 },
+                { name: 'SpeedRunner', level: 78, games: 115, wins: 98 },
+                { name: 'ProGamer', level: 75, games: 112, wins: 94 }
+            ];
+            
+            let html = '';
+            players.forEach(player => {
+                const winRate = Math.round(player.wins/player.games*100);
+                html += `
+                    <div class="arcade-card">
+                        <div class="arcade-preview" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user" style="font-size: 48px; opacity: 0.5;"></i>
+                        </div>
+                        <div class="arcade-content">
+                            <h3 class="arcade-title">${player.name}</h3>
+                            <div class="arcade-meta">
+                                <span><i class="fas fa-level-up-alt"></i> Level ${player.level}</span>
+                                <span><i class="fas fa-gamepad"></i> ${player.games} games</span>
+                                <span><i class="fas fa-trophy"></i> ${player.wins} wins</span>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <div style="height: 5px; background: rgba(255,255,255,0.1); border-radius: 5px;">
+                                    <div style="width: ${winRate}%; height: 100%; background: #ffd700; border-radius: 5px;"></div>
+                                </div>
+                                <div style="font-size: 12px; margin-top: 5px;">Win Rate: ${winRate}%</div>
+                            </div>
+                            <button class="nav-link" style="margin-top: 15px; width: 100%;" onclick="viewPlayer('${player.name}')">View Profile</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Load activity
+        async function loadActivity() {
+            const grid = document.getElementById('activityGrid');
+            
+            try {
+                const res = await fetch(`${API_BASE}/recent-activity`);
+                const data = await res.json();
+                
+                if (data.activities && data.activities.length > 0) {
+                    renderActivity(data.activities);
+                } else {
+                    renderSampleActivity();
+                }
+            } catch (err) {
+                console.error('Error loading activity:', err);
+                renderSampleActivity();
+            }
+        }
+
+        function renderActivity(activities) {
+            const grid = document.getElementById('activityGrid');
+            let html = '<div class="activity-feed"><h3 style="margin-bottom: 20px;">Latest Activity</h3>';
+            
+            activities.forEach(activity => {
+                const icon = activity.type === 'score' ? 'fa-trophy' : 
+                            activity.type === 'arcade' ? 'fa-arcade' : 
+                            activity.type === 'game' ? 'fa-gamepad' : 'fa-star';
+                html += `
+                    <div class="activity-item">
+                        <div class="activity-avatar">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div><strong>${activity.user}</strong> ${activity.action} <strong>${activity.target}</strong></div>
+                            <div class="activity-time">${activity.time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            grid.innerHTML = html;
+        }
+
+        function renderSampleActivity() {
+            const grid = document.getElementById('activityGrid');
+            grid.innerHTML = `
+                <div class="activity-feed">
+                    <h3 style="margin-bottom: 20px;">Latest Activity</h3>
+                    <div class="activity-item">
+                        <div class="activity-avatar"><i class="fas fa-trophy"></i></div>
+                        <div class="activity-content">
+                            <div><strong>PlayerOne</strong> achieved #1 on <strong>Nebula Drifter</strong></div>
+                            <div class="activity-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-avatar"><i class="fas fa-arcade"></i></div>
+                        <div class="activity-content">
+                            <div><strong>ArcadeKing</strong> created new arcade <strong>Pixel Paradise</strong></div>
+                            <div class="activity-time">15 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-avatar"><i class="fas fa-star"></i></div>
+                        <div class="activity-content">
+                            <div><strong>GameMaster</strong> beat high score on <strong>Quantum Puzzles</strong></div>
+                            <div class="activity-time">1 hour ago</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
+            
+            document.querySelectorAll('.content-grid').forEach(grid => grid.classList.remove('active'));
+            document.getElementById(tabName + 'Grid').classList.add('active');
+        }
+
+        // Filter category
+        function filterCategory(category) {
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Apply filter logic here
+            if (category === 'arcades') switchTab('arcades');
+            if (category === 'leaderboards') switchTab('leaderboards');
+            if (category === 'games') switchTab('games');
+        }
+
+        // Search
+        function search() {
+            const query = document.getElementById('searchInput').value;
+            console.log('Searching for:', query);
+            // Implement search functionality
+        }
+
+        // Navigation
+        function visitArcade(name) {
+            window.open(`https://${name}.packarcade.xyz`, '_blank');
+        }
+
+        function playGame(subdomain) {
+            window.open(`https://${subdomain}.packarcade.xyz`, '_blank');
+        }
+
+        function viewFullLeaderboard(id) {
+            window.open(`/leaderboard.html?id=${id}`, '_blank');
+        }
+
+        function viewPlayer(playerId) {
+            window.open(`/player.html?id=${playerId}`, '_blank');
+        }
+    </script>
+</body>
+</html>
