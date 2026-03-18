@@ -339,7 +339,7 @@
             let html = '';
             sites.forEach(site => {
                 const subdomain = site.subdomains?.subdomain_name || 'unknown';
-                const url = `https://${subdomain}.packarcade.xyz`;
+                const url = `https://${subdomain}.packarcade.xyz/.netlify/functions/serve-user-site.js`;
                 const rating = site.avgRating || 0;
                 const fullStars = Math.floor(rating);
                 const hasHalfStar = rating % 1 >= 0.5;
