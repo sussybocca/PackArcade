@@ -1,23 +1,105 @@
 {
-  "name": "Your Site Name",
-  "short_name": "Short Name",
-  "description": "A brief description of your site",
-  "start_url": "/",
+  "name": "PackArcade - Immersive Game Hub",
+  "short_name": "PackArcade",
+  "description": "A next-generation arcade platform with subdomain hosting, real-time analytics, version control, and anonymous pass authentication.",
+  "start_url": "/?utm_source=homescreen",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "icons": [
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#1e1e2f",
+  "theme_color": "#4a4aff",
+  "id": "packarcade-app-v2",
+  "categories": ["games", "entertainment", "development", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "iarc_rating_id": "e8c8a1fa-8b9f-4f2a-9a9c-8d3f9a2e1b0c",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
     {
-      "src": "/icons/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "name": "Editor",
+      "short_name": "Editor",
+      "description": "Open the code editor",
+      "url": "/public/editor.html",
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "/icons/favicon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Manage your sites",
+      "url": "/dashboard.html",
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Pass Wall",
+      "short_name": "Pass Wall",
+      "description": "Generate and validate passes",
+      "url": "/passes.html",
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Explore",
+      "short_name": "Explore",
+      "description": "Discover community sites",
+      "url": "/explore.html",
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
     }
-  ]
+  ],
+  "splash_pages": null,
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+packarcade",
+      "url": "/?cmd=%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
+  "handle_links": "auto",
+  "scope_extensions": [
+    {
+      "origin": "https://*.packarcade.xyz"
+    }
+  ],
+  "url_handlers": ["*.packarcade.xyz/*"],
+  "file_handlers": {
+    "html": {
+      "name": "HTML Files",
+      "accept": {
+        "text/html": [".html", ".htm"],
+        "application/xhtml+xml": [".xhtml"]
+      },
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    "css": {
+      "name": "CSS Files",
+      "accept": { "text/css": [".css"] },
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    "javascript": {
+      "name": "JavaScript Files",
+      "accept": { "application/javascript": [".js"], "text/javascript": [".js", ".mjs"] },
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    "json": {
+      "name": "JSON Files",
+      "accept": { "application/json": [".json"] },
+      "icons": [{ "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  },
+  "note_taking": {
+    "new_note_url": "/public/editor.html?template=new"
+  },
+  "lock_screen": {
+    "start_url": "/?lockscreen=true"
+  },
+  "capture_links": "existing-client-event",
+  "background_color_contrast": {
+    "light": "#ffffff",
+    "dark": "#0f0f1f"
+  }
 }
