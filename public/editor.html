@@ -565,15 +565,16 @@
             div.className = `tree-item-content ${currentFile && currentFile.id === item.id ? 'selected' : ''}`;
             div.ondblclick = () => item.isFolder ? toggleFolder(item.id) : openFile(item);
             
-            // Icon
+            // Icon - FIXED: Added safe fallback for undefined name
             const icon = document.createElement('i');
-            icon.className = item.isFolder ? 'fas fa-folder' : getFileIcon(item.name);
+            const fileName = item.name || '';
+            icon.className = item.isFolder ? 'fas fa-folder' : getFileIcon(fileName);
             div.appendChild(icon);
             
-            // Name
+            // Name - FIXED: Added safe fallback for undefined name
             const name = document.createElement('span');
             name.className = 'name';
-            name.textContent = item.name;
+            name.textContent = item.name || 'unnamed';
             div.appendChild(name);
             
             // Actions
@@ -610,8 +611,16 @@
             container.appendChild(li);
         }
 
+        // FIXED: Added safe null check for filename
         function getFileIcon(filename) {
-            const ext = filename.split('.').pop();
+            // Handle undefined or null filename
+            if (!filename) {
+                return 'fas fa-file';
+            }
+            
+            // Convert to string and get extension safely
+            const nameStr = String(filename);
+            const ext = nameStr.split('.').pop() || '';
             const icons = {
                 html: 'fab fa-html5',
                 css: 'fab fa-css3-alt',
@@ -712,6 +721,7 @@
         }
 
         function getModeFromFile(filename) {
+            if (!filename) return 'text/plain';
             const ext = filename.split('.').pop();
             const modes = {
                 html: 'htmlmixed',
@@ -801,16 +811,32 @@
             }
         }
 
-        // Load user files from Supabase
+        // Load user files from Supabase - FIXED: Added base URL for cross-domain
         function loadUserFiles() {
             if (subdomain) {
-                fetch(`/.netlify/functions/get-files?subdomain=${subdomain}&sessionId=${sessionId}`)
-                .then(res => res.json())
+                const baseUrl = 'https://packarcade.xyz';
+                fetch(`${baseUrl}/.netlify/functions/get-files?subdomain=${subdomain}&sessionId=${sessionId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to load files');
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.files) {
                         files = data.files;
                         renderFileTree();
+                        
+                        // Open first file if none open
+                        if (!currentFile && files.length > 0) {
+                            const indexFile = files.find(f => f.name === 'index.html');
+                            openFile(indexFile || files[0]);
+                        }
                     }
+                })
+                .catch(err => {
+                    console.error('Error loading files:', err);
+                    updateStatus('Error loading files');
                 });
             }
         }
@@ -820,7 +846,8 @@
             if (!subdomain) return;
             
             try {
-                const res = await fetch(`/.netlify/functions/get-versions?subdomain=${subdomain}&sessionId=${sessionId}`);
+                const baseUrl = 'https://packarcade.xyz';
+                const res = await fetch(`${baseUrl}/.netlify/functions/get-versions?subdomain=${subdomain}&sessionId=${sessionId}`);
                 const data = await res.json();
                 if (data.versions) {
                     versions = data.versions;
@@ -879,13 +906,14 @@
                 name: f.name,
                 path: f.path || '/',
                 content: f.content || '',
-                type: f.name.split('.').pop(),
+                type: f.name ? f.name.split('.').pop() : 'txt',
                 isFolder: f.isFolder || false,
                 parentFolder: f.parent
             }));
 
             try {
-                const res = await fetch('/.netlify/functions/create-version', {
+                const baseUrl = 'https://packarcade.xyz';
+                const res = await fetch(`${baseUrl}/.netlify/functions/create-version`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -911,7 +939,8 @@
 
         async function loadVersion(versionNumber) {
             try {
-                const res = await fetch(`/.netlify/functions/get-version?subdomain=${subdomain}&version=${versionNumber}&sessionId=${sessionId}`);
+                const baseUrl = 'https://packarcade.xyz';
+                const res = await fetch(`${baseUrl}/.netlify/functions/get-version?subdomain=${subdomain}&version=${versionNumber}&sessionId=${sessionId}`);
                 const data = await res.json();
                 if (data.files) {
                     files = data.files;
@@ -933,7 +962,8 @@
             if (!confirm(`Delete version ${versionNumber}?`)) return;
             
             try {
-                const res = await fetch('/.netlify/functions/delete-version', {
+                const baseUrl = 'https://packarcade.xyz';
+                const res = await fetch(`${baseUrl}/.netlify/functions/delete-version`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ subdomain, version: versionNumber, sessionId })
@@ -948,7 +978,7 @@
             }
         }
 
-        // Publish function
+        // Publish function - FIXED: Added base URL
         function publishWebsite() {
             if (!subdomain) {
                 alert('No subdomain specified.');
@@ -973,12 +1003,13 @@
                 name: f.name,
                 path: f.path || '/',
                 content: f.content || '',
-                type: f.name.split('.').pop(),
+                type: f.name ? f.name.split('.').pop() : 'txt',
                 isFolder: f.isFolder || false,
                 parentFolder: f.parent
             }));
 
-            fetch('/.netlify/functions/create-subdomains', {
+            const baseUrl = 'https://packarcade.xyz';
+            fetch(`${baseUrl}/.netlify/functions/create-subdomains`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -991,7 +1022,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    const url = `https://${subdomain}.packarcade.xyz`;
+                    const url = `https://${subdomain}.packarcade.xyz/.netlify/functions/serve-user-site`;
                     updateStatus(`Published successfully!`);
                     
                     document.getElementById('publishedUrl').textContent = url;
