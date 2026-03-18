@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackArcade Arcade Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            border: 2px solid white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: white;
+            color: #764ba2;
+        }
+
+        /* Builder Layout */
+        .builder-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        /* Sidebar Panels */
+        .builder-sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Game Library */
+        .game-library {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .game-item {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .game-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .game-item:active {
+            cursor: grabbing;
+        }
+
+        .game-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .game-info {
+            flex: 1;
+        }
+
+        .game-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .game-subdomain {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* Canvas Area */
+        .builder-canvas {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .arcade-info {
+            flex: 1;
+        }
+
+        .arcade-info input {
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            padding: 5px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .arcade-info input:focus {
+            outline: none;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .canvas-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .canvas-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .preview-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .save-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .publish-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        /* Game Grid in Canvas */
+        .game-grid-canvas {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            min-height: 400px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .game-grid-canvas.drag-over {
+            background: #e3f2fd;
+            border: 2px dashed #667eea;
+        }
+
+        .canvas-game-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .canvas-game-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .canvas-game-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .game-preview {
+            height: 100px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .game-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .canvas-game-item:hover .game-controls {
+            opacity: 1;
+        }
+
+        .game-control-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            border: none;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .game-control-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .game-control-btn.delete:hover {
+            background: #ff4757;
+            color: white;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .property-group h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .property-item {
+            margin-bottom: 15px;
+        }
+
+        .property-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .property-item input[type="text"],
+        .property-item input[type="color"],
+        .property-item select,
+        .property-item textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .property-item input[type="color"] {
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .property-item textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .template-option {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-option:hover {
+            border-color: #667eea;
+        }
+
+        .template-option.selected {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .template-preview {
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        /* Preview Modal */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-modal.active {
+            display: flex;
+        }
+
+        .preview-content {
+            width: 90%;
+            max-width: 1200px;
+            height: 80%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            padding: 15px 20px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .preview-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+
+        .close-preview {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+
+        /* Templates */
+        .template-arcade {
+            width: 100%;
+            height: 100%;
+        }
+
+        .template-header {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .template-grid-3x3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .template-grid-4x2 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .template-carousel {
+            padding: 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .template-carousel .game-tile {
+            display: inline-block;
+            width: 200px;
+            margin-right: 15px;
+        }
+
+        .game-tile {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            text-align: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-arcade"></i> Arcade Builder</h1>
+            <p>Drag, drop, and customize your own game arcade</p>
+            <div class="nav-links">
+                <a href="/dashboard.html" class="nav-link">DASHBOARD</a>
+                <a href="/arcades.html" class="nav-link">MY ARCADES</a>
+                <a href="/explore.html" class="nav-link">EXPLORE</a>
+            </div>
+        </div>
+
+        <!-- Arcade Builder -->
+        <div class="builder-container">
+            <!-- Left Sidebar - Game Library -->
+            <div class="builder-sidebar">
+                <div class="sidebar-title">
+                    <i class="fas fa-gamepad"></i> Game Library
+                </div>
+                <div class="game-library" id="gameLibrary">
+                    <!-- Games will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Center Canvas - Arcade Builder -->
+            <div class="builder-canvas">
+                <div class="canvas-header">
+                    <div class="arcade-info">
+                        <input type="text" id="arcadeTitle" placeholder="Arcade Name" value="My Arcade">
+                        <div style="font-size: 12px; color: #999;" id="subdomainDisplay">my-arcade.packarcade.xyz</div>
+                    </div>
+                    <div class="canvas-actions">
+                        <button class="canvas-btn preview-btn" onclick="previewArcade()">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <button class="canvas-btn save-btn" onclick="saveArcade()">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button class="canvas-btn publish-btn" onclick="publishArcade()">
+                            <i class="fas fa-globe"></i> Publish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Grid Canvas -->
+                <div id="gameCanvas" class="game-grid-canvas" 
+                     ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event)"
+                     ondragleave="handleDragLeave(event)">
+                    <!-- Dropped games will appear here -->
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Properties -->
+            <div class="builder-sidebar">
+                <div class="sidebar-title">
+                    <i class="fas fa-sliders-h"></i> Properties
+                </div>
+                
+                <div class="properties-panel">
+                    <div class="property-group">
+                        <h3>Theme</h3>
+                        <div class="property-item">
+                            <label>Template</label>
+                            <div class="template-grid">
+                                <div class="template-option selected" onclick="selectTemplate('grid-3x3')">
+                                    <div class="template-preview" style="background: linear-gradient(135deg, #667eea, #764ba2)"></div>
+                                    <div>3x3 Grid</div>
+                                </div>
+                                <div class="template-option" onclick="selectTemplate('grid-4x2')">
+                                    <div class="template-preview" style="background: linear-gradient(135deg, #ff6b6b, #ff8787)"></div>
+                                    <div>4x2 Grid</div>
+                                </div>
+                                <div class="template-option" onclick="selectTemplate('carousel')">
+                                    <div class="template-preview" style="background: linear-gradient(135deg, #4ecdc4, #45b7d1)"></div>
+                                    <div>Carousel</div>
+                                </div>
+                                <div class="template-option" onclick="selectTemplate('featured')">
+                                    <div class="template-preview" style="background: linear-gradient(135deg, #f9ca24, #f6e58d)"></div>
+                                    <div>Featured</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="property-group">
+                        <h3>Colors</h3>
+                        <div class="property-item">
+                            <label>Background</label>
+                            <input type="color" id="bgColor" value="#1a1f33" onchange="updateColors()">
+                        </div>
+                        <div class="property-item">
+                            <label>Text</label>
+                            <input type="color" id="textColor" value="#ffffff" onchange="updateColors()">
+                        </div>
+                        <div class="property-item">
+                            <label>Accent</label>
+                            <input type="color" id="accentColor" value="#667eea" onchange="updateColors()">
+                        </div>
+                    </div>
+
+                    <div class="property-group">
+                        <h3>Layout</h3>
+                        <div class="property-item">
+                            <label>Header Style</label>
+                            <select id="headerStyle" onchange="updateLayout()">
+                                <option value="standard">Standard</option>
+                                <option value="compact">Compact</option>
+                                <option value="hero">Hero</option>
+                                <option value="minimal">Minimal</option>
+                            </select>
+                        </div>
+                        <div class="property-item">
+                            <label>Game Tile Size</label>
+                            <select id="tileSize" onchange="updateLayout()">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="property-group">
+                        <h3>Description</h3>
+                        <div class="property-item">
+                            <textarea id="arcadeDescription" placeholder="Describe your arcade..." oninput="updateDescription()">My awesome game collection</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Arcades List -->
+        <h2 style="color: white; margin: 40px 0 20px;">My Arcades</h2>
+        <div id="arcadesGrid" class="arcades-grid">
+            <!-- Arcades will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="preview-modal">
+        <div class="preview-content">
+            <div class="preview-header">
+                <h3><i class="fas fa-eye"></i> Arcade Preview</h3>
+                <button class="close-preview" onclick="closePreview()">✖</button>
+            </div>
+            <iframe id="previewFrame" class="preview-iframe" srcdoc=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Available games
+        const AVAILABLE_GAMES = [
+            { subdomain: 'nebula', name: 'Nebula Drifter', icon: 'fa-rocket', color: '#ff6b6b' },
+            { subdomain: 'samurai', name: 'Echoes of Samurai', icon: 'fa-khanda', color: '#4ecdc4' },
+            { subdomain: 'quantum', name: 'Quantum Puzzles', icon: 'fa-atom', color: '#45b7d1' },
+            { subdomain: 'luma', name: 'Luma Island', icon: 'fa-sun', color: '#f9ca24' },
+            { subdomain: 'space', name: 'Space Shooters', icon: 'fa-rocket', color: '#6c5ce7' },
+            { subdomain: 'mario', name: 'Super Mario', icon: 'fa-star', color: '#e74c3c' },
+            { subdomain: 'tetris', name: 'Tetris', icon: 'fa-cubes', color: '#3498db' },
+            { subdomain: 'pacman', name: 'Pac-Man', icon: 'fa-circle', color: '#f1c40f' },
+            { subdomain: '2048', name: '2048', icon: 'fa-th', color: '#2ecc71' },
+            { subdomain: 'flappy', name: 'Flappy Bird', icon: 'fa-dove', color: '#e67e22' },
+            { subdomain: 'slope', name: 'Slope', icon: 'fa-mountain', color: '#95a5a6' },
+            { subdomain: 'subway', name: 'Subway Surfers', icon: 'fa-train', color: '#e84118' },
+            { subdomain: 'minecraft', name: 'Minecraft', icon: 'fa-cube', color: '#27ae60' },
+            { subdomain: 'geometry', name: 'Geometry Dash', icon: 'fa-shapes', color: '#f39c12' },
+            { subdomain: 'run', name: 'Run', icon: 'fa-running', color: '#3498db' },
+            { subdomain: 'fruitninja', name: 'Fruit Ninja', icon: 'fa-apple-alt', color: '#e74c3c' },
+            { subdomain: 'cookieclicker', name: 'Cookie Clicker', icon: 'fa-cookie', color: '#d35400' },
+            { subdomain: 'bitlife', name: 'BitLife', icon: 'fa-heart', color: '#e84393' },
+            { subdomain: 'bloonstd', name: 'Bloons TD', icon: 'fa-bullseye', color: '#00b894' },
+            { subdomain: 'angrybirds', name: 'Angry Birds', icon: 'fa-dove', color: '#e74c3c' },
+            { subdomain: 'ageofwar', name: 'Age of War', icon: 'fa-chess', color: '#fdcb6e' }
+        ];
+
+        let sessionId = localStorage.getItem('sessionId');
+        if (!sessionId) {
+            sessionId = 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+            localStorage.setItem('sessionId', sessionId);
+        }
+
+        let currentArcade = {
+            games: [],
+            template: 'grid-3x3',
+            colors: {
+                bg: '#1a1f33',
+                text: '#ffffff',
+                accent: '#667eea'
+            },
+            title: 'My Arcade',
+            description: 'My awesome game collection',
+            subdomain: '',
+            headerStyle: 'standard',
+            tileSize: 'medium'
+        };
+
+        let draggedGame = null;
+
+        // Render game library
+        function renderGameLibrary() {
+            const library = document.getElementById('gameLibrary');
+            let html = '';
+            
+            AVAILABLE_GAMES.forEach(game => {
+                html += `
+                    <div class="game-item" draggable="true" 
+                         ondragstart="dragStart(event, '${game.subdomain}')"
+                         ondragend="dragEnd(event)">
+                        <div class="game-icon" style="background: ${game.color}20; color: ${game.color}">
+                            <i class="fas ${game.icon}"></i>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-name">${game.name}</div>
+                            <div class="game-subdomain">${game.subdomain}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            library.innerHTML = html;
+        }
+
+        // Drag and drop handlers
+        function dragStart(event, subdomain) {
+            draggedGame = AVAILABLE_GAMES.find(g => g.subdomain === subdomain);
+            event.dataTransfer.setData('text/plain', subdomain);
+            event.target.style.opacity = '0.5';
+        }
+
+        function dragEnd(event) {
+            event.target.style.opacity = '1';
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            document.getElementById('gameCanvas').classList.add('drag-over');
+        }
+
+        function handleDragLeave(event) {
+            document.getElementById('gameCanvas').classList.remove('drag-over');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            document.getElementById('gameCanvas').classList.remove('drag-over');
+            
+            if (draggedGame) {
+                addGameToCanvas(draggedGame);
+                draggedGame = null;
+            }
+        }
+
+        // Add game to canvas
+        function addGameToCanvas(game) {
+            if (!currentArcade.games.some(g => g.subdomain === game.subdomain)) {
+                currentArcade.games.push({ ...game, id: Date.now() + Math.random() });
+                renderCanvas();
+            }
+        }
+
+        // Remove game from canvas
+        function removeGameFromCanvas(gameId) {
+            currentArcade.games = currentArcade.games.filter(g => g.id !== gameId);
+            renderCanvas();
+        }
+
+        // Move game (reorder)
+        function moveGameUp(index) {
+            if (index > 0) {
+                [currentArcade.games[index - 1], currentArcade.games[index]] = 
+                [currentArcade.games[index], currentArcade.games[index - 1]];
+                renderCanvas();
+            }
+        }
+
+        function moveGameDown(index) {
+            if (index < currentArcade.games.length - 1) {
+                [currentArcade.games[index], currentArcade.games[index + 1]] = 
+                [currentArcade.games[index + 1], currentArcade.games[index]];
+                renderCanvas();
+            }
+        }
+
+        // Render canvas
+        function renderCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            let html = '';
+            
+            currentArcade.games.forEach((game, index) => {
+                html += `
+                    <div class="canvas-game-item" draggable="false">
+                        <div class="game-preview" style="background: linear-gradient(135deg, ${game.color}, ${game.color}dd)">
+                            <i class="fas ${game.icon}" style="font-size: 30px;"></i>
+                        </div>
+                        <div class="game-name">${game.name}</div>
+                        <div class="game-controls">
+                            ${index > 0 ? `<button class="game-control-btn" onclick="moveGameUp(${index})"><i class="fas fa-arrow-up"></i></button>` : ''}
+                            ${index < currentArcade.games.length - 1 ? `<button class="game-control-btn" onclick="moveGameDown(${index})"><i class="fas fa-arrow-down"></i></button>` : ''}
+                            <button class="game-control-btn delete" onclick="removeGameFromCanvas('${game.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (currentArcade.games.length === 0) {
+                html = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">Drag and drop games here to build your arcade</div>';
+            }
+            
+            canvas.innerHTML = html;
+        }
+
+        // Template selection
+        function selectTemplate(template) {
+            currentArcade.template = template;
+            document.querySelectorAll('.template-option').forEach(opt => opt.classList.remove('selected'));
+            event.target.closest('.template-option').classList.add('selected');
+        }
+
+        // Update colors
+        function updateColors() {
+            currentArcade.colors = {
+                bg: document.getElementById('bgColor').value,
+                text: document.getElementById('textColor').value,
+                accent: document.getElementById('accentColor').value
+            };
+        }
+
+        // Update layout
+        function updateLayout() {
+            currentArcade.headerStyle = document.getElementById('headerStyle').value;
+            currentArcade.tileSize = document.getElementById('tileSize').value;
+        }
+
+        // Update description
+        function updateDescription() {
+            currentArcade.description = document.getElementById('arcadeDescription').value;
+        }
+
+        // Preview arcade
+        function previewArcade() {
+            const title = document.getElementById('arcadeTitle').value;
+            const description = document.getElementById('arcadeDescription').value;
+            
+            let gamesHtml = '';
+            if (currentArcade.template === 'grid-3x3') {
+                gamesHtml = '<div class="template-grid-3x3">';
+                currentArcade.games.forEach(game => {
+                    gamesHtml += `
+                        <div class="game-tile">
+                            <i class="fas ${game.icon}" style="font-size: 40px; margin-bottom: 10px;"></i>
+                            <h3>${game.name}</h3>
+                            <a href="https://${game.subdomain}.packarcade.xyz" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: inline-block; margin-top: 10px;">Play</a>
+                        </div>
+                    `;
+                });
+                gamesHtml += '</div>';
+            } else if (currentArcade.template === 'carousel') {
+                gamesHtml = '<div class="template-carousel">';
+                currentArcade.games.forEach(game => {
+                    gamesHtml += `
+                        <div class="game-tile" style="width: 200px;">
+                            <i class="fas ${game.icon}" style="font-size: 40px; margin-bottom: 10px;"></i>
+                            <h3>${game.name}</h3>
+                            <a href="https://${game.subdomain}.packarcade.xyz" target="_blank" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: inline-block; margin-top: 10px;">Play</a>
+                        </div>
+                    `;
+                });
+                gamesHtml += '</div>';
+            }
+
+            const previewHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title} - Arcade Preview</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            font-family: 'Segoe UI', sans-serif;
+                            background: ${currentArcade.colors.bg};
+                            color: ${currentArcade.colors.text};
+                        }
+                        .arcade-header {
+                            text-align: center;
+                            padding: ${currentArcade.headerStyle === 'compact' ? '20px' : '60px 20px'};
+                            background: linear-gradient(135deg, ${currentArcade.colors.accent}, ${currentArcade.colors.accent}dd);
+                        }
+                        h1 { margin: 0; font-size: ${currentArcade.headerStyle === 'hero' ? '64px' : '48px'}; }
+                        p { opacity: 0.9; }
+                        .games-container {
+                            max-width: 1200px;
+                            margin: 0 auto;
+                            padding: 40px 20px;
+                        }
+                        .game-tile {
+                            background: rgba(255,255,255,0.1);
+                            border-radius: 10px;
+                            padding: 20px;
+                            text-align: center;
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(255,255,255,0.1);
+                        }
+                        ${currentArcade.template === 'grid-3x3' ? `
+                            .template-grid-3x3 {
+                                display: grid;
+                                grid-template-columns: repeat(3, 1fr);
+                                gap: 20px;
+                            }
+                        ` : ''}
+                        ${currentArcade.template === 'carousel' ? `
+                            .template-carousel {
+                                overflow-x: auto;
+                                white-space: nowrap;
+                                padding: 20px 0;
+                            }
+                            .template-carousel .game-tile {
+                                display: inline-block;
+                                width: 250px;
+                                margin-right: 20px;
+                            }
+                        ` : ''}
+                        a { transition: transform 0.2s; }
+                        a:hover { transform: scale(1.05); }
+                    </style>
+                </head>
+                <body>
+                    <div class="arcade-header">
+                        <h1>${title}</h1>
+                        <p>${description}</p>
+                    </div>
+                    <div class="games-container">
+                        ${gamesHtml}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            document.getElementById('previewFrame').srcdoc = previewHtml;
+            document.getElementById('previewModal').classList.add('active');
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
+        // Save arcade
+        async function saveArcade() {
+            const arcadeData = {
+                title: document.getElementById('arcadeTitle').value,
+                description: document.getElementById('arcadeDescription').value,
+                games: currentArcade.games,
+                template: currentArcade.template,
+                colors: currentArcade.colors,
+                headerStyle: currentArcade.headerStyle,
+                tileSize: currentArcade.tileSize
+            };
+
+            localStorage.setItem('arcadeDraft', JSON.stringify(arcadeData));
+            alert('Arcade draft saved locally!');
+        }
+
+        // Publish arcade
+        async function publishArcade() {
+            const subdomain = prompt('Enter a subdomain for your arcade (e.g., my-arcade):');
+            if (!subdomain) return;
+
+            const arcadeName = document.getElementById('arcadeTitle').value;
+            
+            const config = {
+                title: arcadeName,
+                description: document.getElementById('arcadeDescription').value,
+                background_color: currentArcade.colors.bg,
+                text_color: currentArcade.colors.text,
+                accent_color: currentArcade.colors.accent,
+                defaultGames: currentArcade.games,
+                template: currentArcade.template,
+                headerStyle: currentArcade.headerStyle,
+                tileSize: currentArcade.tileSize,
+                is_public: true
+            };
+
+            try {
+                const res = await fetch('/.netlify/functions/create-arcade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        arcadeName,
+                        subdomain,
+                        sessionId,
+                        config
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert(`Arcade published! Visit at ${data.url}`);
+                    loadArcades();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Load user's arcades
+        async function loadArcades() {
+            try {
+                const res = await fetch(`/.netlify/functions/get-arcades?sessionId=${sessionId}`);
+                const data = await res.json();
+                
+                const grid = document.getElementById('arcadesGrid');
+                
+                if (data.arcades && data.arcades.length > 0) {
+                    let html = '';
+                    data.arcades.forEach(arcade => {
+                        const url = `https://${arcade.subdomain}.packarcade.xyz`;
+                        html += `
+                            <div class="arcade-card">
+                                <div class="arcade-preview" style="background: linear-gradient(135deg, ${arcade.background_color || '#667eea'}, ${arcade.accent_color || '#764ba2'})"></div>
+                                <div class="arcade-content">
+                                    <h3 class="arcade-title">${arcade.title || arcade.arcade_name}</h3>
+                                    <div class="arcade-subdomain">${url}</div>
+                                    <p class="arcade-description">${arcade.description || 'No description'}</p>
+                                    <div class="game-badges">
+                                        ${arcade.arcade_games?.slice(0, 5).map(game => `
+                                            <span class="game-badge">${game.display_name || game.game_subdomain}</span>
+                                        `).join('')}
+                                        ${arcade.arcade_games?.length > 5 ? `<span class="game-badge">+${arcade.arcade_games.length - 5}</span>` : ''}
+                                    </div>
+                                    <div class="arcade-actions">
+                                        <button class="manage-btn" onclick="editArcade('${arcade.id}')">Edit</button>
+                                        <button class="leaderboard-btn" onclick="viewArcade('${arcade.subdomain}')">View</button>
+                                        <button class="delete-btn" onclick="deleteArcade('${arcade.id}')">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    grid.innerHTML = html;
+                } else {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: white;">No arcades yet. Build one above!</div>';
+                }
+            } catch (err) {
+                console.error('Error loading arcades:', err);
+            }
+        }
+
+        window.editArcade = function(arcadeId) {
+            // Load arcade for editing
+            alert('Edit functionality coming soon!');
+        };
+
+        window.viewArcade = function(subdomain) {
+            window.open(`https://${subdomain}.packarcade.xyz`, '_blank');
+        };
+
+        window.deleteArcade = async function(arcadeId) {
+            if (!confirm('Are you sure you want to delete this arcade?')) return;
+            // Add delete function
+        };
+
+        // Initialize
+        renderGameLibrary();
+        renderCanvas();
+        loadArcades();
+
+        // Update subdomain preview
+        document.getElementById('arcadeTitle').addEventListener('input', function(e) {
+            const subdomain = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            document.getElementById('subdomainDisplay').textContent = `${subdomain || 'my-arcade'}.packarcade.xyz`;
+        });
+    </script>
+</body>
+</html>
