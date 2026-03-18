@@ -964,14 +964,28 @@
             alert('✨ arcade draft saved locally!');
         }
 
-        // PUBLISH (with netlify functions preserved)
-        async function publishArcade() {
-            const subdomain = prompt('Enter a subdomain for your arcade (e.g., my-arcade):');
-            if (!subdomain) return;
+       async function publishArcade() {
+    const subdomain = prompt('Enter a subdomain for your arcade (e.g., my-arcade):');
+    if (!subdomain) return;
 
-            const arcadeName = document.getElementById('arcadeTitle').value;
-            
-            const config = {
+    const arcadeName = document.getElementById('arcadeTitle').value;
+    
+    // Generate the HTML content from your arcade data
+    const htmlContent = generateArcadeHTML(currentArcade);
+    
+    // Create files array just like your working editor
+    const filesData = [
+        {
+            name: 'index.html',
+            path: '/',
+            content: htmlContent,
+            type: 'html',
+            isFolder: false
+        },
+        {
+            name: 'arcade-config.json',
+            path: '/',
+            content: JSON.stringify({
                 title: arcadeName,
                 description: document.getElementById('arcadeDescription').value,
                 background_color: currentArcade.colors.bg,
@@ -982,34 +996,126 @@
                 headerStyle: currentArcade.headerStyle,
                 tileSize: currentArcade.tileSize,
                 is_public: true
-            };
-
-            try {
-                // NETLIFY FUNCTIONS (intact)
-                const res = await fetch('/.netlify/functions/create-arcade', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        arcadeName,
-                        subdomain,
-                        sessionId,
-                        config
-                    })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert(`🚀 Arcade published! Visit at ${data.url}`);
-                    loadArcades();
-                } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
+            }, null, 2),
+            type: 'json',
+            isFolder: false
         }
+    ];
 
+    // Add CSS file if you have custom styles
+    if (currentArcade.customCss) {
+        filesData.push({
+            name: 'styles.css',
+            path: '/',
+            content: currentArcade.customCss,
+            type: 'css',
+            isFolder: false
+        });
+    }
+
+    try {
+        updateStatus('Publishing...'); // Add a status element if you have one
+        
+        // Use the SAME endpoint as your working editor
+        const res = await fetch('/.netlify/functions/create-subdomains', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                subdomain: subdomain,
+                files: filesData,  // Now with actual file content!
+                sessionId: sessionId,
+                config: {
+                    title: arcadeName,
+                    template: currentArcade.template,
+                    is_public: true
+                }
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const url = `https://${subdomain}.packarcade.xyz`;
+            alert(`✅ Arcade published! Visit at ${url}`);
+            
+            // Show success message like your editor does
+            document.getElementById('publishedUrl').textContent = url;
+            document.getElementById('publishSuccessModal').classList.add('active');
+            
+            loadArcades(); // Refresh your arcades list
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Helper function to generate HTML from arcade data (copy from your preview)
+function generateArcadeHTML(arcade) {
+    const title = arcade.title || 'My Arcade';
+    const description = arcade.description || '';
+    const bgColor = arcade.colors?.bg || '#0d1428';
+    const textColor = arcade.colors?.text || '#ffffff';
+    const accentColor = arcade.colors?.accent || '#5f7cff';
+    const template = arcade.template || 'grid-3x3';
+    
+    let gamesHtml = '';
+    
+    if (template === 'grid-3x3') {
+        gamesHtml = '<div class="games-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">';
+        arcade.games.forEach(game => {
+            gamesHtml += `
+                <div class="game-card" style="background: ${accentColor}20; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid ${accentColor}40;">
+                    <i class="fas ${game.icon}" style="font-size: 48px; color: ${game.color}; margin-bottom: 10px;"></i>
+                    <h3 style="color: ${textColor};">${game.name}</h3>
+                    <a href="https://${game.subdomain}.packarcade.xyz" style="display: inline-block; background: ${accentColor}; color: white; text-decoration: none; padding: 8px 20px; border-radius: 30px; margin-top: 10px;">Play</a>
+                </div>
+            `;
+        });
+        gamesHtml += '</div>';
+    } else {
+        // Add other template layouts here
+        gamesHtml = '<div>Template: ' + template + '</div>';
+    }
+    
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} · Arcade</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: ${bgColor}; 
+            color: ${textColor}; 
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, ${accentColor}, ${accentColor}80);
+        }
+        h1 { font-size: 48px; margin-bottom: 10px; }
+        p { opacity: 0.9; font-size: 18px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        ${currentArcade.customCss || ''}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${title}</h1>
+        <p>${description}</p>
+    </div>
+    <div class="container">
+        ${gamesHtml}
+    </div>
+</body>
+</html>`;
+}
         // loadArcades (preserved)
         async function loadArcades() {
             try {
