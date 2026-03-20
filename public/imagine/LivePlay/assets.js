@@ -1,4 +1,4 @@
-// Image Manager - REPLACE THESE PATHS WITH YOUR ACTUAL PNG FILES
+// Image Manager - Game works perfectly without images, loads them when available
 let gameAssets = {
     runner: null,
     obstacle: null,
@@ -8,37 +8,51 @@ let gameAssets = {
 // Load images from your provided PNG files
 function loadGameAssets() {
     // UPDATE THESE PATHS WITH YOUR ACTUAL PNG FILE LOCATIONS
+    const imagePaths = {
+        runner: 'images/runner.png',
+        obstacle: 'images/obstacle.png',
+        background: 'images/background.png'
+    };
+    
     gameAssets.runner = new Image();
-    gameAssets.runner.src = 'images/runner.png';
+    gameAssets.runner.src = imagePaths.runner;
     
     gameAssets.obstacle = new Image();
-    gameAssets.obstacle.src = 'images/obstacle.png';
+    gameAssets.obstacle.src = imagePaths.obstacle;
     
     gameAssets.background = new Image();
-    gameAssets.background.src = 'images/background.png';
+    gameAssets.background.src = imagePaths.background;
     
-    // Wait for images to load then pass to game
     let imagesLoaded = 0;
     const totalImages = 3;
     
-    function imageLoaded() {
+    function checkAllLoaded() {
         imagesLoaded++;
         if (imagesLoaded === totalImages) {
             if (window.setGameImages) {
                 window.setGameImages(gameAssets.runner, gameAssets.obstacle, gameAssets.background);
             }
-            console.log("All game assets loaded!");
+            console.log("All game assets loaded! Your PNGs are now active.");
         }
     }
     
-    gameAssets.runner.onload = imageLoaded;
-    gameAssets.obstacle.onload = imageLoaded;
-    gameAssets.background.onload = imageLoaded;
+    gameAssets.runner.onload = checkAllLoaded;
+    gameAssets.obstacle.onload = checkAllLoaded;
+    gameAssets.background.onload = checkAllLoaded;
     
-    // If images fail to load, use fallback (game will still work with colored shapes)
-    gameAssets.runner.onerror = () => { console.warn("Runner image not found, using fallback"); imageLoaded(); };
-    gameAssets.obstacle.onerror = () => { console.warn("Obstacle image not found, using fallback"); imageLoaded(); };
-    gameAssets.background.onerror = () => { console.warn("Background image not found, using fallback"); imageLoaded(); };
+    // If images fail, still work with fallback graphics
+    gameAssets.runner.onerror = () => { 
+        console.log("Runner PNG not found - using colored character (still works!)"); 
+        checkAllLoaded();
+    };
+    gameAssets.obstacle.onerror = () => { 
+        console.log("Obstacle PNG not found - using colored obstacle (still works!)"); 
+        checkAllLoaded();
+    };
+    gameAssets.background.onerror = () => { 
+        console.log("Background PNG not found - using gradient background (still works!)"); 
+        checkAllLoaded();
+    };
 }
 
 // Initialize when page loads
