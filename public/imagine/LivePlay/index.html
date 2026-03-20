@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PlayLive - Martan's Infinite Run</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Top Stats Panel -->
+        <div class="stats-panel">
+            <div class="stat">
+                <span class="stat-icon">🏃</span>
+                <span class="stat-label">LAPS</span>
+                <span class="stat-value" id="lapsValue">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">⭐</span>
+                <span class="stat-label">LEVEL</span>
+                <span class="stat-value" id="levelValue">1</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">💰</span>
+                <span class="stat-label">POINTS</span>
+                <span class="stat-value" id="pointsValue">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-label">MULTI</span>
+                <span class="stat-value" id="multiplierValue">x1</span>
+            </div>
+        </div>
+
+        <!-- Game Canvas Area -->
+        <div class="game-area">
+            <canvas id="gameCanvas" width="900" height="400"></canvas>
+            
+            <!-- Game Overlay -->
+            <div class="game-overlay" id="gameOverlay" style="display: none;">
+                <div class="overlay-content">
+                    <h2>GAME OVER</h2>
+                    <p>You ran <span id="finalLaps">0</span> laps!</p>
+                    <p>Earned <span id="finalPoints">0</span> points</p>
+                    <button class="btn-primary" id="restartBtn">RUN AGAIN</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mini-Games Panel -->
+        <div class="mini-games-panel">
+            <!-- Card Gambling Game -->
+            <div class="game-card" id="cardGame">
+                <h3>🎴 CARD GAMBLE</h3>
+                <p>50/50 chance • Risk your points!</p>
+                <div class="card-area">
+                    <div class="card" id="cardLeft">?</div>
+                    <div class="card" id="cardRight">?</div>
+                </div>
+                <div class="gamble-controls">
+                    <input type="number" id="betAmount" placeholder="Bet points" value="10" min="1">
+                    <button class="btn-gamble" id="gambleBtn">🎲 GAMBLE</button>
+                </div>
+                <div class="gamble-result" id="gambleResult"></div>
+            </div>
+
+            <!-- Puzzle Mini-Game -->
+            <div class="game-card" id="puzzleGame">
+                <h3>🧩 PUZZLE LOCK</h3>
+                <p>Solve to skip obstacles +50 pts</p>
+                <div class="puzzle-area">
+                    <div class="puzzle-question" id="puzzleQuestion">2 + 2 = ?</div>
+                    <input type="number" id="puzzleAnswer" placeholder="Your answer">
+                    <button class="btn-puzzle" id="solvePuzzleBtn">SOLVE</button>
+                </div>
+                <div class="puzzle-result" id="puzzleResult"></div>
+            </div>
+
+            <!-- Upgrades Shop -->
+            <div class="game-card" id="upgradeShop">
+                <h3>🛒 UPGRADE SHOP</h3>
+                <p>Boost your multiplier permanently!</p>
+                <div class="upgrade-list">
+                    <div class="upgrade-item">
+                        <span>x2 Multiplier</span>
+                        <span class="upgrade-cost">100 pts</span>
+                        <button class="btn-upgrade" data-multiplier="2">BUY</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <span>x4 Multiplier</span>
+                        <span class="upgrade-cost">250 pts</span>
+                        <button class="btn-upgrade" data-multiplier="4">BUY</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <span>x6 Multiplier</span>
+                        <span class="upgrade-cost">500 pts</span>
+                        <button class="btn-upgrade" data-multiplier="6">BUY</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <span>x8 Multiplier</span>
+                        <span class="upgrade-cost">1000 pts</span>
+                        <button class="btn-upgrade" data-multiplier="8">BUY</button>
+                    </div>
+                    <div class="upgrade-item">
+                        <span>x10 Multiplier</span>
+                        <span class="upgrade-cost">2000 pts</span>
+                        <button class="btn-upgrade" data-multiplier="10">BUY</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <p>🎮 SPACE or CLICK to jump | Run endless laps, avoid obstacles!</p>
+            <p>💡 Each lap = +10 points × multiplier | Level increases every 5 laps</p>
+        </div>
+    </div>
+
+    <!-- External JS Files -->
+    <script src="game.js"></script>
+    <script src="audio.js"></script>
+    <script src="assets.js"></script>
+</body>
+</html>
