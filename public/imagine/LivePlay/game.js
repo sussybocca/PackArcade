@@ -8,7 +8,6 @@ let laps = 0;
 let level = 1;
 let points = 0;
 let multiplier = 1;
-let scoreMultiplier = 1;
 
 // Runner Variables
 let runner = {
@@ -28,16 +27,19 @@ let frameCount = 0;
 let obstacleSpawnRate = 80;
 let baseSpeed = 5;
 
-// Images (will be loaded from assets.js)
+// Images (will be loaded from assets.js, safe to use even if null)
 let runnerImage = null;
 let obstacleImage = null;
 let backgroundImage = null;
+let imagesReady = false;
 
-// Load images when assets are ready
+// Set images from assets.js
 function setGameImages(runnerImg, obstacleImg, bgImg) {
     runnerImage = runnerImg;
     obstacleImage = obstacleImg;
     backgroundImage = bgImg;
+    imagesReady = true;
+    console.log("Images received by game.js");
 }
 
 // Jump Function
@@ -45,7 +47,7 @@ function jump() {
     if (!runner.isJumping && gameRunning) {
         runner.yVelocity = runner.jumpPower;
         runner.isJumping = true;
-        playSound('jump');
+        if (window.playSound) window.playSound('jump');
     }
 }
 
@@ -120,12 +122,12 @@ function completeLap() {
     let newLevel = Math.floor(laps / 5) + 1;
     if (newLevel > level) {
         level = newLevel;
-        playSound('levelUp');
+        if (window.playSound) window.playSound('levelUp');
         showMessage(`⭐ LEVEL UP! Level ${level} ⭐`);
     }
     
     updateDisplay();
-    playSound('lapComplete');
+    if (window.playSound) window.playSound('lapComplete');
     
     // Increase difficulty
     if (obstacleSpawnRate > 40) {
@@ -136,7 +138,7 @@ function completeLap() {
 // Game Over
 function gameOver() {
     gameRunning = false;
-    playSound('gameOver');
+    if (window.playSound) window.playSound('gameOver');
     document.getElementById('finalLaps').textContent = laps;
     document.getElementById('finalPoints').textContent = points;
     document.getElementById('gameOverlay').style.display = 'flex';
@@ -148,8 +150,7 @@ function restartGame() {
     laps = 0;
     level = 1;
     points = 0;
-    multiplier = parseInt(document.getElementById('multiplierValue').textContent.replace('x', ''));
-    scoreMultiplier = multiplier;
+    multiplier = parseInt(document.getElementById('multiplierValue').textContent.replace('x', '')) || 1;
     obstacles = [];
     frameCount = 0;
     obstacleSpawnRate = 80;
@@ -160,7 +161,7 @@ function restartGame() {
     
     updateDisplay();
     document.getElementById('gameOverlay').style.display = 'none';
-    playSound('start');
+    if (window.playSound) window.playSound('start');
 }
 
 // Update UI Display
@@ -184,7 +185,7 @@ function buyUpgrade(newMultiplier) {
         points -= cost;
         multiplier = newMultiplier;
         updateDisplay();
-        playSound('upgrade');
+        if (window.playSound) window.playSound('upgrade');
         showMessage(`✨ UPGRADED! x${multiplier} Multiplier ✨`);
         return true;
     } else if (newMultiplier <= multiplier) {
@@ -197,7 +198,6 @@ function buyUpgrade(newMultiplier) {
 }
 
 // Show Temporary Message
-let messageTimeout;
 function showMessage(msg) {
     let msgDiv = document.createElement('div');
     msgDiv.textContent = msg;
@@ -212,6 +212,7 @@ function showMessage(msg) {
     msgDiv.style.fontWeight = 'bold';
     msgDiv.style.zIndex = '1000';
     msgDiv.style.fontSize = '1.2rem';
+    msgDiv.style.whiteSpace = 'nowrap';
     document.body.appendChild(msgDiv);
     
     setTimeout(() => {
@@ -234,19 +235,22 @@ function gamble(betAmount) {
     let win = Math.random() < 0.5;
     let cardLeft = document.getElementById('cardLeft');
     let cardRight = document.getElementById('cardRight');
+    let resultDiv = document.getElementById('gambleResult');
     
     if (win) {
         points += betAmount;
         cardLeft.textContent = '🎉';
         cardRight.textContent = 'WIN';
-        playSound('win');
-        showMessage(`🎉 YOU WON +${betAmount} POINTS! 🎉`);
+        resultDiv.textContent = `🎉 YOU WON +${betAmount} POINTS! 🎉`;
+        resultDiv.style.color = '#88ff88';
+        if (window.playSound) window.playSound('win');
     } else {
         points -= betAmount;
         cardLeft.textContent = '💀';
         cardRight.textContent = 'LOSE';
-        playSound('lose');
-        showMessage(`💀 YOU LOST -${betAmount} POINTS! 💀`);
+        resultDiv.textContent = `💀 YOU LOST -${betAmount} POINTS! 💀`;
+        resultDiv.style.color = '#ff8888';
+        if (window.playSound) window.playSound('lose');
     }
     
     updateDisplay();
@@ -254,76 +258,100 @@ function gamble(betAmount) {
     setTimeout(() => {
         cardLeft.textContent = '?';
         cardRight.textContent = '?';
-    }, 1000);
+        resultDiv.textContent = '';
+    }, 1500);
     
     return win;
 }
 
 // Puzzle Solve Function
+let currentPuzzleAnswer = 0;
+let currentPuzzleQuestion = "";
+
+function generatePuzzle() {
+    let num1 = Math.floor(Math.random() * 20) + 1;
+    let num2 = Math.floor(Math.random() * 20) + 1;
+    let operators = ['+', '-', '*'];
+    let operator = operators[Math.floor(Math.random() * 3)];
+    
+    let answer;
+    if (operator === '+') answer = num1 + num2;
+    else if (operator === '-') answer = num1 - num2;
+    else answer = num1 * num2;
+    
+    currentPuzzleAnswer = answer;
+    currentPuzzleQuestion = `${num1} ${operator} ${num2} = ?`;
+    document.getElementById('puzzleQuestion').textContent = currentPuzzleQuestion;
+}
+
 function solvePuzzle() {
     if (!gameRunning) {
         showMessage("Game is over! Restart to solve puzzles.");
         return false;
     }
     
-    let question = document.getElementById('puzzleQuestion');
     let answerInput = document.getElementById('puzzleAnswer');
     let userAnswer = parseInt(answerInput.value);
+    let resultDiv = document.getElementById('puzzleResult');
     
-    // Simple random math puzzle
-    let num1 = Math.floor(Math.random() * 20) + 1;
-    let num2 = Math.floor(Math.random() * 20) + 1;
-    let operator = ['+', '-', '*'][Math.floor(Math.random() * 3)];
-    let correctAnswer;
+    if (isNaN(userAnswer)) {
+        resultDiv.textContent = '❌ Enter a number!';
+        resultDiv.style.color = '#ff8888';
+        setTimeout(() => resultDiv.textContent = '', 1500);
+        return false;
+    }
     
-    if (operator === '+') correctAnswer = num1 + num2;
-    else if (operator === '-') correctAnswer = num1 - num2;
-    else correctAnswer = num1 * num2;
-    
-    question.textContent = `${num1} ${operator} ${num2} = ?`;
-    
-    if (userAnswer === correctAnswer) {
+    if (userAnswer === currentPuzzleAnswer) {
         points += 50;
         updateDisplay();
-        playSound('puzzleWin');
-        document.getElementById('puzzleResult').textContent = '✅ CORRECT! +50 POINTS!';
-        document.getElementById('puzzleResult').style.color = '#88ff88';
+        resultDiv.textContent = '✅ CORRECT! +50 POINTS!';
+        resultDiv.style.color = '#88ff88';
         answerInput.value = '';
+        if (window.playSound) window.playSound('puzzleWin');
         
-        // Also remove one obstacle as bonus
+        // Remove one obstacle as bonus
         if (obstacles.length > 0) {
             obstacles.pop();
             showMessage("🧩 Puzzle solved! Obstacle removed!");
+        } else {
+            showMessage("🧩 +50 points! Great job!");
         }
         
+        generatePuzzle(); // New puzzle for next time
+        
         setTimeout(() => {
-            document.getElementById('puzzleResult').textContent = '';
+            if (document.getElementById('puzzleResult').textContent === '✅ CORRECT! +50 POINTS!') {
+                resultDiv.textContent = '';
+            }
         }, 2000);
         return true;
     } else {
-        playSound('puzzleFail');
-        document.getElementById('puzzleResult').textContent = '❌ WRONG! Try again!';
-        document.getElementById('puzzleResult').style.color = '#ff8888';
-        setTimeout(() => {
-            document.getElementById('puzzleResult').textContent = '';
-        }, 1500);
+        if (window.playSound) window.playSound('puzzleFail');
+        resultDiv.textContent = `❌ WRONG! ${currentPuzzleQuestion}`;
+        resultDiv.style.color = '#ff8888';
+        setTimeout(() => resultDiv.textContent = '', 2000);
         return false;
     }
 }
 
-// Draw Game
+// Draw Game - SAFE VERSION (checks if images are valid)
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw background
-    if (backgroundImage) {
+    // Draw background (safe check)
+    if (backgroundImage && backgroundImage.complete && backgroundImage.naturalWidth > 0) {
         ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
     } else {
-        ctx.fillStyle = '#2a3a4a';
+        // Gradient background fallback
+        let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#2a5f7a');
+        gradient.addColorStop(1, '#1a3a4a');
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#3a5a6a';
+        // Ground pattern
+        ctx.fillStyle = '#5a3a2a';
         for (let i = 0; i < 20; i++) {
-            ctx.fillRect(i * 50, canvas.height - 30, 30, 10);
+            ctx.fillRect(i * 60, canvas.height - 35, 40, 8);
         }
     }
     
@@ -333,34 +361,48 @@ function draw() {
     ctx.fillStyle = '#C97E3A';
     ctx.fillRect(0, canvas.height - 35, canvas.width, 5);
     
-    // Draw runner
-    if (runnerImage) {
+    // Draw runner (safe check)
+    if (runnerImage && runnerImage.complete && runnerImage.naturalWidth > 0) {
         ctx.drawImage(runnerImage, runner.x, runner.y, runner.width, runner.height);
     } else {
+        // Martan character fallback
         ctx.fillStyle = '#FF6B6B';
         ctx.fillRect(runner.x, runner.y, runner.width, runner.height);
         ctx.fillStyle = '#FFE66D';
-        ctx.fillRect(runner.x + 5, runner.y - 10, 30, 10);
+        ctx.fillRect(runner.x + 5, runner.y - 8, 30, 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(runner.x + 8, runner.y + 10, 8, 8);
+        ctx.fillRect(runner.x + 24, runner.y + 10, 8, 8);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(runner.x + 10, runner.y + 12, 4, 4);
+        ctx.fillRect(runner.x + 26, runner.y + 12, 4, 4);
     }
     
-    // Draw obstacles
+    // Draw obstacles (safe check)
     for (let obs of obstacles) {
-        if (obstacleImage) {
+        if (obstacleImage && obstacleImage.complete && obstacleImage.naturalWidth > 0) {
             ctx.drawImage(obstacleImage, obs.x, obs.y, obs.width, obs.height);
         } else {
             ctx.fillStyle = '#AA4A2A';
             ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
             ctx.fillStyle = '#8A3A1A';
             ctx.fillRect(obs.x + 5, obs.y - 5, obs.width - 10, 5);
+            ctx.fillStyle = '#FF6B4A';
+            ctx.fillRect(obs.x + 8, obs.y + 10, 6, 20);
+            ctx.fillRect(obs.x + 21, obs.y + 10, 6, 20);
         }
     }
     
     // Draw level text
     ctx.fillStyle = 'white';
     ctx.font = 'bold 20px monospace';
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = 'black';
     ctx.fillText(`LEVEL ${level}`, canvas.width - 100, 40);
     ctx.fillText(`x${multiplier}`, canvas.width - 100, 70);
+    ctx.fillStyle = '#FFD966';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText(`LAP ${laps}`, 20, 40);
     ctx.shadowBlur = 0;
 }
 
@@ -385,13 +427,29 @@ canvas.addEventListener('click', () => {
 
 document.getElementById('restartBtn').addEventListener('click', restartGame);
 
-// Export functions for other files
-window.jump = jump;
-window.buyUpgrade = buyUpgrade;
-window.gamble = gamble;
-window.solvePuzzle = solvePuzzle;
-window.setGameImages = setGameImages;
+// Gambling button
+document.getElementById('gambleBtn').addEventListener('click', () => {
+    let bet = parseInt(document.getElementById('betAmount').value);
+    if (isNaN(bet)) bet = 10;
+    gamble(bet);
+});
 
-// Initialize
+// Puzzle button
+document.getElementById('solvePuzzleBtn').addEventListener('click', solvePuzzle);
+
+// Upgrade buttons
+document.querySelectorAll('.btn-upgrade').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        let newMultiplier = parseInt(btn.getAttribute('data-multiplier'));
+        buyUpgrade(newMultiplier);
+    });
+});
+
+// Initialize puzzle
+generatePuzzle();
+
+// Initialize game
 updateDisplay();
 gameLoop();
+
+console.log("Game initialized - ready for your PNG and MP3 files!");
