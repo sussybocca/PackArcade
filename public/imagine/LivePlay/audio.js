@@ -1,43 +1,42 @@
-// Audio Manager - Replace with your actual MP3 files
-let sounds = {
-    jump: null,
-    lapComplete: null,
-    levelUp: null,
-    gameOver: null,
-    start: null,
-    win: null,
-    lose: null,
-    upgrade: null,
-    puzzleWin: null,
-    puzzleFail: null
-};
+// Audio Manager - Will work silently if files are missing
+let sounds = {};
 
 // Load sounds - UPDATE THESE PATHS WITH YOUR ACTUAL MP3 FILES
 function loadSounds() {
-    sounds.jump = new Audio('sounds/jump.mp3');
-    sounds.lapComplete = new Audio('sounds/lap.mp3');
-    sounds.levelUp = new Audio('sounds/levelup.mp3');
-    sounds.gameOver = new Audio('sounds/gameover.mp3');
-    sounds.start = new Audio('sounds/start.mp3');
-    sounds.win = new Audio('sounds/win.mp3');
-    sounds.lose = new Audio('sounds/lose.mp3');
-    sounds.upgrade = new Audio('sounds/upgrade.mp3');
-    sounds.puzzleWin = new Audio('sounds/puzzlewin.mp3');
-    sounds.puzzleFail = new Audio('sounds/puzzlefail.mp3');
+    const soundFiles = {
+        jump: 'sounds/jump.mp3',
+        lapComplete: 'sounds/lap.mp3',
+        levelUp: 'sounds/levelup.mp3',
+        gameOver: 'sounds/gameover.mp3',
+        start: 'sounds/start.mp3',
+        win: 'sounds/win.mp3',
+        lose: 'sounds/lose.mp3',
+        upgrade: 'sounds/upgrade.mp3',
+        puzzleWin: 'sounds/puzzlewin.mp3',
+        puzzleFail: 'sounds/puzzlefail.mp3'
+    };
     
-    // Optional: preload all sounds
-    for (let key in sounds) {
-        if (sounds[key]) {
-            sounds[key].load();
-        }
+    for (let [name, path] of Object.entries(soundFiles)) {
+        let audio = new Audio();
+        audio.src = path;
+        audio.load();
+        sounds[name] = audio;
+        
+        // Log missing files but don't crash
+        audio.addEventListener('error', () => {
+            console.log(`Audio file not found: ${path} - will play silently`);
+        });
     }
+    console.log("Audio system ready - waiting for your MP3 files");
 }
 
-// Play sound function
+// Play sound function - safe even if audio fails
 function playSound(soundName) {
     if (sounds[soundName]) {
         sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(e => console.log("Audio play failed:", e));
+        sounds[soundName].play().catch(e => {
+            // Silently fail - game still works
+        });
     }
 }
 
