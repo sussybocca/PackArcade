@@ -1,8 +1,8 @@
-// Audio Manager - Properly handles browser autoplay policies
+// Audio Manager - Keeps all sounds, only plays what exists
 let sounds = {};
 let audioEnabled = false;
 
-// Load sounds - UPDATE THESE PATHS WITH YOUR ACTUAL MP3 FILES
+// Load all sounds - missing ones will be marked as unavailable
 function loadSounds() {
     const soundFiles = {
         jump: 'sounds/jump.mp3',
@@ -21,67 +21,83 @@ function loadSounds() {
         let audio = new Audio();
         audio.src = path;
         audio.preload = 'auto';
-        sounds[name] = audio;
+        sounds[name] = {
+            audio: audio,
+            available: false
+        };
         
         audio.addEventListener('canplaythrough', () => {
-            console.log(`✅ Sound loaded: ${name}`);
+            sounds[name].available = true;
+            console.log(`✅ Sound ready: ${name}`);
         });
         
-        audio.addEventListener('error', (e) => {
-            console.log(`⚠️ Sound not found: ${path} - place your MP3 here`);
+        audio.addEventListener('error', () => {
+            sounds[name].available = false;
+            console.log(`⚠️ Sound missing: ${name} - place ${path} to enable`);
         });
     }
-    console.log("Audio system ready - click anywhere to enable sounds");
+    
+    // Check which sounds are available after a short delay
+    setTimeout(() => {
+        let available = [];
+        for (let [name, data] of Object.entries(sounds)) {
+            if (data.available) available.push(name);
+        }
+        console.log(`🎵 Audio system ready! Available sounds: ${available.length > 0 ? available.join(', ') : 'none yet (add MP3 files to sounds/ folder)'}`);
+    }, 500);
 }
 
-// Initialize audio on first user interaction
+// Enable audio on first user interaction
 function initAudio() {
     if (audioEnabled) return;
     
-    // Test play a silent sound to unlock audio
+    // Try to play silent sound to unlock audio
     let testAudio = new Audio();
+    testAudio.volume = 0;
     testAudio.play().then(() => {
         audioEnabled = true;
-        console.log("🔊 Audio enabled! Sounds will now play.");
-        // Preload all sounds
-        for (let key in sounds) {
-            sounds[key].load();
+        console.log("🔊 AUDIO ENABLED! All sounds will now play.");
+        
+        // Hide the hint
+        let hint = document.getElementById('audioHint');
+        if (hint) {
+            hint.style.opacity = '0';
+            setTimeout(() => hint.style.display = 'none', 500);
         }
         testAudio.pause();
     }).catch(e => {
-        console.log("Click/tap to enable sounds");
+        console.log("Click/tap anywhere to enable sounds");
     });
 }
 
-// Play sound function - actually plays!
+// Play sound function - only plays if sound is available
 function playSound(soundName) {
     if (!audioEnabled) {
-        // Try to enable audio on first play attempt
         initAudio();
+        console.log(`🔇 Audio not enabled yet - click the page first to hear ${soundName}`);
         return;
     }
     
-    if (sounds[soundName]) {
-        let sound = sounds[soundName];
-        sound.currentTime = 0;
-        sound.play().catch(e => {
-            console.log(`Failed to play ${soundName}:`, e);
+    const soundData = sounds[soundName];
+    if (soundData && soundData.available) {
+        let audio = soundData.audio;
+        audio.currentTime = 0;
+        audio.play().catch(e => {
+            // Silently fail - don't spam console
         });
-    } else {
-        console.log(`Sound not found: ${soundName}`);
+    } else if (soundData && !soundData.available) {
+        // Sound file missing - do nothing (no error spam)
     }
 }
 
-// Force audio enable on any user interaction
+// Enable audio on any user interaction
 function enableAudioOnInteraction() {
-    initAudio();
-    // Remove listeners after first interaction
-    document.removeEventListener('click', enableAudioOnInteraction);
-    document.removeEventListener('keydown', enableAudioOnInteraction);
-    document.removeEventListener('touchstart', enableAudioOnInteraction);
+    if (!audioEnabled) {
+        initAudio();
+    }
 }
 
-// Listen for first user interaction to enable audio
+// Listen for user interactions
 document.addEventListener('click', enableAudioOnInteraction);
 document.addEventListener('keydown', enableAudioOnInteraction);
 document.addEventListener('touchstart', enableAudioOnInteraction);
@@ -89,7 +105,7 @@ document.addEventListener('touchstart', enableAudioOnInteraction);
 // Initialize when page loads
 window.addEventListener('load', () => {
     loadSounds();
-    console.log("🎮 PlayLive Ready! Click anywhere to enable audio, then play!");
+    console.log("🎮 PlayLive Ready! Click anywhere to enable audio.");
 });
 
 // Export for game.js
