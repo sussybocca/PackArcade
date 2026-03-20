@@ -1,5 +1,6 @@
-// Audio Manager - Will work silently if files are missing
+// Audio Manager - Properly handles browser autoplay policies
 let sounds = {};
+let audioEnabled = false;
 
 // Load sounds - UPDATE THESE PATHS WITH YOUR ACTUAL MP3 FILES
 function loadSounds() {
@@ -19,30 +20,76 @@ function loadSounds() {
     for (let [name, path] of Object.entries(soundFiles)) {
         let audio = new Audio();
         audio.src = path;
-        audio.load();
+        audio.preload = 'auto';
         sounds[name] = audio;
         
-        // Log missing files but don't crash
-        audio.addEventListener('error', () => {
-            console.log(`Audio file not found: ${path} - will play silently`);
+        audio.addEventListener('canplaythrough', () => {
+            console.log(`✅ Sound loaded: ${name}`);
+        });
+        
+        audio.addEventListener('error', (e) => {
+            console.log(`⚠️ Sound not found: ${path} - place your MP3 here`);
         });
     }
-    console.log("Audio system ready - waiting for your MP3 files");
+    console.log("Audio system ready - click anywhere to enable sounds");
 }
 
-// Play sound function - safe even if audio fails
+// Initialize audio on first user interaction
+function initAudio() {
+    if (audioEnabled) return;
+    
+    // Test play a silent sound to unlock audio
+    let testAudio = new Audio();
+    testAudio.play().then(() => {
+        audioEnabled = true;
+        console.log("🔊 Audio enabled! Sounds will now play.");
+        // Preload all sounds
+        for (let key in sounds) {
+            sounds[key].load();
+        }
+        testAudio.pause();
+    }).catch(e => {
+        console.log("Click/tap to enable sounds");
+    });
+}
+
+// Play sound function - actually plays!
 function playSound(soundName) {
+    if (!audioEnabled) {
+        // Try to enable audio on first play attempt
+        initAudio();
+        return;
+    }
+    
     if (sounds[soundName]) {
-        sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(e => {
-            // Silently fail - game still works
+        let sound = sounds[soundName];
+        sound.currentTime = 0;
+        sound.play().catch(e => {
+            console.log(`Failed to play ${soundName}:`, e);
         });
+    } else {
+        console.log(`Sound not found: ${soundName}`);
     }
 }
 
-// Initialize audio when page loads
+// Force audio enable on any user interaction
+function enableAudioOnInteraction() {
+    initAudio();
+    // Remove listeners after first interaction
+    document.removeEventListener('click', enableAudioOnInteraction);
+    document.removeEventListener('keydown', enableAudioOnInteraction);
+    document.removeEventListener('touchstart', enableAudioOnInteraction);
+}
+
+// Listen for first user interaction to enable audio
+document.addEventListener('click', enableAudioOnInteraction);
+document.addEventListener('keydown', enableAudioOnInteraction);
+document.addEventListener('touchstart', enableAudioOnInteraction);
+
+// Initialize when page loads
 window.addEventListener('load', () => {
     loadSounds();
+    console.log("🎮 PlayLive Ready! Click anywhere to enable audio, then play!");
 });
 
 // Export for game.js
