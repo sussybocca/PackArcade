@@ -39,10 +39,10 @@
             <!-- Game Overlay -->
             <div class="game-overlay" id="gameOverlay" style="display: none;">
                 <div class="overlay-content">
-                    <h2>GAME OVER</h2>
+                    <h2>💀 GAME OVER 💀</h2>
                     <p>You ran <span id="finalLaps">0</span> laps!</p>
                     <p>Earned <span id="finalPoints">0</span> points</p>
-                    <button class="btn-primary" id="restartBtn">RUN AGAIN</button>
+                    <button class="btn-primary" id="restartBtn">🏃 RUN AGAIN</button>
                 </div>
             </div>
         </div>
@@ -67,11 +67,11 @@
             <!-- Puzzle Mini-Game -->
             <div class="game-card" id="puzzleGame">
                 <h3>🧩 PUZZLE LOCK</h3>
-                <p>Solve to skip obstacles +50 pts</p>
+                <p>Solve to earn +50 pts & remove obstacle!</p>
                 <div class="puzzle-area">
-                    <div class="puzzle-question" id="puzzleQuestion">2 + 2 = ?</div>
+                    <div class="puzzle-question" id="puzzleQuestion">Click SOLVE for puzzle</div>
                     <input type="number" id="puzzleAnswer" placeholder="Your answer">
-                    <button class="btn-puzzle" id="solvePuzzleBtn">SOLVE</button>
+                    <button class="btn-puzzle" id="solvePuzzleBtn">SOLVE PUZZLE</button>
                 </div>
                 <div class="puzzle-result" id="puzzleResult"></div>
             </div>
@@ -82,27 +82,27 @@
                 <p>Boost your multiplier permanently!</p>
                 <div class="upgrade-list">
                     <div class="upgrade-item">
-                        <span>x2 Multiplier</span>
+                        <span>✨ x2 Multiplier</span>
                         <span class="upgrade-cost">100 pts</span>
                         <button class="btn-upgrade" data-multiplier="2">BUY</button>
                     </div>
                     <div class="upgrade-item">
-                        <span>x4 Multiplier</span>
+                        <span>✨ x4 Multiplier</span>
                         <span class="upgrade-cost">250 pts</span>
                         <button class="btn-upgrade" data-multiplier="4">BUY</button>
                     </div>
                     <div class="upgrade-item">
-                        <span>x6 Multiplier</span>
+                        <span>✨ x6 Multiplier</span>
                         <span class="upgrade-cost">500 pts</span>
                         <button class="btn-upgrade" data-multiplier="6">BUY</button>
                     </div>
                     <div class="upgrade-item">
-                        <span>x8 Multiplier</span>
+                        <span>✨ x8 Multiplier</span>
                         <span class="upgrade-cost">1000 pts</span>
                         <button class="btn-upgrade" data-multiplier="8">BUY</button>
                     </div>
                     <div class="upgrade-item">
-                        <span>x10 Multiplier</span>
+                        <span>✨ x10 Multiplier</span>
                         <span class="upgrade-cost">2000 pts</span>
                         <button class="btn-upgrade" data-multiplier="10">BUY</button>
                     </div>
@@ -114,10 +114,10 @@
         <div class="instructions">
             <p>🎮 SPACE or CLICK to jump | Run endless laps, avoid obstacles!</p>
             <p>💡 Each lap = +10 points × multiplier | Level increases every 5 laps</p>
+            <p>🎴 Gamble points 50/50 | 🧩 Solve puzzles for bonuses</p>
         </div>
     </div>
 
-    <!-- External JS Files -->
     <script src="game.js"></script>
     <script src="audio.js"></script>
     <script src="assets.js"></script>
