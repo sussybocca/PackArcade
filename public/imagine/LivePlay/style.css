@@ -292,6 +292,30 @@ body {
     margin: 5px 0;
 }
 
+/* Audio Hint */
+.audio-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #ffaa44;
+    color: #1a1a2e;
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    animation: pulse 1.5s infinite;
+    cursor: pointer;
+    z-index: 1000;
+    font-family: monospace;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
@@ -305,4 +329,113 @@ body {
 ::-webkit-scrollbar-thumb {
     background: #ffaa44;
     border-radius: 10px;
+}
+
+/* ========== MOBILE & RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 12px;
+    }
+
+    .stats-panel {
+        gap: 8px;
+    }
+
+    .stat {
+        padding: 6px 12px;
+    }
+
+    .stat-icon {
+        font-size: 1.2rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+        min-width: 45px;
+    }
+
+    .game-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .game-card p {
+        font-size: 0.75rem;
+    }
+
+    .card {
+        width: 60px;
+        height: 80px;
+        font-size: 1.5rem;
+    }
+
+    .gamble-controls input,
+    .puzzle-area input {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .btn-gamble, .btn-puzzle, .btn-upgrade {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        min-height: 44px;
+    }
+
+    .upgrade-item {
+        font-size: 0.85rem;
+    }
+
+    .instructions p {
+        font-size: 0.7rem;
+    }
+
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 900 / 400;
+    }
+
+    .btn-primary,
+    .btn-gamble,
+    .btn-puzzle,
+    .btn-upgrade {
+        min-height: 44px;
+    }
+
+    .audio-hint {
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.7rem;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat {
+        padding: 4px 8px;
+    }
+
+    .stat-icon {
+        font-size: 1rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 1rem;
+        min-width: 35px;
+    }
+
+    .mini-games-panel {
+        gap: 12px;
+    }
+
+    .game-card {
+        padding: 10px;
+    }
 }
