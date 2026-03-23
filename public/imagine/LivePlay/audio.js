@@ -1,8 +1,8 @@
-// Audio Manager - Keeps all sounds, only plays what exists
+// Audio Manager - Actually enables audio on click
 let sounds = {};
 let audioEnabled = false;
 
-// Load all sounds - missing ones will be marked as unavailable
+// Load all sounds
 function loadSounds() {
     const soundFiles = {
         jump: 'sounds/jump.mp3',
@@ -33,30 +33,29 @@ function loadSounds() {
         
         audio.addEventListener('error', () => {
             sounds[name].available = false;
-            console.log(`⚠️ Sound missing: ${name} - place ${path} to enable`);
+            console.log(`⚠️ Sound missing: ${name} - place sounds/${name}.mp3 to enable`);
         });
     }
     
-    // Check which sounds are available after a short delay
     setTimeout(() => {
         let available = [];
         for (let [name, data] of Object.entries(sounds)) {
             if (data.available) available.push(name);
         }
-        console.log(`🎵 Audio system ready! Available sounds: ${available.length > 0 ? available.join(', ') : 'none yet (add MP3 files to sounds/ folder)'}`);
+        console.log(`🎵 Audio system ready! Available sounds: ${available.length > 0 ? available.join(', ') : 'none yet'}`);
     }, 500);
 }
 
-// Enable audio on first user interaction
-function initAudio() {
+// Force enable audio immediately on ANY click
+function enableAudio() {
     if (audioEnabled) return;
     
-    // Try to play silent sound to unlock audio
+    // Play a silent sound to unlock audio
     let testAudio = new Audio();
     testAudio.volume = 0;
     testAudio.play().then(() => {
         audioEnabled = true;
-        console.log("🔊 AUDIO ENABLED! All sounds will now play.");
+        console.log("🔊 AUDIO ENABLED! Sounds will now play.");
         
         // Hide the hint
         let hint = document.getElementById('audioHint');
@@ -66,15 +65,16 @@ function initAudio() {
         }
         testAudio.pause();
     }).catch(e => {
-        console.log("Click/tap anywhere to enable sounds");
+        console.log("Audio enable failed, will retry on next click");
     });
 }
 
-// Play sound function - only plays if sound is available
+// Play sound function
 function playSound(soundName) {
+    // If audio not enabled yet, try to enable it
     if (!audioEnabled) {
-        initAudio();
-        console.log(`🔇 Audio not enabled yet - click the page first to hear ${soundName}`);
+        enableAudio();
+        // Don't play the sound yet, wait for next click
         return;
     }
     
@@ -83,24 +83,29 @@ function playSound(soundName) {
         let audio = soundData.audio;
         audio.currentTime = 0;
         audio.play().catch(e => {
-            // Silently fail - don't spam console
+            // Silent fail
         });
-    } else if (soundData && !soundData.available) {
-        // Sound file missing - do nothing (no error spam)
     }
 }
 
-// Enable audio on any user interaction
-function enableAudioOnInteraction() {
+// Enable audio on ANY user interaction - click, keypress, touch
+function handleUserInteraction() {
     if (!audioEnabled) {
-        initAudio();
+        enableAudio();
     }
 }
 
-// Listen for user interactions
-document.addEventListener('click', enableAudioOnInteraction);
-document.addEventListener('keydown', enableAudioOnInteraction);
-document.addEventListener('touchstart', enableAudioOnInteraction);
+// Listen for ALL user interactions
+document.addEventListener('click', handleUserInteraction);
+document.addEventListener('keydown', handleUserInteraction);
+document.addEventListener('touchstart', handleUserInteraction);
+document.addEventListener('keypress', handleUserInteraction);
+
+// Also listen for game canvas clicks
+const canvas = document.getElementById('gameCanvas');
+if (canvas) {
+    canvas.addEventListener('click', handleUserInteraction);
+}
 
 // Initialize when page loads
 window.addEventListener('load', () => {
