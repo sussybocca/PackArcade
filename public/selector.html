@@ -2102,36 +2102,112 @@ function getGameSlugFromLink(link) {
     }
 
     
-    // ========== UPDATED OPEN HTML GAME WITH SCORE TRACKING ==========
+ // ========== UPDATED OPEN HTML GAME WITH SCORE TRACKING ==========
 async function openHtmlGameWithTracking(link, gameSlug, gameTitle) {
   try {
-    const response = await fetch(link);
-    if (!response.ok) throw new Error('Failed to load game');
-    let html = await response.text();
+    // Check if this game uses a subdomain pattern
+    const isSubdomainGame = Object.keys(subdomainMap).some(key => link.includes(key));
     
-    // Inject score tracker
-    html = injectScoreTracker(html, gameSlug);
-    
-    // Fix relative paths by adding base URL
-    const baseUrl = new URL(link, window.location.href).href;
-    const basePath = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
-    
-    // Add base tag to HTML to resolve relative paths
-    html = html.replace('<head>', `<head><base href="${basePath}">`);
-    
-    // Create a blob URL
-    const blob = new Blob([html], { type: 'text/html' });
-    const blobUrl = URL.createObjectURL(blob);
-    
-    // Open game in new tab with proper URL
-    const gameWindow = window.open(blobUrl, '_blank');
-    
-    // Clean up blob URL after window loads
-    gameWindow.onload = () => {
-      URL.revokeObjectURL(blobUrl);
-    };
-    
-    console.log(`Game ${gameTitle} (${gameSlug}) opened with score tracking`);
+    if (isSubdomainGame) {
+      // For subdomain games, open directly with a proxy approach
+      console.log(`Opening subdomain game directly: ${link}`);
+      const gameWindow = window.open(link, '_blank');
+      
+      // Wait for the window to load and inject score tracker
+      const checkWindowLoaded = setInterval(() => {
+        if (gameWindow && gameWindow.document && gameWindow.document.readyState === 'complete') {
+          clearInterval(checkWindowLoaded);
+          try {
+            // Inject score tracker into the new window
+            const trackerScript = `
+              <script>
+                (function() {
+                  let gameScore = 0;
+                  let gameCompleted = false;
+                  
+                  window.updateGameScore = function(points) {
+                    gameScore += points;
+                    console.log('Game score:', gameScore);
+                  };
+                  
+                  window.submitFinalScore = function() {
+                    if (gameCompleted) return;
+                    gameCompleted = true;
+                    
+                    fetch('https://${window.location.host}/.netlify/functions/submit-score', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        username: localStorage.getItem('packarcade_username'), 
+                        game_slug: '${gameSlug}', 
+                        score: gameScore 
+                      })
+                    }).then(() => {
+                      console.log('Final score submitted:', gameScore);
+                    });
+                  };
+                  
+                  window.addEventListener('beforeunload', function() {
+                    if (gameScore > 0 && !gameCompleted) {
+                      window.submitFinalScore();
+                    }
+                  });
+                })();
+              <\/script>
+            `;
+            
+            // Try to inject into the new window's document
+            const head = gameWindow.document.head;
+            if (head) {
+              const scriptElement = gameWindow.document.createElement('script');
+              scriptElement.textContent = trackerScript.replace(/<script>/, '').replace(/<\/script>/, '');
+              head.appendChild(scriptElement);
+            }
+          } catch (e) {
+            console.warn('Could not inject tracker into subdomain game due to CORS:', e);
+          }
+        }
+      }, 500);
+      
+      // Stop checking after 10 seconds
+      setTimeout(() => clearInterval(checkWindowLoaded), 10000);
+      
+    } else {
+      // For regular games, use the blob approach
+      const response = await fetch(link);
+      if (!response.ok) throw new Error('Failed to load game');
+      let html = await response.text();
+      
+      // Inject score tracker
+      html = injectScoreTracker(html, gameSlug);
+      
+      // Fix relative paths by adding base URL
+      const baseUrl = new URL(link, window.location.href).href;
+      const basePath = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
+      
+      // Add base tag to HTML to resolve relative paths
+      if (html.includes('<head>')) {
+        html = html.replace('<head>', `<head><base href="${basePath}">`);
+      } else if (html.includes('<html>')) {
+        html = html.replace('<html>', `<html><head><base href="${basePath}"></head>`);
+      }
+      
+      // Create a blob URL
+      const blob = new Blob([html], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Open game in new tab with proper URL
+      const gameWindow = window.open(blobUrl, '_blank');
+      
+      // Clean up blob URL after window loads
+      if (gameWindow) {
+        gameWindow.onload = () => {
+          URL.revokeObjectURL(blobUrl);
+        };
+      }
+      
+      console.log(`Game ${gameTitle} (${gameSlug}) opened with score tracking`);
+    }
     
   } catch (error) {
     console.error('Error loading game:', error);
