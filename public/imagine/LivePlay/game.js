@@ -12,6 +12,13 @@ let combo = 0;
 let maxCombo = 0;
 let scrollX = 0;
 
+// Countdown State
+let countdownActive = false;
+let countdownStep = 0; // 0=ready, 1=set, 2=go
+let countdownTimer = 0;
+let countdownColors = ['#ff4444', '#ffff44', '#44ff44']; // Red, Yellow, Green
+let countdownTexts = ['READY!', 'SET!', 'GO!'];
+
 // Power-ups
 let shieldFrames = 0;
 let speedBoost = 1;
@@ -145,6 +152,127 @@ function setGameImages(runnerImg, obstacleImg, bgImg) {
     obstacleImage = obstacleImg;
     backgroundImage = bgImg;
     console.log("Images received by game.js");
+}
+
+// Start Countdown Function
+function startCountdown() {
+    countdownActive = true;
+    countdownStep = 0;
+    countdownTimer = 60; // 1 second per step (60 frames at 60fps)
+    gameRunning = false;
+    
+    // Play start sound
+    if (window.playSound) window.playSound('start');
+    
+    // Flash effect
+    let flashDiv = document.createElement('div');
+    flashDiv.style.position = 'fixed';
+    flashDiv.style.top = '0';
+    flashDiv.style.left = '0';
+    flashDiv.style.width = '100%';
+    flashDiv.style.height = '100%';
+    flashDiv.style.backgroundColor = countdownColors[0];
+    flashDiv.style.opacity = '0.5';
+    flashDiv.style.zIndex = '999';
+    flashDiv.style.pointerEvents = 'none';
+    document.body.appendChild(flashDiv);
+    setTimeout(() => flashDiv.remove(), 200);
+}
+
+// Update Countdown
+function updateCountdown() {
+    if (!countdownActive) return;
+    
+    countdownTimer--;
+    
+    // Change step every 60 frames (1 second)
+    if (countdownTimer <= 0) {
+        countdownStep++;
+        
+        if (countdownStep < 3) {
+            countdownTimer = 60;
+            // Flash color for next step
+            let flashDiv = document.createElement('div');
+            flashDiv.style.position = 'fixed';
+            flashDiv.style.top = '0';
+            flashDiv.style.left = '0';
+            flashDiv.style.width = '100%';
+            flashDiv.style.height = '100%';
+            flashDiv.style.backgroundColor = countdownColors[countdownStep];
+            flashDiv.style.opacity = '0.5';
+            flashDiv.style.zIndex = '999';
+            flashDiv.style.pointerEvents = 'none';
+            document.body.appendChild(flashDiv);
+            setTimeout(() => flashDiv.remove(), 200);
+        } else {
+            // Countdown complete - start game
+            countdownActive = false;
+            gameRunning = true;
+            
+            // Final green flash
+            let flashDiv = document.createElement('div');
+            flashDiv.style.position = 'fixed';
+            flashDiv.style.top = '0';
+            flashDiv.style.left = '0';
+            flashDiv.style.width = '100%';
+            flashDiv.style.height = '100%';
+            flashDiv.style.backgroundColor = '#44ff44';
+            flashDiv.style.opacity = '0.5';
+            flashDiv.style.zIndex = '999';
+            flashDiv.style.pointerEvents = 'none';
+            document.body.appendChild(flashDiv);
+            setTimeout(() => flashDiv.remove(), 300);
+            
+            // Spawn initial particles for start
+            addParticles(canvas.width/2, canvas.height/2, 50, '#88ff88');
+        }
+    }
+}
+
+// Draw Countdown
+function drawCountdown() {
+    if (!countdownActive) return;
+    
+    let step = countdownStep;
+    if (step >= 3) return;
+    
+    // Draw semi-transparent overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw countdown text
+    let fontSize = 80;
+    ctx.font = `bold ${fontSize}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Pulse effect based on timer
+    let scale = 1 + Math.sin(countdownTimer * 0.3) * 0.1;
+    ctx.font = `bold ${fontSize * scale}px monospace`;
+    
+    // Color changes with each step - Red, Yellow, Green
+    let color;
+    if (step === 0) color = '#ff4444';
+    else if (step === 1) color = '#ffff44';
+    else color = '#44ff44';
+    
+    ctx.fillStyle = color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = color;
+    ctx.fillText(countdownTexts[step], canvas.width/2, canvas.height/2 - 50);
+    
+    // Draw small indicator dots
+    ctx.font = '30px monospace';
+    ctx.fillStyle = '#ffffff';
+    let dots = '';
+    for (let i = 0; i < 3; i++) {
+        if (i === step) dots += '● ';
+        else dots += '○ ';
+    }
+    ctx.fillText(dots, canvas.width/2, canvas.height/2 + 40);
+    
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
 }
 
 // Jump Function
@@ -326,6 +454,12 @@ function drawRunner() {
 
 // Update Game Logic
 function updateGame() {
+    // Update countdown first
+    if (countdownActive) {
+        updateCountdown();
+        return; // Don't update game during countdown
+    }
+    
     if (!gameRunning) return;
     
     // Scroll background
@@ -574,7 +708,7 @@ function gameOver() {
 
 // Restart Game
 function restartGame() {
-    gameRunning = true;
+    gameRunning = false;
     laps = 0;
     level = 1;
     points = 0;
@@ -600,7 +734,9 @@ function restartGame() {
     
     updateDisplay();
     document.getElementById('gameOverlay').style.display = 'none';
-    if (window.playSound) window.playSound('start');
+    
+    // Start countdown before game begins
+    startCountdown();
 }
 
 // Update UI Display
@@ -788,6 +924,9 @@ function draw() {
     ctx.fillText(`🏃 LAP ${laps}`, 15, 35);
     ctx.fillText(`💯 BEST: ${maxCombo}`, 15, 55);
     ctx.shadowBlur = 0;
+    
+    // Draw countdown on top of everything
+    drawCountdown();
 }
 
 // Add CSS animations
@@ -955,6 +1094,7 @@ document.querySelectorAll('.btn-upgrade').forEach(btn => {
 // Initialize
 generatePuzzle();
 updateDisplay();
+startCountdown(); // Start countdown when game loads
 gameLoop();
 
 console.log("🔥 EPIC ENDLESS RUNNER INITIALIZED! Cars, trucks, buildings, and dynamic objects! 🔥");
