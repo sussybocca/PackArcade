@@ -12,7 +12,6 @@ let combo = 0;
 let maxCombo = 0;
 
 // Power-ups
-let hasShield = false;
 let shieldFrames = 0;
 let speedBoost = 1;
 let boostFrames = 0;
@@ -32,13 +31,13 @@ let runner = {
     color: '#FF6B6B'
 };
 
-// Obstacles with different types
+// Obstacles and powerups
 let obstacles = [];
 let powerups = [];
+let particles = [];
 let frameCount = 0;
-let obstacleSpawnRate = 55; // MORE OBSTACLES - was 80, now 55
-let baseSpeed = 6; // FASTER - was 5, now 6
-let scoreMultiplier = 1;
+let obstacleSpawnRate = 55;
+let baseSpeed = 6;
 
 // Meme messages
 const memes = [
@@ -61,16 +60,12 @@ const powerupTypes = [
 let runnerImage = null;
 let obstacleImage = null;
 let backgroundImage = null;
-let imagesReady = false;
-
-// Particle effects
-let particles = [];
 
 function setGameImages(runnerImg, obstacleImg, bgImg) {
     runnerImage = runnerImg;
     obstacleImage = obstacleImg;
     backgroundImage = bgImg;
-    imagesReady = true;
+    console.log("Images received by game.js");
 }
 
 // Jump Function
@@ -79,7 +74,7 @@ function jump() {
         runner.yVelocity = runner.jumpPower;
         runner.isJumping = true;
         if (window.playSound) window.playSound('jump');
-        addParticles(runner.x + runner.width/2, runner.y + runner.height, 5, '#FFAA44');
+        addParticles(runner.x + runner.width/2, runner.y + runner.height, 8, '#FFAA44');
     }
 }
 
@@ -91,7 +86,7 @@ function addParticles(x, y, count, color) {
             y: y,
             vx: (Math.random() - 0.5) * 4,
             vy: (Math.random() - 0.5) * 4 - 2,
-            life: 20,
+            life: 25,
             color: color,
             size: Math.random() * 3 + 2
         });
@@ -117,7 +112,6 @@ function showMeme() {
     memeDiv.style.whiteSpace = 'nowrap';
     memeDiv.style.animation = 'fadeOut 1s ease-out forwards';
     document.body.appendChild(memeDiv);
-    
     setTimeout(() => memeDiv.remove(), 1000);
 }
 
@@ -153,20 +147,17 @@ function updateGame() {
     if (magnetFrames > 0) magnetFrames--;
     if (doublePointsFrames > 0) doublePointsFrames--;
     
-    // Spawn obstacles MORE FREQUENTLY
+    // Spawn obstacles
     frameCount++;
     let currentSpawnRate = Math.max(35, obstacleSpawnRate - Math.floor(level / 3));
     if (frameCount >= currentSpawnRate) {
         frameCount = 0;
         
-        // Multiple obstacle types with different sizes and behaviors
         let obstacleTypes = [
             { width: 35, height: 45, color: '#AA4A2A', yOffset: 0 },
             { width: 50, height: 30, color: '#8A5A3A', yOffset: 10 },
             { width: 40, height: 60, color: '#CC6A4A', yOffset: -8 },
-            { width: 30, height: 40, color: '#AA6A4A', yOffset: 5 },
-            { width: 45, height: 35, color: '#5A8A6A', yOffset: 0 },
-            { width: 55, height: 40, color: '#8A5A8A', yOffset: 5 }
+            { width: 30, height: 40, color: '#AA6A4A', yOffset: 5 }
         ];
         
         let type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
@@ -182,11 +173,11 @@ function updateGame() {
         };
         obstacles.push(obstacle);
         
-        // Sometimes spawn two obstacles at once for extra challenge
-        if (level > 3 && Math.random() < 0.3) {
+        // Spawn double obstacles sometimes
+        if (level > 3 && Math.random() < 0.25) {
             let type2 = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             obstacles.push({
-                x: canvas.width + 40,
+                x: canvas.width + 30,
                 y: canvas.height - 75 + type2.yOffset,
                 width: type2.width,
                 height: type2.height,
@@ -198,13 +189,13 @@ function updateGame() {
     }
     
     // Spawn power-ups
-    if (Math.random() < 0.008 && powerups.length < 2) {
+    if (Math.random() < 0.007 && powerups.length < 2) {
         let powerType = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
         powerups.push({
             x: canvas.width,
-            y: canvas.height - 90,
-            width: 30,
-            height: 30,
+            y: canvas.height - 85,
+            width: 28,
+            height: 28,
             speed: baseSpeed + Math.floor(level / 15),
             type: powerType,
             passed: false
@@ -215,7 +206,7 @@ function updateGame() {
     for (let i = 0; i < obstacles.length; i++) {
         obstacles[i].x -= obstacles[i].speed;
         
-        // Collision detection with shield
+        // Collision detection
         let collided = runner.x < obstacles[i].x + obstacles[i].width &&
             runner.x + runner.width > obstacles[i].x &&
             runner.y + runner.height > obstacles[i].y &&
@@ -223,7 +214,6 @@ function updateGame() {
         
         if (collided) {
             if (shieldFrames > 0) {
-                // Shield blocks obstacle
                 obstacles.splice(i, 1);
                 addParticles(runner.x + runner.width/2, runner.y + runner.height/2, 15, '#44aaff');
                 showMeme();
@@ -235,7 +225,7 @@ function updateGame() {
             }
         }
         
-        // Pass obstacle points
+        // Pass obstacle - earn points
         if (!obstacles[i].passed && obstacles[i].x + obstacles[i].width < runner.x) {
             obstacles[i].passed = true;
             let pointsGained = 5 * multiplier * (doublePointsFrames > 0 ? 2 : 1);
@@ -244,7 +234,6 @@ function updateGame() {
             
             if (combo > maxCombo) maxCombo = combo;
             
-            // Show combo text
             showFloatingText(`+${pointsGained}`, obstacles[i].x + obstacles[i].width/2, obstacles[i].y - 20, '#88ff88');
             
             if (combo >= 5) {
@@ -253,7 +242,6 @@ function updateGame() {
             }
         }
         
-        // Remove off-screen obstacles
         if (obstacles[i].x + obstacles[i].width < 0) {
             obstacles.splice(i, 1);
             i--;
@@ -264,7 +252,6 @@ function updateGame() {
     for (let i = 0; i < powerups.length; i++) {
         powerups[i].x -= powerups[i].speed;
         
-        // Collect power-up
         if (runner.x < powerups[i].x + powerups[i].width &&
             runner.x + runner.width > powerups[i].x &&
             runner.y + runner.height > powerups[i].y &&
@@ -292,25 +279,15 @@ function updateGame() {
                     break;
             }
             
-            addParticles(powerups[i].x + powerups[i].width/2, powerups[i].y + powerups[i].height/2, 10, power.color);
+            addParticles(powerups[i].x + powerups[i].width/2, powerups[i].y + powerups[i].height/2, 12, power.color);
             powerups.splice(i, 1);
             i--;
             continue;
         }
         
-        // Remove off-screen power-ups
         if (powerups[i].x + powerups[i].width < 0) {
             powerups.splice(i, 1);
             i--;
-        }
-    }
-    
-    // Magnet effect - pull points from obstacles
-    if (magnetFrames > 0) {
-        for (let obs of obstacles) {
-            if (!obs.passed && obs.x + obs.width < runner.x + 100 && obs.x + obs.width > runner.x - 50) {
-                addParticles(obs.x + obs.width/2, obs.y + obs.height/2, 2, '#ff44aa');
-            }
         }
     }
     
@@ -338,17 +315,14 @@ function completeLap() {
     points += lapPoints;
     laps++;
     
-    // Combo bonus
     if (combo >= 5) {
         let comboBonus = Math.floor(combo / 5) * 10;
         points += comboBonus;
         showFloatingText(`🎯 COMBO BONUS +${comboBonus}!`, runner.x, runner.y - 60, '#ffaa44');
     }
     
-    // Reset combo
     combo = 0;
     
-    // Update level (every 5 laps)
     let newLevel = Math.floor(laps / 5) + 1;
     if (newLevel > level) {
         level = newLevel;
@@ -359,9 +333,8 @@ function completeLap() {
     
     updateDisplay();
     if (window.playSound) window.playSound('lapComplete');
-    addParticles(runner.x + runner.width/2, runner.y + runner.height/2, 20, '#FFD966');
+    addParticles(runner.x + runner.width/2, runner.y + runner.height/2, 25, '#FFD966');
     
-    // Increase difficulty
     if (obstacleSpawnRate > 35) {
         obstacleSpawnRate = Math.max(35, obstacleSpawnRate - 1);
     }
@@ -375,7 +348,6 @@ function gameOver() {
     document.getElementById('finalPoints').textContent = Math.floor(points);
     document.getElementById('gameOverlay').style.display = 'flex';
     
-    // Show stats
     let statsDiv = document.createElement('div');
     statsDiv.innerHTML = `🔥 MAX COMBO: ${maxCombo} 🔥`;
     statsDiv.style.position = 'fixed';
@@ -446,7 +418,6 @@ function showFloatingText(text, x, y, color) {
     textDiv.style.zIndex = '1000';
     textDiv.style.animation = 'floatUp 0.8s ease-out forwards';
     document.body.appendChild(textDiv);
-    
     setTimeout(() => textDiv.remove(), 800);
 }
 
@@ -490,14 +461,13 @@ function draw() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     
-    // Draw ground with gradient
+    // Draw ground
     let groundGrad = ctx.createLinearGradient(0, canvas.height - 35, 0, canvas.height);
     groundGrad.addColorStop(0, '#8B5A2B');
     groundGrad.addColorStop(1, '#5A3A1A');
     ctx.fillStyle = groundGrad;
     ctx.fillRect(0, canvas.height - 35, canvas.width, 35);
     
-    // Draw ground details
     ctx.fillStyle = '#C97E3A';
     for (let i = 0; i < 30; i++) {
         ctx.fillRect(i * 40 + (Date.now() * 0.005 % 40), canvas.height - 38, 15, 5);
@@ -511,16 +481,15 @@ function draw() {
         ctx.fillRect(power.x, power.y, power.width, power.height);
         ctx.fillStyle = 'white';
         ctx.font = '20px monospace';
-        ctx.fillText(power.type.emoji, power.x + 5, power.y + 25);
+        ctx.fillText(power.type.emoji, power.x + 5, power.y + 22);
     }
     
-    // Draw obstacles with glow
+    // Draw obstacles
     for (let obs of obstacles) {
         if (obstacleImage && obstacleImage.complete && obstacleImage.naturalWidth > 0) {
             ctx.drawImage(obstacleImage, obs.x, obs.y, obs.width, obs.height);
         } else {
             ctx.shadowBlur = 5;
-            ctx.shadowColor = '#000000';
             ctx.fillStyle = obs.color;
             ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
             ctx.fillStyle = '#FF6B4A';
@@ -534,7 +503,7 @@ function draw() {
         ctx.strokeStyle = '#44aaff';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(runner.x + runner.width/2, runner.y + runner.height/2, 30, 0, Math.PI * 2);
+        ctx.arc(runner.x + runner.width/2, runner.y + runner.height/2, 32, 0, Math.PI * 2);
         ctx.stroke();
     }
     
@@ -559,47 +528,46 @@ function draw() {
         ctx.fillRect(p.x, p.y, p.size, p.size);
     }
     
-    // Draw power-up status icons
+    // Draw status icons
     ctx.shadowBlur = 0;
     let statusY = 80;
     if (shieldFrames > 0) {
         ctx.fillStyle = '#44aaff';
-        ctx.font = '16px monospace';
+        ctx.font = '14px monospace';
         ctx.fillText(`🛡️ SHIELD ${Math.floor(shieldFrames / 60)}s`, 20, statusY);
-        statusY += 25;
+        statusY += 22;
     }
     if (boostFrames > 0) {
         ctx.fillStyle = '#ffaa44';
         ctx.fillText(`⚡ SPEED ${Math.floor(boostFrames / 60)}s`, 20, statusY);
-        statusY += 25;
+        statusY += 22;
     }
     if (doublePointsFrames > 0) {
         ctx.fillStyle = '#88ff44';
-        ctx.fillText(`2️⃣ 2X POINTS ${Math.floor(doublePointsFrames / 60)}s`, 20, statusY);
-        statusY += 25;
+        ctx.fillText(`2️⃣ 2X ${Math.floor(doublePointsFrames / 60)}s`, 20, statusY);
+        statusY += 22;
     }
     
-    // Draw combo meter
+    // Draw combo
     if (combo >= 3) {
         ctx.fillStyle = '#ffaa44';
-        ctx.font = 'bold 20px monospace';
+        ctx.font = 'bold 18px monospace';
         ctx.fillText(`🔥 ${combo} COMBO! 🔥`, runner.x - 30, runner.y - 20);
     }
     
-    // Draw level and stats
+    // Draw stats
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.shadowBlur = 3;
-    ctx.fillText(`LEVEL ${level}`, canvas.width - 110, 40);
-    ctx.fillText(`x${multiplier}`, canvas.width - 110, 70);
+    ctx.fillText(`LEVEL ${level}`, canvas.width - 100, 35);
     ctx.fillStyle = '#FFD966';
-    ctx.font = 'bold 16px monospace';
-    ctx.fillText(`🏃 LAP ${laps}`, 20, 40);
-    ctx.fillText(`💯 BEST: ${maxCombo}`, 20, 65);
+    ctx.font = '14px monospace';
+    ctx.fillText(`🏃 LAP ${laps}`, 15, 35);
+    ctx.fillText(`💯 BEST: ${maxCombo}`, 15, 55);
     ctx.shadowBlur = 0;
 }
 
-// Add CSS animation
+// Add CSS animations
 const style = document.createElement('style');
 style.textContent = `
     @keyframes floatUp {
@@ -613,7 +581,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Gamble Function (kept from original)
+// Gamble Function
 function gamble(betAmount) {
     if (!gameRunning) {
         showFloatingText("Game over! Restart first!", canvas.width/2, 100, '#ff8888');
@@ -655,7 +623,7 @@ function gamble(betAmount) {
     return win;
 }
 
-// Puzzle Function (kept from original)
+// Puzzle Function
 let currentPuzzleAnswer = 0;
 let currentPuzzleQuestion = "";
 
@@ -718,6 +686,13 @@ function solvePuzzle() {
         setTimeout(() => resultDiv.textContent = '', 2000);
         return false;
     }
+}
+
+// Animation Loop
+function gameLoop() {
+    updateGame();
+    draw();
+    requestAnimationFrame(gameLoop);
 }
 
 // Event Listeners
