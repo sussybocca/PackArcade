@@ -1,445 +1,425 @@
-// Three.js 3D Game Variables
-let scene, camera, renderer;
-let runner3D, obstacles3D = [];
-let ground;
-let lanePositions = [-2, 0, 2];
-let currentLane = 1;
-let targetLane = 1;
-let laneSwitchSpeed = 0.2;
-let gameRunning = true;
-let lastTime = 0;
-let obstacleSpawnTimer = 0;
-let obstacleSpawnDelay = 1.2; // seconds
-let baseSpeed = 8;
-let scrollOffset = 0;
+// Game Canvas Elements
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
 // Game State
+let gameRunning = true;
 let laps = 0;
 let level = 1;
 let points = 0;
 let multiplier = 1;
-let obstaclesPassed = 0; // Count obstacles passed for lap system
+let combo = 0;
+let maxCombo = 0;
 
-// Initialize Three.js
-function initThreeJS() {
-    // Get the canvas container
-    const container = document.getElementById('gameCanvas');
-    const canvas = document.getElementById('gameCanvas');
+// Power-ups
+let hasShield = false;
+let shieldFrames = 0;
+let speedBoost = 1;
+let boostFrames = 0;
+let magnetFrames = 0;
+let doublePointsFrames = 0;
+
+// Runner Variables
+let runner = {
+    x: 100,
+    y: canvas.height - 80,
+    width: 40,
+    height: 50,
+    yVelocity: 0,
+    gravity: 0.8,
+    jumpPower: -12,
+    isJumping: false,
+    color: '#FF6B6B'
+};
+
+// Obstacles with different types
+let obstacles = [];
+let powerups = [];
+let frameCount = 0;
+let obstacleSpawnRate = 55; // MORE OBSTACLES - was 80, now 55
+let baseSpeed = 6; // FASTER - was 5, now 6
+let scoreMultiplier = 1;
+
+// Meme messages
+const memes = [
+    "😂 BRUH MOMENT", "🤣 LMAO", "💀 SKIBIDI", "🗿 CHAD RUN", 
+    "😎 SIGMA GRIND", "🤡 YOU FELL OFF", "🔥 STRAIGHT FIRE", 
+    "💪 GIGACHAD", "🥶 COLD AF", "✨ MAIN CHARACTER", 
+    "🍿 W MOVIE", "🎮 GAMER MOMENT", "🤝 SUS", "🗣️ BET",
+    "💀 RIZZ GOD", "😭 NO CAP", "🧢 FAKE NEWS", "🤓 ACKSHUALLY"
+];
+
+// Power-up types
+const powerupTypes = [
+    { emoji: "🛡️", name: "SHIELD", duration: 300, color: "#44aaff" },
+    { emoji: "⚡", name: "SPEED", duration: 300, color: "#ffaa44" },
+    { emoji: "🧲", name: "MAGNET", duration: 300, color: "#ff44aa" },
+    { emoji: "2️⃣", name: "DOUBLE", duration: 300, color: "#88ff44" }
+];
+
+// Images
+let runnerImage = null;
+let obstacleImage = null;
+let backgroundImage = null;
+let imagesReady = false;
+
+// Particle effects
+let particles = [];
+
+function setGameImages(runnerImg, obstacleImg, bgImg) {
+    runnerImage = runnerImg;
+    obstacleImage = obstacleImg;
+    backgroundImage = bgImg;
+    imagesReady = true;
+}
+
+// Jump Function
+function jump() {
+    if (!runner.isJumping && gameRunning) {
+        runner.yVelocity = runner.jumpPower;
+        runner.isJumping = true;
+        if (window.playSound) window.playSound('jump');
+        addParticles(runner.x + runner.width/2, runner.y + runner.height, 5, '#FFAA44');
+    }
+}
+
+// Add particle effect
+function addParticles(x, y, count, color) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4 - 2,
+            life: 20,
+            color: color,
+            size: Math.random() * 3 + 2
+        });
+    }
+}
+
+// Show random meme
+function showMeme() {
+    let meme = memes[Math.floor(Math.random() * memes.length)];
+    let memeDiv = document.createElement('div');
+    memeDiv.textContent = meme;
+    memeDiv.style.position = 'fixed';
+    memeDiv.style.top = Math.random() * 60 + 20 + '%';
+    memeDiv.style.left = Math.random() * 60 + 20 + '%';
+    memeDiv.style.backgroundColor = '#000000aa';
+    memeDiv.style.color = '#ffaa44';
+    memeDiv.style.padding = '8px 16px';
+    memeDiv.style.borderRadius = '50px';
+    memeDiv.style.fontWeight = 'bold';
+    memeDiv.style.zIndex = '1000';
+    memeDiv.style.fontSize = '1.1rem';
+    memeDiv.style.fontFamily = 'monospace';
+    memeDiv.style.whiteSpace = 'nowrap';
+    memeDiv.style.animation = 'fadeOut 1s ease-out forwards';
+    document.body.appendChild(memeDiv);
     
-    // Create scene
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1030);
-    scene.fog = new THREE.FogExp2(0x0a1030, 0.008);
-    
-    // Create camera
-    camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    camera.position.set(0, 4, 12);
-    camera.lookAt(0, 1, 0);
-    
-    // Create renderer
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.shadowMap.enabled = true;
-    
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404060);
-    scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 10, 7);
-    directionalLight.castShadow = true;
-    directionalLight.receiveShadow = true;
-    scene.add(directionalLight);
-    
-    const backLight = new THREE.PointLight(0x4466ff, 0.5);
-    backLight.position.set(0, 3, -5);
-    scene.add(backLight);
-    
-    const fillLight = new THREE.PointLight(0xffaa66, 0.3);
-    fillLight.position.set(3, 2, 4);
-    scene.add(fillLight);
-    
-    // Create ground with grid
-    const gridHelper = new THREE.GridHelper(200, 40, 0xffaa44, 0x336699);
-    gridHelper.position.y = -1.5;
-    gridHelper.material.transparent = true;
-    gridHelper.material.opacity = 0.5;
-    scene.add(gridHelper);
-    
-    // Ground plane
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x2a4a6a, roughness: 0.8, metalness: 0.1 });
-    const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(200, 20), groundMat);
-    groundPlane.rotation.x = -Math.PI / 2;
-    groundPlane.position.y = -1.5;
-    groundPlane.receiveShadow = true;
-    scene.add(groundPlane);
-    
-    // Lane markers
-    const laneMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x442200 });
-    for (let i = -1; i <= 1; i++) {
-        const marker = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 1), laneMat);
-        marker.position.set(i * 2, -1.2, 0);
-        marker.receiveShadow = true;
-        scene.add(marker);
+    setTimeout(() => memeDiv.remove(), 1000);
+}
+
+// Update Game Logic
+function updateGame() {
+    if (!gameRunning) return;
+
+    // Apply gravity
+    runner.yVelocity += runner.gravity;
+    runner.y += runner.yVelocity;
+
+    // Ground collision
+    if (runner.y >= canvas.height - 80) {
+        runner.y = canvas.height - 80;
+        runner.isJumping = false;
+        runner.yVelocity = 0;
+    }
+
+    // Ceiling collision
+    if (runner.y <= 0) {
+        runner.y = 0;
+        if (runner.yVelocity < 0) runner.yVelocity = 0;
     }
     
-    // Create runner (Martan character)
-    const runnerGroup = new THREE.Group();
-    
-    // Body
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff6b6b, emissive: 0x331100 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 0.6), bodyMat);
-    body.castShadow = true;
-    body.receiveShadow = true;
-    body.position.y = 0.5;
-    runnerGroup.add(body);
-    
-    // Head
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xffaa88 });
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.45, 32, 32), headMat);
-    head.castShadow = true;
-    head.position.y = 1.1;
-    runnerGroup.add(head);
-    
-    // Eyes
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 32), eyeMat);
-    leftEye.position.set(-0.2, 1.25, 0.45);
-    runnerGroup.add(leftEye);
-    
-    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 32), eyeMat);
-    rightEye.position.set(0.2, 1.25, 0.45);
-    runnerGroup.add(rightEye);
-    
-    const pupilMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-    const leftPupil = new THREE.Mesh(new THREE.SphereGeometry(0.07, 32, 32), pupilMat);
-    leftPupil.position.set(-0.2, 1.23, 0.57);
-    runnerGroup.add(leftPupil);
-    
-    const rightPupil = new THREE.Mesh(new THREE.SphereGeometry(0.07, 32, 32), pupilMat);
-    rightPupil.position.set(0.2, 1.23, 0.57);
-    runnerGroup.add(rightPupil);
-    
-    // Cape/Scarf
-    const capeMat = new THREE.MeshStandardMaterial({ color: 0xff44aa });
-    const cape = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.2), capeMat);
-    cape.position.set(0, 0.7, -0.4);
-    cape.castShadow = true;
-    runnerGroup.add(cape);
-    
-    // Arms
-    const armMat = new THREE.MeshStandardMaterial({ color: 0xff6b6b });
-    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.25), armMat);
-    leftArm.position.set(-0.55, 0.85, 0);
-    leftArm.castShadow = true;
-    runnerGroup.add(leftArm);
-    
-    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.25), armMat);
-    rightArm.position.set(0.55, 0.85, 0);
-    rightArm.castShadow = true;
-    runnerGroup.add(rightArm);
-    
-    runnerGroup.position.set(0, -1, 3);
-    runnerGroup.castShadow = true;
-    scene.add(runnerGroup);
-    runner3D = runnerGroup;
-    
-    // Add floating particles
-    const particleCount = 300;
-    const particles = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-        particlePositions[i * 3] = (Math.random() - 0.5) * 100;
-        particlePositions[i * 3 + 1] = Math.random() * 8;
-        particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 50 - 20;
+    // Update power-up timers
+    if (shieldFrames > 0) shieldFrames--;
+    if (boostFrames > 0) {
+        boostFrames--;
+        speedBoost = 1.5;
+    } else {
+        speedBoost = 1;
     }
-    particles.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08 });
-    const particleSystem = new THREE.Points(particles, particleMat);
-    scene.add(particleSystem);
+    if (magnetFrames > 0) magnetFrames--;
+    if (doublePointsFrames > 0) doublePointsFrames--;
     
-    // Animation variables
-    let armSwing = 0;
-    let jumpOffset = 0;
-    let jumpVelocity = 0;
-    let isJumping = false;
-    
-    // Obstacle types
-    const obstacleTypes = [
-        { color: 0xaa4a2a, height: 1.2, width: 0.8 },
-        { color: 0x8a5a3a, height: 1.5, width: 0.7 },
-        { color: 0xcc6a4a, height: 1, width: 1 },
-        { color: 0xaa6a4a, height: 0.8, width: 1.2 }
-    ];
-    
-    // Spawn obstacle function
-    function spawnObstacle() {
-        const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-        const lane = Math.floor(Math.random() * 3);
-        const obstacleMat = new THREE.MeshStandardMaterial({ color: type.color, roughness: 0.4, metalness: 0.1 });
-        const obstacle = new THREE.Mesh(new THREE.BoxGeometry(type.width, type.height, type.width), obstacleMat);
-        obstacle.castShadow = true;
-        obstacle.receiveShadow = true;
-        obstacle.userData = {
-            lane: lane,
-            passed: false,
+    // Spawn obstacles MORE FREQUENTLY
+    frameCount++;
+    let currentSpawnRate = Math.max(35, obstacleSpawnRate - Math.floor(level / 3));
+    if (frameCount >= currentSpawnRate) {
+        frameCount = 0;
+        
+        // Multiple obstacle types with different sizes and behaviors
+        let obstacleTypes = [
+            { width: 35, height: 45, color: '#AA4A2A', yOffset: 0 },
+            { width: 50, height: 30, color: '#8A5A3A', yOffset: 10 },
+            { width: 40, height: 60, color: '#CC6A4A', yOffset: -8 },
+            { width: 30, height: 40, color: '#AA6A4A', yOffset: 5 },
+            { width: 45, height: 35, color: '#5A8A6A', yOffset: 0 },
+            { width: 55, height: 40, color: '#8A5A8A', yOffset: 5 }
+        ];
+        
+        let type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+        
+        let obstacle = {
+            x: canvas.width,
+            y: canvas.height - 75 + type.yOffset,
             width: type.width,
-            height: type.height
+            height: type.height,
+            speed: (baseSpeed + Math.floor(level / 15)) * speedBoost,
+            color: type.color,
+            passed: false
         };
-        obstacle.position.set(lanePositions[lane], -1 + type.height / 2, 20);
-        scene.add(obstacle);
-        obstacles3D.push(obstacle);
+        obstacles.push(obstacle);
+        
+        // Sometimes spawn two obstacles at once for extra challenge
+        if (level > 3 && Math.random() < 0.3) {
+            let type2 = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            obstacles.push({
+                x: canvas.width + 40,
+                y: canvas.height - 75 + type2.yOffset,
+                width: type2.width,
+                height: type2.height,
+                speed: (baseSpeed + Math.floor(level / 15)) * speedBoost,
+                color: type2.color,
+                passed: false
+            });
+        }
     }
     
-    // Jump function
-    window.jump3D = function() {
-        if (!isJumping && gameRunning) {
-            jumpVelocity = 0.35;
-            isJumping = true;
-            if (window.playSound) window.playSound('jump');
-        }
-    };
+    // Spawn power-ups
+    if (Math.random() < 0.008 && powerups.length < 2) {
+        let powerType = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+        powerups.push({
+            x: canvas.width,
+            y: canvas.height - 90,
+            width: 30,
+            height: 30,
+            speed: baseSpeed + Math.floor(level / 15),
+            type: powerType,
+            passed: false
+        });
+    }
     
-    // Lane switching
-    window.switchLane = function(direction) {
-        if (!gameRunning) return;
-        targetLane = Math.max(0, Math.min(2, targetLane + direction));
-    };
-    
-    // Update game logic
-    function updateGame3D(deltaTime) {
-        if (!gameRunning) return;
+    // Update obstacles
+    for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].x -= obstacles[i].speed;
         
-        // Handle jumping
-        if (isJumping) {
-            jumpOffset += jumpVelocity;
-            jumpVelocity -= deltaTime * 12;
-            if (jumpOffset <= 0) {
-                jumpOffset = 0;
-                isJumping = false;
-                jumpVelocity = 0;
-            }
-            runner3D.position.y = -1 + jumpOffset * 1.5;
-        } else {
-            runner3D.position.y = -1;
-        }
+        // Collision detection with shield
+        let collided = runner.x < obstacles[i].x + obstacles[i].width &&
+            runner.x + runner.width > obstacles[i].x &&
+            runner.y + runner.height > obstacles[i].y &&
+            runner.y < obstacles[i].y + obstacles[i].height;
         
-        // Smooth lane switching
-        const targetX = lanePositions[targetLane];
-        runner3D.position.x += (targetX - runner3D.position.x) * 0.2;
-        
-        // Arm swing animation
-        armSwing += deltaTime * 12;
-        const leftArm = runner3D.children.find(c => c.position.x === -0.55);
-        const rightArm = runner3D.children.find(c => c.position.x === 0.55);
-        if (leftArm && rightArm) {
-            leftArm.rotation.z = Math.sin(armSwing) * 0.5;
-            rightArm.rotation.z = -Math.sin(armSwing) * 0.5;
-        }
-        
-        // Spawn obstacles
-        obstacleSpawnTimer -= deltaTime;
-        if (obstacleSpawnTimer <= 0) {
-            let spawnDelay = Math.max(0.6, obstacleSpawnDelay - (level * 0.02));
-            obstacleSpawnTimer = spawnDelay;
-            spawnObstacle();
-        }
-        
-        // Update obstacles and check collisions
-        for (let i = 0; i < obstacles3D.length; i++) {
-            const obs = obstacles3D[i];
-            obs.position.z -= baseSpeed * deltaTime;
-            
-            // Check if obstacle passed the runner
-            if (!obs.userData.passed && obs.position.z < 1) {
-                obs.userData.passed = true;
-                obstaclesPassed++;
-                
-                // Every 10 obstacles passed = 1 lap
-                if (obstaclesPassed >= 10) {
-                    obstaclesPassed = 0;
-                    completeLap3D();
-                }
-                
-                // Add points for passing obstacle
-                let obstaclePoints = 5 * multiplier;
-                points += obstaclePoints;
-                updateDisplay();
-                
-                // Show floating text
-                showFloatingText(`+${obstaclePoints}`, obs.position.x, obs.position.y + 1, obs.position.z);
-            }
-            
-            // Collision detection
-            const runnerX = runner3D.position.x;
-            const obsX = obs.position.x;
-            const runnerZ = runner3D.position.z;
-            const obsZ = obs.position.z;
-            
-            if (Math.abs(runnerX - obsX) < 0.6 && Math.abs(runnerZ - obsZ) < 0.8 && !isJumping) {
-                gameOver3D();
-            }
-            
-            // Remove obstacles that are behind camera
-            if (obs.position.z < -8) {
-                scene.remove(obs);
-                obstacles3D.splice(i, 1);
+        if (collided) {
+            if (shieldFrames > 0) {
+                // Shield blocks obstacle
+                obstacles.splice(i, 1);
+                addParticles(runner.x + runner.width/2, runner.y + runner.height/2, 15, '#44aaff');
+                showMeme();
                 i--;
+                continue;
+            } else {
+                gameOver();
+                return;
             }
         }
         
-        // Camera slight bob
-        camera.position.y = 4 + Math.sin(Date.now() * 0.008) * 0.05;
-        camera.lookAt(runner3D.position.x, 1.5, runner3D.position.z + 3);
-        
-        // Update scroll offset for ground
-        scrollOffset += deltaTime * 3;
-        if (gridHelper) {
-            gridHelper.position.z = (scrollOffset % 10) - 5;
+        // Pass obstacle points
+        if (!obstacles[i].passed && obstacles[i].x + obstacles[i].width < runner.x) {
+            obstacles[i].passed = true;
+            let pointsGained = 5 * multiplier * (doublePointsFrames > 0 ? 2 : 1);
+            points += pointsGained;
+            combo++;
+            
+            if (combo > maxCombo) maxCombo = combo;
+            
+            // Show combo text
+            showFloatingText(`+${pointsGained}`, obstacles[i].x + obstacles[i].width/2, obstacles[i].y - 20, '#88ff88');
+            
+            if (combo >= 5) {
+                showFloatingText(`🔥 ${combo} COMBO! 🔥`, runner.x, runner.y - 40, '#ffaa44');
+                if (combo % 10 === 0) showMeme();
+            }
         }
         
-        // Increase difficulty over time
-        baseSpeed = Math.min(18, 8 + level * 0.3);
+        // Remove off-screen obstacles
+        if (obstacles[i].x + obstacles[i].width < 0) {
+            obstacles.splice(i, 1);
+            i--;
+        }
     }
     
-    function completeLap3D() {
-        laps++;
-        let lapPoints = 10 * multiplier;
-        points += lapPoints;
+    // Update power-ups
+    for (let i = 0; i < powerups.length; i++) {
+        powerups[i].x -= powerups[i].speed;
         
-        // Update level (every 5 laps)
-        let newLevel = Math.floor(laps / 5) + 1;
-        if (newLevel > level) {
-            level = newLevel;
-            if (window.playSound) window.playSound('levelUp');
-            showMessage3D(`⭐ LEVEL UP! Level ${level} ⭐`);
+        // Collect power-up
+        if (runner.x < powerups[i].x + powerups[i].width &&
+            runner.x + runner.width > powerups[i].x &&
+            runner.y + runner.height > powerups[i].y &&
+            runner.y < powerups[i].y + powerups[i].height) {
+            
+            let power = powerups[i].type;
+            if (window.playSound) window.playSound('powerup');
+            
+            switch(power.name) {
+                case "SHIELD":
+                    shieldFrames = 300;
+                    showFloatingText("🛡️ SHIELD ACTIVE!", runner.x, runner.y - 40, '#44aaff');
+                    break;
+                case "SPEED":
+                    boostFrames = 300;
+                    showFloatingText("⚡ SPEED BOOST!", runner.x, runner.y - 40, '#ffaa44');
+                    break;
+                case "MAGNET":
+                    magnetFrames = 300;
+                    showFloatingText("🧲 MAGNET ACTIVE!", runner.x, runner.y - 40, '#ff44aa');
+                    break;
+                case "DOUBLE":
+                    doublePointsFrames = 300;
+                    showFloatingText("2️⃣ DOUBLE POINTS!", runner.x, runner.y - 40, '#88ff44');
+                    break;
+            }
+            
+            addParticles(powerups[i].x + powerups[i].width/2, powerups[i].y + powerups[i].height/2, 10, power.color);
+            powerups.splice(i, 1);
+            i--;
+            continue;
         }
         
-        updateDisplay();
-        if (window.playSound) window.playSound('lapComplete');
-        showMessage3D(`🏃 LAP ${laps} COMPLETE! +${lapPoints} 🏃`);
-        
-        // Visual feedback - flash
-        const flashMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0xff4422 });
-        const flashPlane = new THREE.Mesh(new THREE.PlaneGeometry(15, 8), flashMat);
-        flashPlane.position.set(0, 2, 5);
-        scene.add(flashPlane);
-        setTimeout(() => scene.remove(flashPlane), 100);
-    }
-    
-    function gameOver3D() {
-        gameRunning = false;
-        if (window.playSound) window.playSound('gameOver');
-        document.getElementById('finalLaps').textContent = laps;
-        document.getElementById('finalPoints').textContent = Math.floor(points);
-        document.getElementById('gameOverlay').style.display = 'flex';
-        
-        // Fall animation
-        runner3D.position.y = -2;
-    }
-    
-    function showFloatingText(text, x, y, z) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffaa44';
-        ctx.font = 'Bold 24px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(text, 64, 32);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.SpriteMaterial({ map: texture });
-        const sprite = new THREE.Sprite(material);
-        sprite.position.set(x, y + 0.5, z);
-        sprite.scale.set(1, 0.5, 1);
-        scene.add(sprite);
-        
-        setTimeout(() => scene.remove(sprite), 800);
-    }
-    
-    function showMessage3D(msg) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffaa44';
-        ctx.font = 'Bold 32px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(msg, 256, 64);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        const material = new THREE.SpriteMaterial({ map: texture });
-        const sprite = new THREE.Sprite(material);
-        sprite.position.set(0, 4, 5);
-        sprite.scale.set(5, 1.2, 1);
-        scene.add(sprite);
-        
-        setTimeout(() => scene.remove(sprite), 1500);
-    }
-    
-    // Animation loop
-    let lastTimestamp = 0;
-    function animate(currentTime) {
-        requestAnimationFrame(animate);
-        const deltaTime = Math.min(0.033, (currentTime - lastTimestamp) / 1000);
-        lastTimestamp = currentTime;
-        
-        if (deltaTime > 0) {
-            updateGame3D(deltaTime);
+        // Remove off-screen power-ups
+        if (powerups[i].x + powerups[i].width < 0) {
+            powerups.splice(i, 1);
+            i--;
         }
-        
-        renderer.render(scene, camera);
     }
     
-    requestAnimationFrame(animate);
-    
-    // Handle resize
-    window.addEventListener('resize', onWindowResize, false);
-    function onWindowResize() {
-        const canvas = document.getElementById('gameCanvas');
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    // Magnet effect - pull points from obstacles
+    if (magnetFrames > 0) {
+        for (let obs of obstacles) {
+            if (!obs.passed && obs.x + obs.width < runner.x + 100 && obs.x + obs.width > runner.x - 50) {
+                addParticles(obs.x + obs.width/2, obs.y + obs.height/2, 2, '#ff44aa');
+            }
+        }
     }
     
-    // Keyboard controls
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && gameRunning) {
-            e.preventDefault();
-            window.jump3D();
+    // Update particles
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        particles[i].life--;
+        if (particles[i].life <= 0) {
+            particles.splice(i, 1);
+            i--;
         }
-        if (e.code === 'ArrowLeft' && gameRunning) {
-            e.preventDefault();
-            window.switchLane(-1);
-        }
-        if (e.code === 'ArrowRight' && gameRunning) {
-            e.preventDefault();
-            window.switchLane(1);
-        }
-    });
+    }
     
-    // Touch controls for mobile
-    let touchStartX = 0;
-    canvas.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        if (gameRunning) window.jump3D();
-    });
-    canvas.addEventListener('touchmove', (e) => {
-        const diff = e.touches[0].clientX - touchStartX;
-        if (Math.abs(diff) > 30) {
-            if (diff > 0) window.switchLane(1);
-            else window.switchLane(-1);
-            touchStartX = e.touches[0].clientX;
-        }
-        e.preventDefault();
-    });
+    // Lap completion
+    if (runner.x > canvas.width - 50) {
+        completeLap();
+    }
+}
+
+// Complete a Lap
+function completeLap() {
+    runner.x = 100;
+    let lapPoints = (10 + Math.floor(combo / 2)) * multiplier * (doublePointsFrames > 0 ? 2 : 1);
+    points += lapPoints;
+    laps++;
     
-    canvas.addEventListener('click', () => {
-        if (gameRunning) window.jump3D();
-    });
+    // Combo bonus
+    if (combo >= 5) {
+        let comboBonus = Math.floor(combo / 5) * 10;
+        points += comboBonus;
+        showFloatingText(`🎯 COMBO BONUS +${comboBonus}!`, runner.x, runner.y - 60, '#ffaa44');
+    }
     
-    console.log("Three.js 3D Game Initialized!");
+    // Reset combo
+    combo = 0;
+    
+    // Update level (every 5 laps)
+    let newLevel = Math.floor(laps / 5) + 1;
+    if (newLevel > level) {
+        level = newLevel;
+        if (window.playSound) window.playSound('levelUp');
+        showFloatingText(`⭐ LEVEL ${level}! ⭐`, canvas.width/2, 100, '#ffaa44');
+        showMeme();
+    }
+    
+    updateDisplay();
+    if (window.playSound) window.playSound('lapComplete');
+    addParticles(runner.x + runner.width/2, runner.y + runner.height/2, 20, '#FFD966');
+    
+    // Increase difficulty
+    if (obstacleSpawnRate > 35) {
+        obstacleSpawnRate = Math.max(35, obstacleSpawnRate - 1);
+    }
+}
+
+// Game Over
+function gameOver() {
+    gameRunning = false;
+    if (window.playSound) window.playSound('gameOver');
+    document.getElementById('finalLaps').textContent = laps;
+    document.getElementById('finalPoints').textContent = Math.floor(points);
+    document.getElementById('gameOverlay').style.display = 'flex';
+    
+    // Show stats
+    let statsDiv = document.createElement('div');
+    statsDiv.innerHTML = `🔥 MAX COMBO: ${maxCombo} 🔥`;
+    statsDiv.style.position = 'fixed';
+    statsDiv.style.bottom = '30%';
+    statsDiv.style.left = '50%';
+    statsDiv.style.transform = 'translateX(-50%)';
+    statsDiv.style.backgroundColor = '#ffaa44';
+    statsDiv.style.color = '#1a1a2e';
+    statsDiv.style.padding = '10px 20px';
+    statsDiv.style.borderRadius = '50px';
+    statsDiv.style.fontWeight = 'bold';
+    statsDiv.style.zIndex = '1001';
+    statsDiv.style.fontSize = '1rem';
+    document.body.appendChild(statsDiv);
+    setTimeout(() => statsDiv.remove(), 3000);
+}
+
+// Restart Game
+function restartGame() {
+    gameRunning = true;
+    laps = 0;
+    level = 1;
+    points = 0;
+    multiplier = parseInt(document.getElementById('multiplierValue').textContent.replace('x', '')) || 1;
+    combo = 0;
+    maxCombo = 0;
+    obstacles = [];
+    powerups = [];
+    particles = [];
+    frameCount = 0;
+    obstacleSpawnRate = 55;
+    shieldFrames = 0;
+    boostFrames = 0;
+    magnetFrames = 0;
+    doublePointsFrames = 0;
+    speedBoost = 1;
+    runner.y = canvas.height - 80;
+    runner.yVelocity = 0;
+    runner.isJumping = false;
+    runner.x = 100;
+    
+    updateDisplay();
+    document.getElementById('gameOverlay').style.display = 'none';
+    if (window.playSound) window.playSound('start');
 }
 
 // Update UI Display
@@ -448,6 +428,26 @@ function updateDisplay() {
     document.getElementById('levelValue').textContent = level;
     document.getElementById('pointsValue').textContent = Math.floor(points);
     document.getElementById('multiplierValue').textContent = `x${multiplier}`;
+}
+
+// Show floating text
+function showFloatingText(text, x, y, color) {
+    let textDiv = document.createElement('div');
+    textDiv.textContent = text;
+    textDiv.style.position = 'absolute';
+    textDiv.style.left = (canvas.getBoundingClientRect().left + x) + 'px';
+    textDiv.style.top = (canvas.getBoundingClientRect().top + y) + 'px';
+    textDiv.style.color = color;
+    textDiv.style.fontWeight = 'bold';
+    textDiv.style.fontSize = '1.2rem';
+    textDiv.style.fontFamily = 'monospace';
+    textDiv.style.textShadow = '1px 1px 0px black';
+    textDiv.style.pointerEvents = 'none';
+    textDiv.style.zIndex = '1000';
+    textDiv.style.animation = 'floatUp 0.8s ease-out forwards';
+    document.body.appendChild(textDiv);
+    
+    setTimeout(() => textDiv.remove(), 800);
 }
 
 // Buy Upgrade
@@ -464,49 +464,163 @@ function buyUpgrade(newMultiplier) {
         multiplier = newMultiplier;
         updateDisplay();
         if (window.playSound) window.playSound('upgrade');
-        showMessage2D(`✨ UPGRADED! x${multiplier} Multiplier ✨`);
+        showFloatingText(`✨ x${multiplier} MULTIPLIER! ✨`, canvas.width/2, 100, '#ffaa44');
         return true;
     } else if (newMultiplier <= multiplier) {
-        showMessage2D("You already have equal or higher multiplier!");
+        showFloatingText("Already have higher!", canvas.width/2, 100, '#ff8888');
         return false;
     } else {
-        showMessage2D("Not enough points!");
+        showFloatingText("Not enough points!", canvas.width/2, 100, '#ff8888');
         return false;
     }
 }
 
-// Show Temporary Message (2D overlay)
-function showMessage2D(msg) {
-    let msgDiv = document.createElement('div');
-    msgDiv.textContent = msg;
-    msgDiv.style.position = 'fixed';
-    msgDiv.style.top = '30%';
-    msgDiv.style.left = '50%';
-    msgDiv.style.transform = 'translate(-50%, -50%)';
-    msgDiv.style.backgroundColor = '#ffaa44';
-    msgDiv.style.color = '#1a1a2e';
-    msgDiv.style.padding = '10px 20px';
-    msgDiv.style.borderRadius = '50px';
-    msgDiv.style.fontWeight = 'bold';
-    msgDiv.style.zIndex = '1000';
-    msgDiv.style.fontSize = '1.2rem';
-    msgDiv.style.whiteSpace = 'nowrap';
-    document.body.appendChild(msgDiv);
+// Draw Game
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    setTimeout(() => {
-        msgDiv.remove();
-    }, 1500);
+    // Draw background
+    if (backgroundImage && backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    } else {
+        let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#1a3a5a');
+        gradient.addColorStop(1, '#0a2a3a');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Draw ground with gradient
+    let groundGrad = ctx.createLinearGradient(0, canvas.height - 35, 0, canvas.height);
+    groundGrad.addColorStop(0, '#8B5A2B');
+    groundGrad.addColorStop(1, '#5A3A1A');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, canvas.height - 35, canvas.width, 35);
+    
+    // Draw ground details
+    ctx.fillStyle = '#C97E3A';
+    for (let i = 0; i < 30; i++) {
+        ctx.fillRect(i * 40 + (Date.now() * 0.005 % 40), canvas.height - 38, 15, 5);
+    }
+    
+    // Draw power-ups
+    for (let power of powerups) {
+        ctx.fillStyle = power.type.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = power.type.color;
+        ctx.fillRect(power.x, power.y, power.width, power.height);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px monospace';
+        ctx.fillText(power.type.emoji, power.x + 5, power.y + 25);
+    }
+    
+    // Draw obstacles with glow
+    for (let obs of obstacles) {
+        if (obstacleImage && obstacleImage.complete && obstacleImage.naturalWidth > 0) {
+            ctx.drawImage(obstacleImage, obs.x, obs.y, obs.width, obs.height);
+        } else {
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#000000';
+            ctx.fillStyle = obs.color;
+            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            ctx.fillStyle = '#FF6B4A';
+            ctx.fillRect(obs.x + 8, obs.y + 10, 6, 20);
+            ctx.fillRect(obs.x + obs.width - 14, obs.y + 10, 6, 20);
+        }
+    }
+    
+    // Draw runner with shield effect
+    if (shieldFrames > 0 && (Math.floor(Date.now() / 100) % 2 === 0)) {
+        ctx.strokeStyle = '#44aaff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(runner.x + runner.width/2, runner.y + runner.height/2, 30, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    if (runnerImage && runnerImage.complete && runnerImage.naturalWidth > 0) {
+        ctx.drawImage(runnerImage, runner.x, runner.y, runner.width, runner.height);
+    } else {
+        ctx.fillStyle = runner.color;
+        ctx.fillRect(runner.x, runner.y, runner.width, runner.height);
+        ctx.fillStyle = '#FFE66D';
+        ctx.fillRect(runner.x + 5, runner.y - 8, 30, 8);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(runner.x + 8, runner.y + 10, 8, 8);
+        ctx.fillRect(runner.x + 24, runner.y + 10, 8, 8);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(runner.x + 10, runner.y + 12, 4, 4);
+        ctx.fillRect(runner.x + 26, runner.y + 12, 4, 4);
+    }
+    
+    // Draw particles
+    for (let p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+    }
+    
+    // Draw power-up status icons
+    ctx.shadowBlur = 0;
+    let statusY = 80;
+    if (shieldFrames > 0) {
+        ctx.fillStyle = '#44aaff';
+        ctx.font = '16px monospace';
+        ctx.fillText(`🛡️ SHIELD ${Math.floor(shieldFrames / 60)}s`, 20, statusY);
+        statusY += 25;
+    }
+    if (boostFrames > 0) {
+        ctx.fillStyle = '#ffaa44';
+        ctx.fillText(`⚡ SPEED ${Math.floor(boostFrames / 60)}s`, 20, statusY);
+        statusY += 25;
+    }
+    if (doublePointsFrames > 0) {
+        ctx.fillStyle = '#88ff44';
+        ctx.fillText(`2️⃣ 2X POINTS ${Math.floor(doublePointsFrames / 60)}s`, 20, statusY);
+        statusY += 25;
+    }
+    
+    // Draw combo meter
+    if (combo >= 3) {
+        ctx.fillStyle = '#ffaa44';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText(`🔥 ${combo} COMBO! 🔥`, runner.x - 30, runner.y - 20);
+    }
+    
+    // Draw level and stats
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 20px monospace';
+    ctx.shadowBlur = 3;
+    ctx.fillText(`LEVEL ${level}`, canvas.width - 110, 40);
+    ctx.fillText(`x${multiplier}`, canvas.width - 110, 70);
+    ctx.fillStyle = '#FFD966';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText(`🏃 LAP ${laps}`, 20, 40);
+    ctx.fillText(`💯 BEST: ${maxCombo}`, 20, 65);
+    ctx.shadowBlur = 0;
 }
 
-// Card Gamble Function
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes floatUp {
+        0% { opacity: 1; transform: translateY(0px); }
+        100% { opacity: 0; transform: translateY(-40px); }
+    }
+    @keyframes fadeOut {
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Gamble Function (kept from original)
 function gamble(betAmount) {
     if (!gameRunning) {
-        showMessage2D("Game is over! Restart to gamble.");
+        showFloatingText("Game over! Restart first!", canvas.width/2, 100, '#ff8888');
         return false;
     }
-    
     if (betAmount <= 0 || betAmount > points) {
-        showMessage2D("Invalid bet amount!");
+        showFloatingText("Invalid bet!", canvas.width/2, 100, '#ff8888');
         return false;
     }
     
@@ -522,6 +636,7 @@ function gamble(betAmount) {
         resultDiv.textContent = `🎉 YOU WON +${betAmount} POINTS! 🎉`;
         resultDiv.style.color = '#88ff88';
         if (window.playSound) window.playSound('win');
+        showMeme();
     } else {
         points -= betAmount;
         cardLeft.textContent = '💀';
@@ -532,17 +647,15 @@ function gamble(betAmount) {
     }
     
     updateDisplay();
-    
     setTimeout(() => {
         cardLeft.textContent = '?';
         cardRight.textContent = '?';
         resultDiv.textContent = '';
     }, 1500);
-    
     return win;
 }
 
-// Puzzle Solve Function
+// Puzzle Function (kept from original)
 let currentPuzzleAnswer = 0;
 let currentPuzzleQuestion = "";
 
@@ -551,12 +664,10 @@ function generatePuzzle() {
     let num2 = Math.floor(Math.random() * 20) + 1;
     let operators = ['+', '-', '*'];
     let operator = operators[Math.floor(Math.random() * 3)];
-    
     let answer;
     if (operator === '+') answer = num1 + num2;
     else if (operator === '-') answer = num1 - num2;
     else answer = num1 * num2;
-    
     currentPuzzleAnswer = answer;
     currentPuzzleQuestion = `${num1} ${operator} ${num2} = ?`;
     document.getElementById('puzzleQuestion').textContent = currentPuzzleQuestion;
@@ -564,10 +675,9 @@ function generatePuzzle() {
 
 function solvePuzzle() {
     if (!gameRunning) {
-        showMessage2D("Game is over! Restart to solve puzzles.");
+        showFloatingText("Game over!", canvas.width/2, 100, '#ff8888');
         return false;
     }
-    
     let answerInput = document.getElementById('puzzleAnswer');
     let userAnswer = parseInt(answerInput.value);
     let resultDiv = document.getElementById('puzzleResult');
@@ -580,18 +690,23 @@ function solvePuzzle() {
     }
     
     if (userAnswer === currentPuzzleAnswer) {
-        points += 50;
+        let puzzlePoints = 50 * (doublePointsFrames > 0 ? 2 : 1);
+        points += puzzlePoints;
         updateDisplay();
-        resultDiv.textContent = '✅ CORRECT! +50 POINTS!';
+        resultDiv.textContent = '✅ CORRECT! +' + puzzlePoints + ' POINTS!';
         resultDiv.style.color = '#88ff88';
         answerInput.value = '';
         if (window.playSound) window.playSound('puzzleWin');
         
-        showMessage2D("🧩 +50 points! Great job!");
+        if (obstacles.length > 0) {
+            obstacles.pop();
+            showFloatingText("🧩 Obstacle removed!", canvas.width/2, 100, '#88ff88');
+        }
         generatePuzzle();
+        showMeme();
         
         setTimeout(() => {
-            if (document.getElementById('puzzleResult').textContent === '✅ CORRECT! +50 POINTS!') {
+            if (document.getElementById('puzzleResult').textContent === '✅ CORRECT! +' + puzzlePoints + ' POINTS!') {
                 resultDiv.textContent = '';
             }
         }, 2000);
@@ -605,36 +720,18 @@ function solvePuzzle() {
     }
 }
 
-// Restart Game
-function restartGame() {
-    gameRunning = true;
-    laps = 0;
-    level = 1;
-    points = 0;
-    multiplier = parseInt(document.getElementById('multiplierValue').textContent.replace('x', '')) || 1;
-    obstaclesPassed = 0;
-    obstacleSpawnTimer = 0;
-    baseSpeed = 8;
-    
-    // Clear existing obstacles
-    for (let obs of obstacles3D) {
-        scene.remove(obs);
+// Event Listeners
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && gameRunning) {
+        e.preventDefault();
+        jump();
     }
-    obstacles3D = [];
-    
-    // Reset runner position
-    if (runner3D) {
-        runner3D.position.set(0, -1, 3);
-        targetLane = 1;
-        currentLane = 1;
-    }
-    
-    updateDisplay();
-    document.getElementById('gameOverlay').style.display = 'none';
-    if (window.playSound) window.playSound('start');
-}
+});
 
-// Event Listeners for UI
+canvas.addEventListener('click', () => {
+    if (gameRunning) jump();
+});
+
 document.getElementById('restartBtn').addEventListener('click', restartGame);
 document.getElementById('gambleBtn').addEventListener('click', () => {
     let bet = parseInt(document.getElementById('betAmount').value);
@@ -650,13 +747,9 @@ document.querySelectorAll('.btn-upgrade').forEach(btn => {
     });
 });
 
-// Initialize puzzle
+// Initialize
 generatePuzzle();
+updateDisplay();
+gameLoop();
 
-// Wait for DOM to load then start Three.js
-window.addEventListener('load', () => {
-    initThreeJS();
-    updateDisplay();
-});
-
-console.log("3D Game initialized - Martan is ready to run!");
+console.log("🔥 EPIC 2D GAME INITIALIZED! More obstacles, power-ups, memes, and combos! 🔥");
