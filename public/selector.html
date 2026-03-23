@@ -2101,26 +2101,44 @@ function getGameSlugFromLink(link) {
       }
     }
 
-    // ========== OPEN HTML GAME WITH SCORE TRACKING ==========
-    async function openHtmlGameWithTracking(link, gameSlug, gameTitle) {
-      try {
-        const response = await fetch(link);
-        if (!response.ok) throw new Error('Failed to load game');
-        let html = await response.text();
-        
-        html = injectScoreTracker(html, gameSlug);
-        
-        const gameWindow = window.open('', '_blank');
-        gameWindow.document.write(html);
-        gameWindow.document.close();
-        
-        console.log(`Game ${gameTitle} (${gameSlug}) opened with score tracking`);
-        
-      } catch (error) {
-        console.error('Error loading game:', error);
-        window.open(link, '_blank');
-      }
-    }
+    
+    // ========== UPDATED OPEN HTML GAME WITH SCORE TRACKING ==========
+async function openHtmlGameWithTracking(link, gameSlug, gameTitle) {
+  try {
+    const response = await fetch(link);
+    if (!response.ok) throw new Error('Failed to load game');
+    let html = await response.text();
+    
+    // Inject score tracker
+    html = injectScoreTracker(html, gameSlug);
+    
+    // Fix relative paths by adding base URL
+    const baseUrl = new URL(link, window.location.href).href;
+    const basePath = baseUrl.substring(0, baseUrl.lastIndexOf('/') + 1);
+    
+    // Add base tag to HTML to resolve relative paths
+    html = html.replace('<head>', `<head><base href="${basePath}">`);
+    
+    // Create a blob URL
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Open game in new tab with proper URL
+    const gameWindow = window.open(blobUrl, '_blank');
+    
+    // Clean up blob URL after window loads
+    gameWindow.onload = () => {
+      URL.revokeObjectURL(blobUrl);
+    };
+    
+    console.log(`Game ${gameTitle} (${gameSlug}) opened with score tracking`);
+    
+  } catch (error) {
+    console.error('Error loading game:', error);
+    // Fallback: open directly in new tab
+    window.open(link, '_blank');
+  }
+}
 
     // ========== GAME CARDS RENDERING ==========
     (function() {
