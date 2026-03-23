@@ -1,4 +1,4 @@
-// Audio Manager - Actually enables audio on click
+// Audio Manager - With dedicated enable button
 let sounds = {};
 let audioEnabled = false;
 
@@ -33,7 +33,6 @@ function loadSounds() {
         
         audio.addEventListener('error', () => {
             sounds[name].available = false;
-            console.log(`⚠️ Sound missing: ${name} - place sounds/${name}.mp3 to enable`);
         });
     }
     
@@ -42,75 +41,81 @@ function loadSounds() {
         for (let [name, data] of Object.entries(sounds)) {
             if (data.available) available.push(name);
         }
-        console.log(`🎵 Audio system ready! Available sounds: ${available.length > 0 ? available.join(', ') : 'none yet'}`);
+        console.log(`🎵 Audio ready! Sounds: ${available.length > 0 ? available.join(', ') : 'none'}`);
     }, 500);
 }
 
-// Force enable audio immediately on ANY click
+// Enable audio
 function enableAudio() {
     if (audioEnabled) return;
     
-    // Play a silent sound to unlock audio
     let testAudio = new Audio();
     testAudio.volume = 0;
     testAudio.play().then(() => {
         audioEnabled = true;
-        console.log("🔊 AUDIO ENABLED! Sounds will now play.");
+        console.log("🔊 AUDIO ENABLED!");
         
-        // Hide the hint
         let hint = document.getElementById('audioHint');
-        if (hint) {
-            hint.style.opacity = '0';
-            setTimeout(() => hint.style.display = 'none', 500);
+        if (hint) hint.style.display = 'none';
+        
+        let enableBtn = document.getElementById('enableAudioBtn');
+        if (enableBtn) {
+            enableBtn.style.display = 'none';
         }
+        
         testAudio.pause();
     }).catch(e => {
-        console.log("Audio enable failed, will retry on next click");
+        console.log("Click the button to enable audio");
     });
 }
 
 // Play sound function
 function playSound(soundName) {
-    // If audio not enabled yet, try to enable it
-    if (!audioEnabled) {
-        enableAudio();
-        // Don't play the sound yet, wait for next click
-        return;
-    }
+    if (!audioEnabled) return;
     
     const soundData = sounds[soundName];
     if (soundData && soundData.available) {
         let audio = soundData.audio;
         audio.currentTime = 0;
-        audio.play().catch(e => {
-            // Silent fail
-        });
+        audio.play().catch(e => {});
     }
 }
 
-// Enable audio on ANY user interaction - click, keypress, touch
-function handleUserInteraction() {
-    if (!audioEnabled) {
+// Create enable button if it doesn't exist
+function createAudioButton() {
+    if (document.getElementById('enableAudioBtn')) return;
+    
+    let btn = document.createElement('button');
+    btn.id = 'enableAudioBtn';
+    btn.innerHTML = '🔊 ENABLE SOUND';
+    btn.style.position = 'fixed';
+    btn.style.bottom = '20px';
+    btn.style.right = '20px';
+    btn.style.backgroundColor = '#ffaa44';
+    btn.style.color = '#1a1a2e';
+    btn.style.border = 'none';
+    btn.style.padding = '12px 24px';
+    btn.style.borderRadius = '50px';
+    btn.style.fontWeight = 'bold';
+    btn.style.fontSize = '1rem';
+    btn.style.cursor = 'pointer';
+    btn.style.zIndex = '1000';
+    btn.style.fontFamily = 'monospace';
+    btn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+    btn.style.animation = 'pulse 1.5s infinite';
+    
+    btn.onclick = function() {
         enableAudio();
-    }
-}
-
-// Listen for ALL user interactions
-document.addEventListener('click', handleUserInteraction);
-document.addEventListener('keydown', handleUserInteraction);
-document.addEventListener('touchstart', handleUserInteraction);
-document.addEventListener('keypress', handleUserInteraction);
-
-// Also listen for game canvas clicks
-const canvas = document.getElementById('gameCanvas');
-if (canvas) {
-    canvas.addEventListener('click', handleUserInteraction);
+    };
+    
+    document.body.appendChild(btn);
 }
 
 // Initialize when page loads
 window.addEventListener('load', () => {
     loadSounds();
-    console.log("🎮 PlayLive Ready! Click anywhere to enable audio.");
+    createAudioButton();
+    console.log("🎮 PlayLive Ready! Click 'ENABLE SOUND' button to enable audio.");
 });
 
 // Export for game.js
