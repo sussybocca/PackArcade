@@ -58,7 +58,7 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 24px;
       padding: 0.75rem 0.5rem;
-      min-width: 220px;
+      min-width: 260px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
       opacity: 0;
       transform: scale(0.95);
@@ -116,6 +116,70 @@
       margin: 0.5rem 0.5rem;
     }
 
+    /* search section styles */
+    .search-section {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.6rem 1rem 0.6rem 2.5rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 40px;
+      color: #eef2ff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .search-input::placeholder {
+      color: #6b7299;
+    }
+
+    .quick-search-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .quick-search-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 40px;
+      padding: 0.4rem 0.9rem;
+      color: #b8bfff;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-search-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.02);
+    }
+
     /* Chromebook badge inside menu */
     #chromebook-badge-container {
       margin: 0.5rem 0.5rem 0.3rem;
@@ -162,6 +226,25 @@
 
   <!-- Custom context menu (hidden by default) -->
   <div id="customContextMenu" class="context-menu">
+    <div class="context-menu-header">🔍 SEARCH GAMES</div>
+    
+    <!-- Search Section -->
+    <div class="search-section">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔎</span>
+        <input type="text" id="gameSearchInput" class="search-input" placeholder="Search unblocked games, free games...">
+      </div>
+      <div class="quick-search-buttons">
+        <button class="quick-search-btn" data-query="unblocked games">🎮 Unblocked Games</button>
+        <button class="quick-search-btn" data-query="free games">✨ Free Games</button>
+        <button class="quick-search-btn" data-query="online games">🌐 Online Games</button>
+        <button class="quick-search-btn" data-query="io games">🎯 .io Games</button>
+        <button class="quick-search-btn" data-query="2 player games">👥 2 Player Games</button>
+        <button class="quick-search-btn" data-query="car games">🚗 Car Games</button>
+      </div>
+    </div>
+    
+    <div class="context-menu-separator"></div>
     <div class="context-menu-header">⚡ DIMENSION SELECTOR</div>
     <a href="/launcher.html" class="context-menu-item">⬇️ Install Arcade Web App</a>
     <a href="Pack-Studio.html" class="context-menu-item">🎮 Studio</a>
@@ -211,7 +294,62 @@
         menu.style.left = left + 'px';
         menu.style.top = top + 'px';
         menu.classList.add('show');
+        
+        // Focus the search input when menu opens
+        setTimeout(() => {
+          const searchInput = document.getElementById('gameSearchInput');
+          if (searchInput) {
+            searchInput.focus();
+          }
+        }, 50);
       }
+
+      // ---------- SEARCH FUNCTIONALITY ----------
+      function performSearch(query) {
+        if (!query || query.trim() === '') return;
+        
+        // Encode the query for URL
+        const encodedQuery = encodeURIComponent(query.trim());
+        
+        // Open Google search in a new tab with the query
+        const searchUrl = `https://www.google.com/search?q=${encodedQuery}+site:packarcade.xyz+OR+unblocked+games`;
+        
+        // Also try to search within popular game sites
+        const gameSites = [
+          'https://www.google.com/search?q=' + encodedQuery + '+unblocked+games',
+          'https://www.google.com/search?q=' + encodedQuery + '+free+online+games'
+        ];
+        
+        // Open the primary search
+        window.open(searchUrl, '_blank');
+        
+        // Hide menu after search
+        hideMenu();
+      }
+
+      // Handle search input submission
+      const searchInput = document.getElementById('gameSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch(searchInput.value);
+          }
+        });
+      }
+
+      // Handle quick search buttons
+      const quickButtons = document.querySelectorAll('.quick-search-btn');
+      quickButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const query = button.getAttribute('data-query');
+          if (query) {
+            performSearch(query);
+          }
+        });
+      });
 
       // Global right‑click handler for the main document
       document.addEventListener('contextmenu', (e) => {
@@ -237,8 +375,8 @@
       window.addEventListener('scroll', hideMenu);
       window.addEventListener('resize', hideMenu);
 
-      // Hide menu when any clickable item inside it is clicked
-      const clickableItems = menu.querySelectorAll('a, button, .context-menu-item');
+      // Hide menu when any clickable item inside it is clicked (except search input and buttons)
+      const clickableItems = menu.querySelectorAll('a, .context-menu-item:not(#gameSearchInput):not(.quick-search-btn)');
       for (let item of clickableItems) {
         item.addEventListener('click', (e) => {
           // Allow the click to go through (e.g., follow the link) but hide the menu
@@ -285,6 +423,39 @@
           badgeContainer.style.display = 'block';
         }
       }
+
+      // ---------- ADDITIONAL SEARCH QUERIES FOR ANALYTICS ----------
+      // This tracks popular search queries that users might be looking for
+      const popularGameQueries = [
+        'unblocked games',
+        'free games',
+        'online games',
+        'io games',
+        '2 player games',
+        'car games',
+        'shooting games',
+        'action games',
+        'puzzle games',
+        'adventure games',
+        'retro games',
+        'multiplayer games',
+        'battle royale games',
+        'racing games',
+        'sports games',
+        'strategy games',
+        'simulation games',
+        'horror games',
+        'anime games',
+        'pokemon games',
+        'mario games',
+        'minecraft games',
+        'among us games',
+        'fortnite games',
+        'roblox games'
+      ];
+      
+      // Log search queries to console for analytics (optional)
+      console.log('Game Hub Loaded - Popular search queries available:', popularGameQueries.length);
     })();
   </script>
 </body>
