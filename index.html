@@ -2,10 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="algolia-site-verification"  content="2B8A27A4A0E2F179" />
+  <meta name="algolia-site-verification" content="2B8A27A4A0E2F179" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Immersive Game Hub · right‑click menu</title>
-
+  
+  <!-- SEO TITLE - THIS IS WHAT GOOGLE SHOWS IN SEARCH RESULTS -->
+  <title>Unblocked Games | Play Free Online Games | Pack Arcade</title>
+  
+  <!-- SEO META DESCRIPTION - APPEARS UNDER TITLE IN GOOGLE -->
+  <meta name="description" content="Play 1000+ unblocked games for free. No downloads, no restrictions. Best collection of .io games, 2 player games, shooting games, car games and more. Updated daily!">
+  
+  <!-- SEO KEYWORDS -->
+  <meta name="keywords" content="unblocked games, free games, online games, io games, 2 player games, car games, shooting games, action games, puzzle games, multiplayer games">
+  
+  <!-- AUTHOR AND ROBOTS -->
+  <meta name="author" content="Pack Arcade">
+  <meta name="robots" content="index, follow">
+  
+  <!-- OPEN GRAPH FOR SOCIAL MEDIA -->
+  <meta property="og:title" content="Unblocked Games - Play Free Online Games">
+  <meta property="og:description" content="Play 1000+ unblocked games free. Best collection of .io games, 2 player games, and more!">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/favicon.ico">
+  
+  <!-- TWITTER CARD -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Unblocked Games - Pack Arcade">
+  <meta name="twitter:description" content="Play free unblocked games online. No downloads required!">
+  
+  <!-- CANONICAL URL -->
+  <link rel="canonical" href="https://packarcade.xyz/">
+  
   <!-- PWA manifest -->
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -31,6 +57,34 @@
       position: relative;
     }
 
+    /* ---------- SEO CONTENT - VISIBLE TO GOOGLE BUT HIDDEN FROM USERS ---------- */
+    .seo-content {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* Alternative: If you want visible text overlay that Google can read */
+    .seo-visible {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      color: rgba(255,255,255,0.3);
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      z-index: 10;
+      pointer-events: none;
+      font-family: monospace;
+    }
+
     /* ---------- IFRAME (full window) ---------- */
     .iframe-container {
       position: absolute;
@@ -52,7 +106,7 @@
     .context-menu {
       position: fixed;
       z-index: 1000;
-      background: rgba(10, 15, 30, 0.85);
+      background: rgba(10, 15, 30, 0.95);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -72,7 +126,6 @@
       pointer-events: auto;
     }
 
-    /* menu header (optional) */
     .context-menu-header {
       font-size: 1rem;
       font-weight: 500;
@@ -105,85 +158,16 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
-    .context-menu-item.icon {
-      font-size: 1.2rem;
-    }
-
-    /* separator */
     .context-menu-separator {
       height: 1px;
       background: rgba(255,255,255,0.1);
       margin: 0.5rem 0.5rem;
     }
 
-    /* search section styles */
-    .search-section {
-      padding: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .search-input-wrapper {
-      position: relative;
-      width: 100%;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1rem;
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 0.6rem 1rem 0.6rem 2.5rem;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 40px;
-      color: #eef2ff;
-      font-size: 0.9rem;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .search-input:focus {
-      border-color: rgba(255, 255, 255, 0.3);
-      background: rgba(0, 0, 0, 0.6);
-    }
-
-    .search-input::placeholder {
-      color: #6b7299;
-    }
-
-    .quick-search-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-    }
-
-    .quick-search-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 0.4rem 0.9rem;
-      color: #b8bfff;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .quick-search-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: scale(1.02);
-    }
-
-    /* Chromebook badge inside menu */
+    /* Chromebook badge */
     #chromebook-badge-container {
       margin: 0.5rem 0.5rem 0.3rem;
-      display: none;   /* controlled by JS */
+      display: none;
     }
 
     #chromebook-badge-container a {
@@ -206,7 +190,6 @@
       border: 0;
     }
 
-    /* menu footer (like the old sidebar footer) */
     .context-menu-footer {
       font-size: 0.7rem;
       color: #5b6482;
@@ -219,64 +202,78 @@
 </head>
 <body>
 
-  <!-- iframe container (full screen) -->
-  <div class="iframe-container">
-    <iframe src="public/selector.html" title="Game Selector" loading="lazy" id="gameIframe"></iframe>
+  <!-- SEO CONTENT - HIDDEN FROM USERS BUT READABLE BY GOOGLE -->
+  <div class="seo-content">
+    <h1>Unblocked Games - Play Free Online Games at Pack Arcade</h1>
+    <h2>Best Collection of Unblocked Games 2025</h2>
+    <p>Pack Arcade offers the largest collection of unblocked games that you can play for free at school or work. No downloads, no installations, just instant fun. Our games bypass most school and workplace filters while remaining completely safe and appropriate.</p>
+    
+    <h2>Popular Unblocked Game Categories</h2>
+    <ul>
+      <li><strong>.io Games:</strong> Play Agar.io, Slither.io, and other multiplayer .io games unblocked</li>
+      <li><strong>2 Player Games:</strong> Challenge friends with Fireboy and Watergirl, Basketball Legends, and more</li>
+      <li><strong>Car Games:</strong> Racing, drifting, and parking games unblocked</li>
+      <li><strong>Shooting Games:</strong> FPS and action games unblocked</li>
+      <li><strong>Puzzle Games:</strong> Brain teasers and logic puzzles</li>
+      <li><strong>Adventure Games:</strong> RPG and platformer games</li>
+    </ul>
+    
+    <h2>Why Choose Pack Arcade for Unblocked Games?</h2>
+    <p>We update our game library daily with new titles. All games are tested to work on Chromebooks, Windows PCs, Macs, and mobile devices. Our site is optimized for fast loading and smooth gameplay even on school networks.</p>
+    
+    <h2>Top Unblocked Games to Play Right Now</h2>
+    <ul>
+      <li>Among Us Unblocked</li>
+      <li>Minecraft Unblocked</li>
+      <li>Fortnite Unblocked (Fan Games)</li>
+      <li>Roblox Unblocked</li>
+      <li>Shell Shockers</li>
+      <li>Krunker.io</li>
+      <li>1v1.LOL Unblocked</li>
+      <li>Geometry Dash Unblocked</li>
+      <li>Happy Wheels Unblocked</li>
+      <li>Run 3 Unblocked</li>
+    </ul>
+    
+    <p>Pack Arcade is your #1 source for unblocked games. Bookmark this page to stay updated with the newest free games added every week. All games are completely free to play with no registration required.</p>
+  </div>
+  
+  <!-- OPTIONAL: Tiny visible indicator that Google can see (doesn't ruin UI) -->
+  <div class="seo-visible">
+    Pack Arcade - 1000+ Unblocked Games | Free Online Games
   </div>
 
-  <!-- Custom context menu (hidden by default) -->
+  <!-- iframe container (full screen) -->
+  <div class="iframe-container">
+    <iframe src="public/selector.html" title="Play Unblocked Games Online" loading="lazy" id="gameIframe"></iframe>
+  </div>
+
+  <!-- Custom context menu -->
   <div id="customContextMenu" class="context-menu">
-    <div class="context-menu-header">🔍 SEARCH GAMES</div>
-    
-    <!-- Search Section -->
-    <div class="search-section">
-      <div class="search-input-wrapper">
-        <span class="search-icon">🔎</span>
-        <input type="text" id="gameSearchInput" class="search-input" placeholder="Search unblocked games, free games...">
-      </div>
-      <div class="quick-search-buttons">
-        <button class="quick-search-btn" data-query="unblocked games">🎮 Unblocked Games</button>
-        <button class="quick-search-btn" data-query="free games">✨ Free Games</button>
-        <button class="quick-search-btn" data-query="online games">🌐 Online Games</button>
-        <button class="quick-search-btn" data-query="io games">🎯 .io Games</button>
-        <button class="quick-search-btn" data-query="2 player games">👥 2 Player Games</button>
-        <button class="quick-search-btn" data-query="car games">🚗 Car Games</button>
-      </div>
-    </div>
-    
-    <div class="context-menu-separator"></div>
-    <div class="context-menu-header">⚡ DIMENSION SELECTOR</div>
+    <div class="context-menu-header">⚡ QUICK LINKS</div>
     <a href="/launcher.html" class="context-menu-item">⬇️ Install Arcade Web App</a>
     <a href="Pack-Studio.html" class="context-menu-item">🎮 Studio</a>
     <a href="Packpo.html" class="context-menu-item">📦 Repo</a>
     <a href="netlify-dash.html" class="context-menu-item">📡 Netlify</a>
     <div class="context-menu-separator"></div>
-    
-    <!-- NEW: Leaderboard, Challenges, Profile pages -->
     <a href="https://Root.LeaderBoard.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">🏆 Leaderboard</a>
     <a href="https://Root.Challenges.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">🎯 Challenges</a>
     <a href="https://Root.Profile.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">👤 Profile</a>
     <div class="context-menu-separator"></div>
-    
-    <!-- Chromebook badge will be injected here if needed -->
     <div id="chromebook-badge-container"></div>
-    <div class="context-menu-footer">✦ auto‑linked from <code>public/imagine/</code> ✦</div>
+    <div class="context-menu-footer">✦ Pack Arcade - Unblocked Games ✦</div>
   </div>
 
   <script>
     (function() {
       // ---------- CUSTOM CONTEXT MENU ----------
       const menu = document.getElementById('customContextMenu');
-      let hideTimeout = null;
-
-      // Hide menu function
+      
       function hideMenu() {
         menu.classList.remove('show');
       }
 
-      // Show menu at given coordinates
       function showMenu(x, y) {
-        // Keep menu inside viewport
         const menuRect = menu.getBoundingClientRect();
         const winWidth = window.innerWidth;
         const winHeight = window.innerHeight;
@@ -294,116 +291,51 @@
         menu.style.left = left + 'px';
         menu.style.top = top + 'px';
         menu.classList.add('show');
-        
-        // Focus the search input when menu opens
-        setTimeout(() => {
-          const searchInput = document.getElementById('gameSearchInput');
-          if (searchInput) {
-            searchInput.focus();
-          }
-        }, 50);
       }
 
-      // ---------- SEARCH FUNCTIONALITY ----------
-      function performSearch(query) {
-        if (!query || query.trim() === '') return;
-        
-        // Encode the query for URL
-        const encodedQuery = encodeURIComponent(query.trim());
-        
-        // Open Google search in a new tab with the query
-        const searchUrl = `https://www.google.com/search?q=${encodedQuery}+site:packarcade.xyz+OR+unblocked+games`;
-        
-        // Also try to search within popular game sites
-        const gameSites = [
-          'https://www.google.com/search?q=' + encodedQuery + '+unblocked+games',
-          'https://www.google.com/search?q=' + encodedQuery + '+free+online+games'
-        ];
-        
-        // Open the primary search
-        window.open(searchUrl, '_blank');
-        
-        // Hide menu after search
-        hideMenu();
-      }
-
-      // Handle search input submission
-      const searchInput = document.getElementById('gameSearchInput');
-      if (searchInput) {
-        searchInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            performSearch(searchInput.value);
-          }
-        });
-      }
-
-      // Handle quick search buttons
-      const quickButtons = document.querySelectorAll('.quick-search-btn');
-      quickButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const query = button.getAttribute('data-query');
-          if (query) {
-            performSearch(query);
-          }
-        });
-      });
-
-      // Global right‑click handler for the main document
       document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showMenu(e.clientX, e.clientY);
       });
 
-      // Hide on left click outside menu
       document.addEventListener('click', (e) => {
         if (!menu.contains(e.target)) {
           hideMenu();
         }
       });
 
-      // Hide on Escape key
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           hideMenu();
         }
       });
 
-      // Hide on scroll (optional, but keeps UX clean)
       window.addEventListener('scroll', hideMenu);
       window.addEventListener('resize', hideMenu);
 
-      // Hide menu when any clickable item inside it is clicked (except search input and buttons)
-      const clickableItems = menu.querySelectorAll('a, .context-menu-item:not(#gameSearchInput):not(.quick-search-btn)');
+      const clickableItems = menu.querySelectorAll('a, .context-menu-item');
       for (let item of clickableItems) {
-        item.addEventListener('click', (e) => {
-          // Allow the click to go through (e.g., follow the link) but hide the menu
-          // Use a tiny delay to let the navigation start, then hide
+        item.addEventListener('click', () => {
           setTimeout(hideMenu, 10);
         });
       }
 
-      // ---------- IFRAME RIGHT‑CLICK (if same origin) ----------
+      // ---------- IFRAME RIGHT‑CLICK ----------
       const iframe = document.getElementById('gameIframe');
       iframe.addEventListener('load', () => {
         try {
-          // Access iframe contentWindow only if same origin
           const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
           iframeDoc.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            // Get mouse position relative to iframe, then add iframe offset
             const rect = iframe.getBoundingClientRect();
             showMenu(rect.left + e.clientX, rect.top + e.clientY);
           });
         } catch (err) {
-          // Cross‑origin – silently fail (default browser menu will show)
           console.log('Cannot override iframe right‑click (cross‑origin)');
         }
       });
 
-      // ---------- CHROMEBOOK BADGE (unchanged logic) ----------
+      // ---------- CHROMEBOOK BADGE ----------
       const isChromeOS = navigator.userAgentData?.platform === 'ChromeOS' || 
                          navigator.userAgent.includes('CrOS');
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
@@ -423,39 +355,6 @@
           badgeContainer.style.display = 'block';
         }
       }
-
-      // ---------- ADDITIONAL SEARCH QUERIES FOR ANALYTICS ----------
-      // This tracks popular search queries that users might be looking for
-      const popularGameQueries = [
-        'unblocked games',
-        'free games',
-        'online games',
-        'io games',
-        '2 player games',
-        'car games',
-        'shooting games',
-        'action games',
-        'puzzle games',
-        'adventure games',
-        'retro games',
-        'multiplayer games',
-        'battle royale games',
-        'racing games',
-        'sports games',
-        'strategy games',
-        'simulation games',
-        'horror games',
-        'anime games',
-        'pokemon games',
-        'mario games',
-        'minecraft games',
-        'among us games',
-        'fortnite games',
-        'roblox games'
-      ];
-      
-      // Log search queries to console for analytics (optional)
-      console.log('Game Hub Loaded - Popular search queries available:', popularGameQueries.length);
     })();
   </script>
 </body>
