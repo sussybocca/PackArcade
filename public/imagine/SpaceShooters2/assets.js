@@ -27,18 +27,18 @@ const builtIn = {
         { name: 'laser2', src: 'sounds/phaser.mp3', label: 'Phaser' },
         { name: 'laser3', src: 'sounds/blaster.mp3', label: 'Blaster' },
         { name: 'explode1', src: 'sounds/dragon-studio-loud-explosion-425457.mp3', label: 'Big Boom' },
-        { name: 'explode2', src: 'sounds/explode2.mp3', label: 'Small Pop' },
+        { name: 'explode2', src: 'sounds/explode.mp3', label: 'Small Pop' },
         { name: 'bgm1', src: 'sounds/universfield-horror-background-atmosphere-156462.mp3', label: 'Horror Atmosphere' },
-        { name: 'bgm2', src: 'sounds/space-ambient.mp3', label: 'Space Ambient' }
+        { name: 'bgm2', src: '../../audio/LobbyMusic.mp3', label: 'Space Ambient' }
     ],
     videos: [
         { name: 'nebula1', src: 'sounds/139106-771366016_small.mp4', label: 'Nebula' },
-        { name: 'stars1', src: 'videos/stars.mp4', label: 'Stars' },
-        { name: 'galaxy1', src: 'videos/galaxy.mp4', label: 'Galaxy' }
+        { name: 'stars1', src: '../../Videos/bg.mp4', label: 'Stars' },
+        { name: 'galaxy1', src: 'sounds/139106-771366016_small.mp4', label: 'Galaxy' }
     ],
     models: [   // 3D models (FBX)
-        { name: 'player', src: 'models/Player.FBX', label: 'Player Ship' },
-        { name: 'enemy1', src: 'models/enemy.FBX', label: 'Enemy Ship' }
+        { name: 'player', src: 'models/Player.fbx', label: 'Player Ship' },
+        { name: 'enemy1', src: 'models/enemy.fbx', label: 'Enemy Ship' }
     ]
 };
 

@@ -14,6 +14,7 @@ let onPlayerDisconnect = null;
 // Initialize PeerJS with a random ID (host) or specific ID (joiner)
 function initPeer(asHost, code, callbacks) {
     return new Promise((resolve, reject) => {
+        isHost = !!asHost;
         onPlayerJoined = callbacks.onPlayerJoined;
         onEnemyUpdate = callbacks.onEnemyUpdate;
         onPlayerDisconnect = callbacks.onPlayerDisconnect;
@@ -91,6 +92,7 @@ function disconnect() {
     if (peer) peer.destroy();
     conn = null;
     peer = null;
+    isHost = false;
 }
 
 window.network = {
