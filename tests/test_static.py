@@ -38,5 +38,5 @@ for path in ['index.html','play.html',*[str(p.relative_to(BASE)) for p in (BASE/
 for path in ['public/arcade-core.js','public/arcade-next.js','public/player-next.js','tools/import-github-game.mjs','netlify/functions/arcade-event.js','netlify/functions/arcade-stats.js']:
  p=BASE/path;r=subprocess.run(['node','--check',str(p)],capture_output=True,text=True);assert r.returncode==0,(path,r.stderr)
 css=(BASE/'public/arcade-next.css').read_text();assert '@media(max-width:610px)' in css and '@media(max-width:860px)' in css and '@media(max-width:1160px)' in css
-ui=(BASE/'index.html').read_text();assert 'data-go="favorites"' in ui and 'data-go="recent"' in ui and 'mobile-nav' in ui
+ui=(BASE/'index.html').read_text();assert 'data-go="favorites"' in ui and 'data-go="recent"' in ui and 'mobile-nav' in ui and 'mobileSettingsButton' in ui
 print('Static JS, responsive CSS, game and HTML assertions passed')
