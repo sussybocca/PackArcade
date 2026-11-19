@@ -1,0 +1,24 @@
+name: PackArcade NEXT integrity checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate game catalog and all referenced HTML entry points
+        env:
+          PACKARCADE_FULL_CHECK: '1'
+        run: python tests/test_static.py
+      - name: Test anonymous metrics functions
+        run: node --test tests/analytics.test.cjs

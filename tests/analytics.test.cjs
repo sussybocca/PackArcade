@@ -1,0 +1,13 @@
+const test=require('node:test'),assert=require('node:assert/strict'),Module=require('node:module');
+let queries=[],returnError=null;const mockDb={rpc:async(name,params)=>{queries.push({name,params});return {error:returnError}},from:()=>({select(){return this},limit:async()=>({data:[],error:null}),gte(){return this}})};
+const old=Module._load;Module._load=function(name,...args){if(name==='@supabase/supabase-js')return{createClient:()=>mockDb};return old.call(this,name,...args)};
+const saved={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SERVICE_KEY};process.env.SUPABASE_URL='https://unit-test.example';process.env.SUPABASE_SERVICE_KEY='testing-only';
+const event=require('../netlify/functions/arcade-event.js'),stats=require('../netlify/functions/arcade-stats.js');
+function req(type,value,method='POST',origin='https://packarcade.xyz'){return{httpMethod:method,headers:{origin},body:JSON.stringify({type,value})}}
+test('View counts are submitted without user IDs',async()=>{queries=[];const r=await event.handler(req('view','neon-serpent'));assert.equal(r.statusCode,200);assert.deepEqual(queries,[{name:'arcade_record_view',params:{p_game_id:'neon-serpent'}}]);assert(!event.handler.toString().includes('player_id'))});
+test('Search aggregates sanitized terms',async()=>{queries=[];const r=await event.handler(req('search','  PUZZLE  GAME  '));assert.equal(r.statusCode,200);assert.deepEqual(queries,[{name:'arcade_record_search',params:{p_term:'puzzle game'}}])});
+test('Reject illegal origins, invalid game IDs and excess bodies',async()=>{assert.equal((await event.handler(req('view','fine','POST','https://attacker.invalid'))).statusCode,403);assert.equal((await event.handler(req('view','../../secure'))).statusCode,400);assert.equal((await event.handler(req('view','nonexistent-game-xyz'))).statusCode,400);assert.equal((await event.handler(req('search','a'))).statusCode,400);assert.equal((await event.handler({...req('view','valid'),body:'x'.repeat(900)})).statusCode,413)});
+test('Reject incorrect method',async()=>assert.equal((await event.handler(req('view','valid','GET'))).statusCode,405));
+test('Stats report available with valid (mock) aggregate tables',async()=>{const response=await stats.handler({httpMethod:'GET'});const data=JSON.parse(response.body);assert.equal(response.statusCode,200);assert.equal(data.available,true);assert.deepEqual(data.games,[])});
+test('Stats degrade safely if Supabase throws',async()=>{returnError={message:'mock failure'};const response=await event.handler(req('view','neon-serpent'));assert.equal(response.statusCode,503);returnError=null});
+process.on('exit',()=>{Module._load=old;process.env.SUPABASE_URL=saved.url;process.env.SUPABASE_SERVICE_KEY=saved.key});
