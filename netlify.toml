@@ -1,294 +1,107 @@
+# PackArcade NEXT — one anonymous arcade, no user-site publishing or subdomain routing.
 [build]
   publish = "."
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
-# === FUNCTIONS FIRST - THIS IS CRITICAL ===
+# Retire old creator, account, and site-administration frontends.
 [[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+  from = "/dashboard.html"
+  to = "/"
+  status = 301
   force = true
-
-# === USER-CREATED SUBDOMAINS (EDITOR/DASHBOARD) ===
 [[redirects]]
-  from = "https://editor.packarcade.xyz/*"
-  to = "/public/editor.html"
-  status = 200
+  from = "/game-builder.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://dashboard.packarcade.xyz/*"
-  to = "/dashboard.html"
-  status = 200
+  from = "/Pack-Studio.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://studio.packarcade.xyz/*"
-  to = "/dashboard.html"
-  status = 200
+  from = "/SimpleGames.html"
+  to = "/"
+  status = 301
   force = true
-
-# === COLON-BASED ROUTING (:Root.LeaderBoard) ===
 [[redirects]]
-  from = "https://root.leaderboard.packarcade.xyz/*"
-  to = "/leaderboard.html"
-  status = 200
+  from = "/Packpo.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://root.challenges.packarcade.xyz/*"
-  to = "/challenges.html"
-  status = 200
+  from = "/netlify-dash.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://root.profile.packarcade.xyz/*"
-  to = "/profile.html"
-  status = 200
+  from = "/passes.html"
+  to = "/"
+  status = 301
   force = true
-
-# === messed up url (.....messed.up.urls) ===
 [[redirects]]
-  from = "https://root.foot.nut.cut.dut.fuck.index.packarcade.xyz/*"
-  to = "/public/root-index/:splat"
-  status = 200
+  from = "/profile.html"
+  to = "/"
+  status = 301
   force = true
-
-# === STANDARD SUBDOMAINS ===
 [[redirects]]
-  from = "https://leaderboard.packarcade.xyz/*"
-  to = "/leaderboard.html"
-  status = 200
+  from = "/versions.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://challenges.packarcade.xyz/*"
-  to = "/challenges.html"
-  status = 200
+  from = "/leaderboard.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://profile.packarcade.xyz/*"
-  to = "/profile.html"
-  status = 200
+  from = "/challenges.html"
+  to = "/"
+  status = 301
   force = true
-
-# === GAME SUBDOMAINS (explicit overrides - MUST COME BEFORE DYNAMIC) ===
 [[redirects]]
-  from = "https://nebula.packarcade.xyz/*"
-  to = "/public/imagine/nebula-drifter.html"
-  status = 200
+  from = "/analytics.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://samurai.packarcade.xyz/*"
-  to = "/public/imagine/echoes-samurai.html"
-  status = 200
+  from = "/explore.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://quantum.packarcade.xyz/*"
-  to = "/public/imagine/quantum-puzzles.html"
-  status = 200
+  from = "/public/selector.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://luma.packarcade.xyz/*"
-  to = "/public/imagine/luma-island.html"
-  status = 200
+  from = "/public/editor.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://space.packarcade.xyz/*"
-  to = "/public/imagine/SpaceShooters.html"
-  status = 200
+  from = "/public/arcades.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://mario.packarcade.xyz/*"
-  to = "/public/imagine/SuperMario/sm64.html"
-  status = 200
+  from = "/public/explore.html"
+  to = "/"
+  status = 301
   force = true
-
 [[redirects]]
-  from = "https://tetris.packarcade.xyz/*"
-  to = "/public/imagine/tetris.html"
-  status = 200
+  from = "/public/portal/*"
+  to = "/"
+  status = 301
   force = true
-
-[[redirects]]
-  from = "https://pacman.packarcade.xyz/*"
-  to = "/public/imagine/PackMan/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://2048.packarcade.xyz/*"
-  to = "/public/imagine/2048.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://flappy.packarcade.xyz/*"
-  to = "/public/imagine/flappybird.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://slope.packarcade.xyz/*"
-  to = "/public/imagine/Slope/slope.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://subway.packarcade.xyz/*"
-  to = "/public/imagine/SubwaySufers/subwaysurferssanfrancisco.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://minecraft.packarcade.xyz/*"
-  to = "/public/imagine/MineCraft/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://geometry.packarcade.xyz/*"
-  to = "/public/imagine/GeoMentry_Dash/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://run.packarcade.xyz/*"
-  to = "/public/imagine/run/runner/run.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://run3.packarcade.xyz/*"
-  to = "/public/imagine/Run/Runner/run3.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://fruitninja.packarcade.xyz/*"
-  to = "/public/imagine/FruitNinja/fruitninja.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://cookieclicker.packarcade.xyz/*"
-  to = "/public/imagine/cookieclicker.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://bitlife.packarcade.xyz/*"
-  to = "/public/imagine/bitlife.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://bloonstd.packarcade.xyz/*"
-  to = "/public/imagine/bloonsTD.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://angrybirds.packarcade.xyz/*"
-  to = "/public/imagine/angrybirds.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://ageofwar.packarcade.xyz/*"
-  to = "/public/imagine/ageofwar.html"
-  status = 200
-  force = true
-
-# === CREATIVE SUBDOMAINS ===
-[[redirects]]
-  from = "https://portal.packarcade.xyz/"
-  to = "/public/portal/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://portal.packarcade.xyz/*"
-  to = "/public/portal/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://languages.sites.packarcade.xyz/*"
-  to = "/public/languages/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://secret.packarcade.xyz/*"
-  to = "/public/secret/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://door.way.packarcade.xyz/*"
-  to = "/public/doorway/:splat"
-  status = 200
-  force = true
-
-# === LANGUAGE-SPECIFIC SUBDOMAINS ===
-[[redirects]]
-  from = "https://fr.packarcade.xyz/*"
-  to = "/public/fr/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://es.packarcade.xyz/*"
-  to = "/public/es/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://en.packarcade.xyz/*"
-  to = "/public/en/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "https://de.packarcade.xyz/*"
-  to = "/public/de/:splat"
-  status = 200
-  force = true
-
-# === DYNAMIC USER SUBDOMAINS - THIS CATCHES ALL OTHER SUBDOMAINS ===
-[[redirects]]
-  from = "https://*.packarcade.xyz/*"
-  to = "/.netlify/functions/serve-user-site"
-  status = 200
-  force = true
-
-# === MAIN DOMAIN ===
-[[redirects]]
-  from = "packarcade.xyz/*"
-  to = "/index.html"
-  status = 200
-  force = true
-
-# === ERROR PAGES (must be last) ===
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
-
-# === CACHE HEADERS ===
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
-  for = "/*.simple"
+  for = "/public/game-catalog.json"
   [headers.values]
-    Content-Type = "text/plain"
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=60"
+[[headers]]
+  for = "/public/*-next.js"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

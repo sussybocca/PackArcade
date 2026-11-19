@@ -1,361 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="algolia-site-verification" content="2B8A27A4A0E2F179" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- SEO TITLE - THIS IS WHAT GOOGLE SHOWS IN SEARCH RESULTS -->
-  <title>Unblocked Games | Play Free Online Games | Pack Arcade</title>
-  
-  <!-- SEO META DESCRIPTION - APPEARS UNDER TITLE IN GOOGLE -->
-  <meta name="description" content="Play 1000+ unblocked games for free. No downloads, no restrictions. Best collection of .io games, 2 player games, shooting games, car games and more. Updated daily!">
-  
-  <!-- SEO KEYWORDS -->
-  <meta name="keywords" content="unblocked games, free games, online games, io games, 2 player games, car games, shooting games, action games, puzzle games, multiplayer games">
-  
-  <!-- AUTHOR AND ROBOTS -->
-  <meta name="author" content="Pack Arcade">
-  <meta name="robots" content="index, follow">
-  
-  <!-- OPEN GRAPH FOR SOCIAL MEDIA -->
-  <meta property="og:title" content="Unblocked Games - Play Free Online Games">
-  <meta property="og:description" content="Play 1000+ unblocked games free. Best collection of .io games, 2 player games, and more!">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="/favicon.ico">
-  
-  <!-- TWITTER CARD -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Unblocked Games - Pack Arcade">
-  <meta name="twitter:description" content="Play free unblocked games online. No downloads required!">
-  
-  <!-- CANONICAL URL -->
-  <link rel="canonical" href="https://packarcade.xyz/">
-  
-  <!-- PWA manifest -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <script src="/AWA.js" defer></script>
-
-  <style>
-    /* ---------- RESET ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(145deg, #0b0f1c 0%, #1a1f33 100%);
-      position: relative;
-    }
-
-    /* ---------- SEO CONTENT - VISIBLE TO GOOGLE BUT HIDDEN FROM USERS ---------- */
-    .seo-content {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    
-    /* Alternative: If you want visible text overlay that Google can read */
-    .seo-visible {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.5);
-      color: rgba(255,255,255,0.3);
-      font-size: 10px;
-      padding: 5px 10px;
-      border-radius: 8px;
-      z-index: 10;
-      pointer-events: none;
-      font-family: monospace;
-    }
-
-    /* ---------- IFRAME (full window) ---------- */
-    .iframe-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #0e121f;
-    }
-
-    /* ---------- CUSTOM CONTEXT MENU ---------- */
-    .context-menu {
-      position: fixed;
-      z-index: 1000;
-      background: rgba(10, 15, 30, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
-      padding: 0.75rem 0.5rem;
-      min-width: 260px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-      opacity: 0;
-      transform: scale(0.95);
-      transition: opacity 0.1s ease, transform 0.1s ease;
-      pointer-events: none;
-    }
-
-    .context-menu.show {
-      opacity: 1;
-      transform: scale(1);
-      pointer-events: auto;
-    }
-
-    .context-menu-header {
-      font-size: 1rem;
-      font-weight: 500;
-      padding: 0.5rem 1rem 0.3rem;
-      color: #b8bfff;
-      letter-spacing: 0.3px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 0.3rem;
-    }
-
-    .context-menu-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.6rem 1rem;
-      border-radius: 40px;
-      color: #eef2ff;
-      text-decoration: none;
-      font-size: 0.95rem;
-      transition: background 0.15s;
-      margin: 0.1rem 0;
-      border: none;
-      background: transparent;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .context-menu-item:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .context-menu-separator {
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-      margin: 0.5rem 0.5rem;
-    }
-
-    /* Chromebook badge */
-    #chromebook-badge-container {
-      margin: 0.5rem 0.5rem 0.3rem;
-      display: none;
-    }
-
-    #chromebook-badge-container a {
-      display: inline-block;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
-    }
-
-    #chromebook-badge-container a:hover {
-      transform: scale(1.02);
-    }
-
-    #chromebook-badge-container picture img {
-      display: block;
-      width: 100%;
-      max-width: 150px;
-      height: auto;
-      border: 0;
-    }
-
-    .context-menu-footer {
-      font-size: 0.7rem;
-      color: #5b6482;
-      padding: 0.5rem 1rem 0.2rem;
-      text-align: center;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      margin-top: 0.2rem;
-    }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#25122e"><meta name="description" content="PackArcade: play a curated collection of browser games instantly, anonymously, and for free.">
+<link rel="icon" href="/favicon.ico"><link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/public/arcade-next.css"><script src="/public/arcade-core.js" defer></script><script src="/public/arcade-next.js" defer></script>
+<title>PackArcade — Play instantly</title>
 </head>
 <body>
-
-  <!-- SEO CONTENT - HIDDEN FROM USERS BUT READABLE BY GOOGLE -->
-  <div class="seo-content">
-    <h1>Unblocked Games - Play Free Online Games at Pack Arcade</h1>
-    <h2>Best Collection of Unblocked Games 2025</h2>
-    <p>Pack Arcade offers the largest collection of unblocked games that you can play for free at school or work. No downloads, no installations, just instant fun. Our games bypass most school and workplace filters while remaining completely safe and appropriate.</p>
-    
-    <h2>Popular Unblocked Game Categories</h2>
-    <ul>
-      <li><strong>.io Games:</strong> Play Agar.io, Slither.io, and other multiplayer .io games unblocked</li>
-      <li><strong>2 Player Games:</strong> Challenge friends with Fireboy and Watergirl, Basketball Legends, and more</li>
-      <li><strong>Car Games:</strong> Racing, drifting, and parking games unblocked</li>
-      <li><strong>Shooting Games:</strong> FPS and action games unblocked</li>
-      <li><strong>Puzzle Games:</strong> Brain teasers and logic puzzles</li>
-      <li><strong>Adventure Games:</strong> RPG and platformer games</li>
-    </ul>
-    
-    <h2>Why Choose Pack Arcade for Unblocked Games?</h2>
-    <p>We update our game library daily with new titles. All games are tested to work on Chromebooks, Windows PCs, Macs, and mobile devices. Our site is optimized for fast loading and smooth gameplay even on school networks.</p>
-    
-    <h2>Top Unblocked Games to Play Right Now</h2>
-    <ul>
-      <li>Among Us Unblocked</li>
-      <li>Minecraft Unblocked</li>
-      <li>Fortnite Unblocked (Fan Games)</li>
-      <li>Roblox Unblocked</li>
-      <li>Shell Shockers</li>
-      <li>Krunker.io</li>
-      <li>1v1.LOL Unblocked</li>
-      <li>Geometry Dash Unblocked</li>
-      <li>Happy Wheels Unblocked</li>
-      <li>Run 3 Unblocked</li>
-    </ul>
-    
-    <p>Pack Arcade is your #1 source for unblocked games. Bookmark this page to stay updated with the newest free games added every week. All games are completely free to play with no registration required.</p>
-  </div>
-  
-  <!-- OPTIONAL: Tiny visible indicator that Google can see (doesn't ruin UI) -->
-  <div class="seo-visible">
-    Pack Arcade - 1000+ Unblocked Games | Free Online Games
-  </div>
-
-  <!-- iframe container (full screen) -->
-  <div class="iframe-container">
-    <iframe src="public/selector.html" title="Play Unblocked Games Online" loading="lazy" id="gameIframe"></iframe>
-  </div>
-
-  <!-- Custom context menu -->
-  <div id="customContextMenu" class="context-menu">
-    <div class="context-menu-header">⚡ QUICK LINKS</div>
-    <a href="/launcher.html" class="context-menu-item">⬇️ Install Arcade Web App</a>
-    <a href="Pack-Studio.html" class="context-menu-item">🎮 Studio</a>
-    <a href="Packpo.html" class="context-menu-item">📦 Repo</a>
-    <a href="netlify-dash.html" class="context-menu-item">📡 Netlify</a>
-    <div class="context-menu-separator"></div>
-    <a href="https://Root.LeaderBoard.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">🏆 Leaderboard</a>
-    <a href="https://Root.Challenges.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">🎯 Challenges</a>
-    <a href="https://Root.Profile.packarcade.xyz" class="context-menu-item" target="_blank" rel="noopener noreferrer">👤 Profile</a>
-    <div class="context-menu-separator"></div>
-    <div id="chromebook-badge-container"></div>
-    <div class="context-menu-footer">✦ Pack Arcade - Unblocked Games ✦</div>
-  </div>
-
-  <script>
-    (function() {
-      // ---------- CUSTOM CONTEXT MENU ----------
-      const menu = document.getElementById('customContextMenu');
-      
-      function hideMenu() {
-        menu.classList.remove('show');
-      }
-
-      function showMenu(x, y) {
-        const menuRect = menu.getBoundingClientRect();
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
-
-        let left = x;
-        let top = y;
-
-        if (left + menuRect.width > winWidth) {
-          left = winWidth - menuRect.width - 5;
-        }
-        if (top + menuRect.height > winHeight) {
-          top = winHeight - menuRect.height - 5;
-        }
-
-        menu.style.left = left + 'px';
-        menu.style.top = top + 'px';
-        menu.classList.add('show');
-      }
-
-      document.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        showMenu(e.clientX, e.clientY);
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!menu.contains(e.target)) {
-          hideMenu();
-        }
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          hideMenu();
-        }
-      });
-
-      window.addEventListener('scroll', hideMenu);
-      window.addEventListener('resize', hideMenu);
-
-      const clickableItems = menu.querySelectorAll('a, .context-menu-item');
-      for (let item of clickableItems) {
-        item.addEventListener('click', () => {
-          setTimeout(hideMenu, 10);
-        });
-      }
-
-      // ---------- IFRAME RIGHT‑CLICK ----------
-      const iframe = document.getElementById('gameIframe');
-      iframe.addEventListener('load', () => {
-        try {
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-          iframeDoc.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            const rect = iframe.getBoundingClientRect();
-            showMenu(rect.left + e.clientX, rect.top + e.clientY);
-          });
-        } catch (err) {
-          console.log('Cannot override iframe right‑click (cross‑origin)');
-        }
-      });
-
-      // ---------- CHROMEBOOK BADGE ----------
-      const isChromeOS = navigator.userAgentData?.platform === 'ChromeOS' || 
-                         navigator.userAgent.includes('CrOS');
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                           window.navigator.standalone === true;
-
-      if (isChromeOS && !isStandalone) {
-        const badgeContainer = document.getElementById('chromebook-badge-container');
-        if (badgeContainer) {
-          badgeContainer.innerHTML = `
-            <a href="/launcher.html?utm_source=Arcade&utm_campaign=Games" id="add-to-chromebook-link">
-              <picture>
-                <source srcset="https://chromeos.dev/badges/en/dark.svg" media="(prefers-color-scheme: dark)">
-                <img src="https://chromeos.dev/badges/en/primary.svg" alt="Add to Chromebook">
-              </picture>
-            </a>
-          `;
-          badgeContainer.style.display = 'block';
-        }
-      }
-    })();
-  </script>
-</body>
-</html>
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="app-window" id="app">
+  <nav class="rail" aria-label="Main navigation">
+    <a class="brand-icon" href="/" aria-label="PackArcade home"><span>◩</span></a>
+    <div class="rail-links">
+      <button class="rail-button selected" data-go="home" title="Discover" aria-label="Discover"><span class="glyph">⌂</span></button>
+      <button class="rail-button" data-go="popular" title="Most played" aria-label="Most played"><span class="glyph">▦</span></button>
+      <button class="rail-button" data-go="categories" title="Categories" aria-label="Categories"><span class="glyph">▤</span></button>
+      <button class="rail-button" data-go="favorites" title="Favorites" aria-label="Favorites"><span class="glyph">♡</span></button>
+      <button class="rail-button" data-go="recent" title="Recent games" aria-label="Recent games"><span class="glyph">◷</span></button>
+      <button class="rail-button" data-go="library" title="All games" aria-label="All games"><span class="glyph">⊞</span></button>
+    </div>
+    <div class="rail-foot"><button class="rail-button" id="settingsButton" title="Settings" aria-label="Settings"><span class="glyph">⚙</span></button><span class="status-led" title="Anonymous play enabled" aria-label="Anonymous play enabled"></span></div>
+  </nav>
+  <main class="main-layout" id="main">
+    <header class="topbar">
+      <div class="mobile-brand"><span class="brand-mark">◩</span><strong>PackArcade</strong></div>
+      <form class="search-wrap" id="searchForm" role="search"><label class="sr-only" for="searchInput">Search games</label><span class="search-icon" aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search any game..." autocomplete="off" spellcheck="false" minlength="1"><kbd class="search-hint">/</kbd><button type="button" id="clearSearch" aria-label="Clear search" hidden>×</button></form>
+      <nav class="top-links" aria-label="Discover games"><button data-go="popular">Most played</button><button data-go="recent">Recently played</button></nav>
+      <button class="mobile-search-button" id="mobileSearchButton" aria-label="Search games">⌕</button>
+    </header>
+    <div class="body-columns">
+      <div class="content-column">
+        <section class="hero" aria-label="Featured game"><div class="hero-content"><span class="tag"><span class="tag-dot"></span>FEATURED GAME</span><div class="hero-middle"><p class="eyebrow" id="heroCategory">PLAY INSTANTLY</p><h1 id="heroTitle">PackArcade</h1><p class="hero-description" id="heroDescription">Jump into your next game, with no account required.</p><div class="hero-ctas"><button class="pill primary" id="heroPlay"><span>▶</span> Play now</button><button class="pill light" id="heroSave"><span id="heroSaveIcon">♡</span> Save game</button></div></div></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="hero-shape" id="heroShape">✦</div><div class="hero-flare"></div></div><button class="hero-arrow back" id="heroPrev" aria-label="Previous featured game">‹</button><button class="hero-arrow next" id="heroNext" aria-label="Next featured game">›</button><div class="hero-dots" id="heroDots" aria-label="Featured game selector"></div></section>
+        <section class="browse-header" aria-label="Browse games"><div class="section-heading"><h2 id="browseHeading">Most popular games</h2><button class="small-link" id="viewAll">See all <span>›</span></button></div><div class="filters" id="filters" aria-label="Filter by game category"></div></section>
+        <section class="game-grid" id="gameGrid" aria-label="Game collection"><div class="loading-state">Loading game library…</div></section>
+        <div class="show-more-wrap"><button class="show-more" id="showMore" hidden>Show more games <span>↓</span></button></div>
+        <section class="continue-section" id="continueSection"><div class="section-heading"><h2>Recently played</h2><button class="small-link" data-go="recent">See all <span>›</span></button></div><div class="recent-strip" id="recentStrip"></div></section>
+      </div>
+      <aside class="side-column" aria-label="Arcade activity">
+        <section class="reward-card"><span class="reward-small">YOUR ARCADE</span><h2>Play more.<br>Discover more.</h2><p>No sign-ups. No downloads. Just games.</p><button class="reward-button" id="randomGame" aria-label="Play a random game">➜</button></section>
+        <section class="activity-panel"><div class="panel-title"><h2>Most played <small id="activityPeriod">this week</small></h2><button class="small-link" data-go="popular">See all</button></div><div class="live-list" id="liveList"><p class="aside-muted">Finding popular games…</p></div></section>
+        <section class="spotlight-panel" id="spotlight"><div class="spotlight-art" aria-hidden="true"><span class="spotlight-star">✧</span><span class="spotlight-ring"></span></div><h2>Pick up where you left off</h2><p id="spotlightDescription">Your recent games stay on this device and never require an account.</p><button class="spotlight-cta" id="spotlightPlay">Explore games <span>➜</span></button></section>
+      </aside>
+    </div>
+  </main>
+  <aside class="social-rail" aria-label="Quick game categories"><div class="avatar-circle avatar-primary" aria-label="Playing anonymously">◩</div><div class="social-divider"></div><button class="avatar-circle" data-category-shortcut="Action" title="Action games">⚡</button><button class="avatar-circle" data-category-shortcut="Puzzle" title="Puzzle games">◇</button><button class="avatar-circle" data-category-shortcut="Arcade" title="Arcade games">◉</button><button class="avatar-circle" data-category-shortcut="Sports" title="Sports games">◈</button><button class="avatar-circle" data-category-shortcut="Runner" title="Runner games">◆</button><span class="social-spacer"></span><button class="avatar-circle" id="socialRandom" title="Surprise me">✦</button></aside>
+</div>
+<nav class="mobile-nav" aria-label="Mobile navigation"><button class="active" data-go="home"><span>⌂</span><small>Home</small></button><button data-go="popular"><span>▦</span><small>Popular</small></button><button data-go="library"><span>⊞</span><small>Games</small></button><button data-go="favorites"><span>♡</span><small>Saved</small></button><button data-go="recent"><span>◷</span><small>Recent</small></button></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="settings-dialog" id="settingsDialog" hidden><div class="dialog-backdrop" data-close-settings></div><section class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><header><h2 id="settingsTitle">Arcade settings</h2><button id="closeSettings" aria-label="Close settings">×</button></header><p>PackArcade lets you play without an account. Saved games and recent activity are stored only in this browser.</p><label class="setting-line"><span>Reduce animations</span><input type="checkbox" id="reduceMotion"></label><label class="setting-line"><span>Allow anonymous analytics</span><input type="checkbox" id="analyticsOptIn" checked></label><p class="settings-detail">Analytics stores aggregated game launches and searches in Supabase, without player identities. Turning it off stops new events from this browser.</p><button class="danger-link" id="clearLocal">Clear saved and recent games</button><button class="pill primary dialog-done" id="settingsDone">Done</button></section></div>
+</body></html>

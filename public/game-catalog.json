@@ -1,0 +1,856 @@
+{
+  "version": "2026.11.19-next",
+  "source": "PackArcade GitHub main tree",
+  "games": [
+    {
+      "id": "crystal-memory",
+      "name": "Crystal Memory",
+      "path": "/public/imagine/CrystalMemory/index.html",
+      "category": "Puzzle",
+      "description": "Find all matching crystal pairs and beat your best score.",
+      "symbol": "✥",
+      "accent": "#dab5ff",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "orbit-rally",
+      "name": "Orbit Rally",
+      "path": "/public/imagine/OrbitRally/index.html",
+      "category": "Sports",
+      "description": "Rally against a computer opponent in glowing arcade Pong. Mouse, keyboard and touch.",
+      "symbol": "◎",
+      "accent": "#ff9de5",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "neon-serpent",
+      "name": "Neon Serpent",
+      "path": "/public/imagine/NeonSerpent/index.html",
+      "category": "Arcade",
+      "description": "Collect glowing orbs in a neon snake challenge. Keyboard, swipe and touch controls.",
+      "symbol": "ϟ",
+      "accent": "#63f2ad",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "2048",
+      "name": "2048",
+      "path": "/public/imagine/2048.html",
+      "category": "Puzzle",
+      "description": "Merge matching numbered tiles and aim for 2048.",
+      "symbol": "◈",
+      "accent": "#f6aa65",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "tetris",
+      "name": "Tetris",
+      "path": "/public/imagine/tetris.html",
+      "category": "Puzzle",
+      "description": "Arrange falling shapes and clear full lines.",
+      "symbol": "▦",
+      "accent": "#e858af",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "pacman",
+      "name": "Pacman",
+      "path": "/public/imagine/PackMan/index.html",
+      "category": "Arcade",
+      "description": "Navigate the maze, collect points and dodge the ghosts.",
+      "symbol": "◉",
+      "accent": "#efd164",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "flappy-bird",
+      "name": "Flappy Bird",
+      "path": "/public/imagine/flappybird.html",
+      "category": "Casual",
+      "description": "Keep flying between obstacles and chase your best score.",
+      "symbol": "◈",
+      "accent": "#74dada",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "slope",
+      "name": "Slope",
+      "path": "/public/imagine/Slope/slope.html",
+      "category": "Arcade",
+      "description": "Roll through the neon course and stay on track.",
+      "symbol": "◆",
+      "accent": "#68e1a3",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "slope-2-player",
+      "name": "Slope 2 Player",
+      "path": "/public/imagine/Slope/slope2player.html",
+      "category": "Multiplayer",
+      "description": "Challenge a friend on the same keyboard.",
+      "symbol": "◆",
+      "accent": "#6fd8e8",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "slope-3",
+      "name": "Slope 3",
+      "path": "/public/imagine/Slope/slope3.html",
+      "category": "Arcade",
+      "description": "A faster run down an unpredictable slope.",
+      "symbol": "◆",
+      "accent": "#9df56f",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "chess",
+      "name": "Chess",
+      "path": "/public/imagine/chess.html",
+      "category": "Strategy",
+      "description": "Plan moves and find a winning position.",
+      "symbol": "♜",
+      "accent": "#a596e9",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "2048-solitaire",
+      "name": "2048 Solitaire",
+      "path": "/public/imagine/stack.html",
+      "category": "Puzzle",
+      "description": "Stack and combine pieces for a higher score.",
+      "symbol": "▧",
+      "accent": "#f5b675",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "maze",
+      "name": "Maze",
+      "path": "/public/imagine/maze.html",
+      "category": "Puzzle",
+      "description": "Explore passages and find your route to the exit.",
+      "symbol": "⌘",
+      "accent": "#71dfcb",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "janggi",
+      "name": "Janggi",
+      "path": "/public/imagine/janggi.html",
+      "category": "Strategy",
+      "description": "Play the classic Korean strategy board game.",
+      "symbol": "♜",
+      "accent": "#d9b5f6",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "omok",
+      "name": "Omok",
+      "path": "/public/imagine/omok.html",
+      "category": "Strategy",
+      "description": "Line up stones to win a tactical board game.",
+      "symbol": "◉",
+      "accent": "#c4e8f2",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "brick-breaker",
+      "name": "Brick Breaker",
+      "path": "/public/imagine/brick-breaker.html",
+      "category": "Arcade",
+      "description": "Bounce the ball to shatter every brick.",
+      "symbol": "▥",
+      "accent": "#f6819a",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "cookie-clicker",
+      "name": "Cookie Clicker",
+      "path": "/public/imagine/cookieclicker.html",
+      "category": "Idle",
+      "description": "Click, collect upgrades, and build an empire.",
+      "symbol": "◉",
+      "accent": "#c798ef",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "tiny-fishing",
+      "name": "Tiny Fishing",
+      "path": "/public/imagine/TinyFishing/Games/ETC/tinyfishing.html",
+      "category": "Casual",
+      "description": "Cast your line and upgrade your fishing gear.",
+      "symbol": "≈",
+      "accent": "#72bfff",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "crossy-road",
+      "name": "Crossy Road",
+      "path": "/public/imagine/TinyFishing/Games/ETC/crossyroad.htm",
+      "category": "Arcade",
+      "description": "Cross dangerous roads and see how far you go.",
+      "symbol": "▤",
+      "accent": "#f0ce7c",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "duck-life",
+      "name": "Duck Life",
+      "path": "/public/imagine/TinyFishing/Games/ETC/ducklife.html",
+      "category": "Adventure",
+      "description": "Train your duck and take on challenging races.",
+      "symbol": "◈",
+      "accent": "#f1b86c",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "paper-io-2",
+      "name": "Paper.io 2",
+      "path": "/public/imagine/paper.io2/paperio2.htm",
+      "category": "Arcade",
+      "description": "Capture territory while watching your opponents.",
+      "symbol": "⬡",
+      "accent": "#84e3da",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "basketball-legends",
+      "name": "Basketball Legends",
+      "path": "/public/imagine/Basketball/basketballlegends.html",
+      "category": "Sports",
+      "description": "Take the court and make the winning shot.",
+      "symbol": "◉",
+      "accent": "#ea916c",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "basketball-stars",
+      "name": "Basketball Stars",
+      "path": "/public/imagine/Basketball/basketballstars.html",
+      "category": "Sports",
+      "description": "Play head-to-head basketball challenges.",
+      "symbol": "◉",
+      "accent": "#ebbb70",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "basket-random",
+      "name": "Basket Random",
+      "path": "/public/imagine/Basketball/basketrandom.html",
+      "category": "Sports",
+      "description": "Unpredictable basketball with wild physics.",
+      "symbol": "◉",
+      "accent": "#f0bd80",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "basket-bros",
+      "name": "Basket Bros",
+      "path": "/public/imagine/basketbros.html",
+      "category": "Sports",
+      "description": "Fast-paced hoops and arcade basketball action.",
+      "symbol": "◉",
+      "accent": "#ffaa82",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "8-ball-classic",
+      "name": "8 Ball Classic",
+      "path": "/public/imagine/8ballclassic.html",
+      "category": "Sports",
+      "description": "Line up shots and clear the pool table.",
+      "symbol": "◉",
+      "accent": "#8cdaec",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "age-of-war",
+      "name": "Age of War",
+      "path": "/public/imagine/ageofwar.html",
+      "category": "Strategy",
+      "description": "Build your army and advance through the ages.",
+      "symbol": "♜",
+      "accent": "#f7a877",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "bloons-td",
+      "name": "Bloons TD",
+      "path": "/public/imagine/bloonsTD.html",
+      "category": "Strategy",
+      "description": "Place defenses and stop each approaching wave.",
+      "symbol": "⬡",
+      "accent": "#8ee4a5",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "plants-vs-zombies",
+      "name": "Plants vs Zombies",
+      "path": "/public/imagine/PVZ/plantsvszombies.html",
+      "category": "Strategy",
+      "description": "Protect your garden with clever defenses.",
+      "symbol": "❀",
+      "accent": "#c0ee8a",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "among-us",
+      "name": "Among Us",
+      "path": "/public/imagine/amongus.html",
+      "category": "Adventure",
+      "description": "Explore a social-deduction-inspired browser game.",
+      "symbol": "◈",
+      "accent": "#e9729d",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "angry-birds",
+      "name": "Angry Birds",
+      "path": "/public/imagine/angrybirds.html",
+      "category": "Puzzle",
+      "description": "Launch birds and solve physics challenges.",
+      "symbol": "◈",
+      "accent": "#f47e75",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "fruit-ninja",
+      "name": "Fruit Ninja",
+      "path": "/public/imagine/FruitNinja/fruitninja.html",
+      "category": "Arcade",
+      "description": "Slice fruit in a rapid-fire arcade challenge.",
+      "symbol": "✦",
+      "accent": "#fa8298",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "candy-crush",
+      "name": "Candy Crush",
+      "path": "/public/imagine/CandyCrush/candycrush.html",
+      "category": "Puzzle",
+      "description": "Match colorful sweets and clear the board.",
+      "symbol": "✦",
+      "accent": "#f5adbf",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "capybara-clicker",
+      "name": "Capybara Clicker",
+      "path": "/public/imagine/CapyBaraClicker/capybaraclicker.html",
+      "category": "Idle",
+      "description": "Click and build your capybara collection.",
+      "symbol": "◉",
+      "accent": "#beac7b",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "spacebar-clicker",
+      "name": "Spacebar Clicker",
+      "path": "/public/imagine/SpaceBarClicker/spacebarclicker.html",
+      "category": "Idle",
+      "description": "Turn every tap into points and upgrades.",
+      "symbol": "▦",
+      "accent": "#a9beff",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "minecraft-browser",
+      "name": "MineCraft Browser",
+      "path": "/public/imagine/MineCraft/index (3).html",
+      "category": "Sandbox",
+      "description": "Explore a block-style world in the browser.",
+      "symbol": "▣",
+      "accent": "#8cda8f",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "subway-surfers-beijing",
+      "name": "Subway Surfers Beijing",
+      "path": "/public/imagine/SubwaySufers/subwaysurfersbeijing.html",
+      "category": "Runner",
+      "description": "Race through the city and avoid obstacles.",
+      "symbol": "◆",
+      "accent": "#f0b073",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "subway-surfers-havana",
+      "name": "Subway Surfers Havana",
+      "path": "/public/imagine/SubwaySufers/subwaysurfershavana.html",
+      "category": "Runner",
+      "description": "Dash through the Havana-themed course.",
+      "symbol": "◆",
+      "accent": "#dba1f1",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "subway-surfers-san-francisco",
+      "name": "Subway Surfers San Francisco",
+      "path": "/public/imagine/SubwaySufers/subwaysurferssanfrancisco.html",
+      "category": "Runner",
+      "description": "Run through the San Francisco-themed course.",
+      "symbol": "◆",
+      "accent": "#8fbbf9",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "run",
+      "name": "Run",
+      "path": "/public/imagine/Run/Runner/run.html",
+      "category": "Runner",
+      "description": "Run and jump through demanding platforms.",
+      "symbol": "◆",
+      "accent": "#9eb1fb",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "run-3",
+      "name": "Run 3",
+      "path": "/public/imagine/Run/Runner/run3.html",
+      "category": "Runner",
+      "description": "Race through tunnels and shifting platforms.",
+      "symbol": "◆",
+      "accent": "#7cb8e9",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "death-run-3d",
+      "name": "Death Run 3D",
+      "path": "/public/imagine/DeathRun3D/deathrun3D.html",
+      "category": "Runner",
+      "description": "Survive the high-speed 3D obstacle course.",
+      "symbol": "◆",
+      "accent": "#d69cfa",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "crazy-cattle-3d",
+      "name": "Crazy Cattle 3D",
+      "path": "/public/imagine/CrazyCattle3D/crazycattle3D.html",
+      "category": "Arcade",
+      "description": "Jump into a chaotic 3D arena.",
+      "symbol": "◈",
+      "accent": "#e1d16c",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "1v1-lol",
+      "name": "1v1.LOL",
+      "path": "/public/imagine/1v1Lol/1v1.lol.html",
+      "category": "Action",
+      "description": "Enter a fast-paced arena challenge.",
+      "symbol": "✦",
+      "accent": "#83c9fa",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "bowmasters",
+      "name": "Bowmasters",
+      "path": "/public/imagine/BowMasters/bowmasters.html",
+      "category": "Action",
+      "description": "Test your aim in a physics-action challenge.",
+      "symbol": "✧",
+      "accent": "#fd9c7b",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "happy-wheels",
+      "name": "Happy Wheels",
+      "path": "/public/imagine/HappyWheels/Dude/Why/game/happywheels.html",
+      "category": "Action",
+      "description": "Navigate physics obstacle courses.",
+      "symbol": "⚡",
+      "accent": "#f6bb75",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "space-shooters",
+      "name": "Space Shooters",
+      "path": "/public/imagine/SpaceShooters.html",
+      "category": "Action",
+      "description": "Blast through waves of enemies in space.",
+      "symbol": "✦",
+      "accent": "#b197fa",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "space-shooters-2",
+      "name": "Space Shooters 2",
+      "path": "/public/imagine/SpaceShooters2/index.html",
+      "category": "Action",
+      "description": "Pilot a ship through a deeper space adventure.",
+      "symbol": "✦",
+      "accent": "#90ddf5",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "space-shooters-3",
+      "name": "Space Shooters 3",
+      "path": "/public/imagine/SpaceShooters3.beta.test.Production/index.html",
+      "category": "Action",
+      "description": "Battle through the next space shooter.",
+      "symbol": "✦",
+      "accent": "#ac91fa",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "zombie-rush",
+      "name": "Zombie Rush",
+      "path": "/public/imagine/zombierush.html",
+      "category": "Action",
+      "description": "Stay moving and survive the invading horde.",
+      "symbol": "✧",
+      "accent": "#d9b97b",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "ghost",
+      "name": "Ghost",
+      "path": "/public/imagine/ghost.html",
+      "category": "Adventure",
+      "description": "Explore an eerie haunted world.",
+      "symbol": "✧",
+      "accent": "#b8a6f8",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "bad-parenting",
+      "name": "Bad Parenting",
+      "path": "/public/imagine/BadParenting/badparenting.html",
+      "category": "Adventure",
+      "description": "Experience a mysterious narrative adventure.",
+      "symbol": "✦",
+      "accent": "#d2a9d9",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "five-nights-at-freddy-s",
+      "name": "Five Nights at Freddy's",
+      "path": "/public/imagine/fnaf.html",
+      "category": "Horror",
+      "description": "Watch carefully through a tense survival challenge.",
+      "symbol": "◉",
+      "accent": "#c5a3b7",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "game-impossible-2",
+      "name": "Game Impossible 2",
+      "path": "/public/imagine/GameImpossbile2/index.html",
+      "category": "Puzzle",
+      "description": "Face a difficult, shifting maze challenge.",
+      "symbol": "⌘",
+      "accent": "#dc93fa",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "game-impossible",
+      "name": "Game Impossible",
+      "path": "/public/imagine/GameImpossible-Private/index.html",
+      "category": "Puzzle",
+      "description": "Find your way through a demanding puzzle game.",
+      "symbol": "⌘",
+      "accent": "#c8a0f7",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "geometry-dash",
+      "name": "Geometry Dash",
+      "path": "/public/imagine/GeoMentry_Dash/index.html",
+      "category": "Runner",
+      "description": "Time your jumps in a rhythm platform challenge.",
+      "symbol": "◆",
+      "accent": "#ac8dff",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "mind-clicker",
+      "name": "Mind Clicker",
+      "path": "/public/imagine/MindClicker/index.html",
+      "category": "Idle",
+      "description": "Build progress one click at a time.",
+      "symbol": "◉",
+      "accent": "#da9cf2",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "funny-battle",
+      "name": "Funny Battle",
+      "path": "/public/imagine/FunnyBattle/funnybattle.html",
+      "category": "Action",
+      "description": "Enter a playful browser battle.",
+      "symbol": "⚡",
+      "accent": "#f6ac93",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "funny-battle-2",
+      "name": "Funny Battle 2",
+      "path": "/public/imagine/FunnyBattle/funnybattle2.html",
+      "category": "Action",
+      "description": "Return to the arena with new challenges.",
+      "symbol": "⚡",
+      "accent": "#f6a6b4",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "hole-io",
+      "name": "Hole.io",
+      "path": "/public/imagine/holeio/holeio.html",
+      "category": "Arcade",
+      "description": "Grow by absorbing objects across the map.",
+      "symbol": "◉",
+      "accent": "#b89fff",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "road-chase",
+      "name": "Road Chase",
+      "path": "/public/imagine/RoadChase.html",
+      "category": "Racing",
+      "description": "Stay ahead in a fast-moving road chase.",
+      "symbol": "◆",
+      "accent": "#ed9d88",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "parcore-sim",
+      "name": "Parcore Sim",
+      "path": "/public/imagine/ParCoreSim.html",
+      "category": "Runner",
+      "description": "Conquer a parkour obstacle course.",
+      "symbol": "◆",
+      "accent": "#98d1fa",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "liveplay-infinite-run",
+      "name": "LivePlay Infinite Run",
+      "path": "/public/imagine/LivePlay/index.html",
+      "category": "Runner",
+      "description": "Push your running streak as far as you can.",
+      "symbol": "◆",
+      "accent": "#a6b8fc",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "super-mario-63",
+      "name": "Super Mario 63",
+      "path": "/public/imagine/SuperMario/sm63.html",
+      "category": "Platformer",
+      "description": "Leap through a colorful platform adventure.",
+      "symbol": "✦",
+      "accent": "#f2ae8b",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "super-mario-64",
+      "name": "Super Mario 64",
+      "path": "/public/imagine/SuperMario/sm64.html",
+      "category": "Platformer",
+      "description": "Explore a classic-style 3D platform world.",
+      "symbol": "✦",
+      "accent": "#87bff8",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "bitlife",
+      "name": "BitLife",
+      "path": "/public/imagine/bitlife.html",
+      "category": "Simulation",
+      "description": "Navigate choices in a text-based life simulator.",
+      "symbol": "◈",
+      "accent": "#c7a2fb",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ]
+    },
+    {
+      "id": "airborne-dodge",
+      "name": "Airborne Dodge",
+      "path": "/public/imagine/index (1).html",
+      "category": "Arcade",
+      "description": "Take on an experimental arcade game.",
+      "symbol": "◇",
+      "accent": "#94c7f5",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "retro-challenge",
+      "name": "Retro Challenge",
+      "path": "/public/imagine/index (2).html",
+      "category": "Arcade",
+      "description": "Play a compact browser arcade experience.",
+      "symbol": "◇",
+      "accent": "#e1b2ff",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    {
+      "id": "hallicination-io",
+      "name": "Hallicination.IO",
+      "path": "/public/imagine/Hallicination.IO/index.html",
+      "category": "Action",
+      "description": "Survive an unusual browser arena.",
+      "symbol": "✦",
+      "accent": "#ca8df9",
+      "platforms": [
+        "desktop"
+      ]
+    }
+  ]
+}
