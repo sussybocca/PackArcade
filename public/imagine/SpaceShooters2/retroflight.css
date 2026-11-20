@@ -29,3 +29,19 @@
 @media(max-width:650px) and (orientation:landscape){#stickArea,#turnArea{width:103px;height:105px}.stick-base,.turn-base{width:88px;height:88px}.mobile-actions{flex-direction:row;gap:5px}.mobile-actions .fire-one{width:65px;height:65px}.mobile-actions .fire-heavy{width:78px;height:78px}.control-note{display:none}#assistState{top:52px}}
 @media(min-width:651px) and (max-width:1050px) and (pointer:coarse){#turnArea{width:148px;height:164px}.turn-base{width:140px;height:140px}}
 @media(max-height:400px){#assistState{display:none}}
+
+/* Compact landscape phones: dedicated low-height flight cockpit rather than scaled desktop HUD. */
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+ #touchControls{bottom:max(4px,env(safe-area-inset-bottom));gap:6px;align-items:flex-end;justify-content:space-between}
+ #stickArea,#turnArea{width:109px;height:104px}
+ .stick-base,.turn-base{width:89px;height:89px}
+ .control-note{display:none}
+ .mobile-actions{flex-direction:row;align-items:center;gap:6px}
+ .mobile-actions .fire-one{width:66px;height:66px}
+ .mobile-actions .fire-heavy{width:79px;height:79px}
+ .mobile-actions button strong{font-size:9px}
+ .mobile-actions button small{font-size:7px}
+ #hud{padding-top:max(5px,env(safe-area-inset-top))}
+ #assistState{top:56px;font-size:9px}
+ #specialIndicator{bottom:4px}
+}
