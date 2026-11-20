@@ -53,6 +53,8 @@ def check_page(browser,name,width,height,has_touch=False,mobile=False):
         before=page.evaluate('RetroflightStatus().bullets')
         if has_touch:
             assert page.locator('#stickArea').is_visible(),f'{name}: joystick missing'
+            assert page.locator('#turnArea').is_visible(),f'{name}: second flight joystick missing'
+            assert page.locator('#aimAssistSlider').count()==1,f'{name}: aim assist slider missing'
             assert page.locator('#fireOneMobile').is_visible(),f'{name}: instant fire missing'
             assert page.locator('#fireHeavyMobile').is_visible(),f'{name}: salvo missing'
             page.locator('#fireOneMobile').dispatch_event('pointerdown',{'pointerId':1,'clientX':width-70,'clientY':height-75})
@@ -84,9 +86,35 @@ def check_page(browser,name,width,height,has_touch=False,mobile=False):
                 page.wait_for_timeout(170)
                 page.locator('#stickArea').dispatch_event('pointerup',{'pointerId':9})
                 assert page.evaluate('RetroflightStatus().threeReady')
+            turn=page.locator('#turnArea')
+            rect=page.locator('.turn-base').bounding_box()
+            if rect:
+                tx=rect['x']+rect['width']*.5;ty=rect['y']+rect['height']*.5
+                turn.dispatch_event('pointerdown',{'pointerId':41,'clientX':tx,'clientY':ty})
+                turn.dispatch_event('pointermove',{'pointerId':41,'clientX':tx,'clientY':ty-rect['height']*.25})
+                page.wait_for_timeout(170)
+                assert abs(page.evaluate('RetroflightTestHarness.getBody().angularVelocity.x'))>.005,f'{name}: pitch/loop joystick inactive'
+                turn.dispatch_event('pointerup',{'pointerId':41})
+                for k in (42,43):
+                    turn.dispatch_event('pointerdown',{'pointerId':k,'clientX':tx,'clientY':ty})
+                    turn.dispatch_event('pointerup',{'pointerId':k})
+                assert page.evaluate('RetroflightStatus().rollMode'),f'{name}: double-tap roll mode broken'
+                for k in (51,52):
+                    page.locator('#stickArea').dispatch_event('pointerdown',{'pointerId':k,'clientX':x,'clientY':y})
+                    page.locator('#stickArea').dispatch_event('pointerup',{'pointerId':k})
+                assert page.evaluate('RetroflightStatus().liftMode'),f'{name}: mobile lift mode broken'
         else:
             page.keyboard.down('w');page.wait_for_timeout(230);page.keyboard.up('w')
             assert page.evaluate('RetroflightTestHarness.getBody().velocity.z')<0
+        if name=='Desktop':
+            # Reaching wave 5 must actually enable planetary gravitational acceleration.
+            for _ in range(3):
+                page.evaluate('RetroflightTestHarness.finishWave()')
+                assert page.locator('#upgradeScreen').is_visible()
+                page.locator('[data-upgrade="thrusters"]').click()
+            assert page.evaluate('RetroflightStatus().wave')==5
+            assert page.evaluate('RetroflightStatus().gravitySources')>=2
+            assert 'GRAVITY' in page.locator('#gravityReadout').inner_text()
         # Persistent upgrades survive a new page session on the same origin.
         if FAKE:
             # A new document keeps the test's explicit mock Storage contents.

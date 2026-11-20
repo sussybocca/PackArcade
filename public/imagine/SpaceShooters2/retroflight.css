@@ -6,3 +6,42 @@
 @media(min-width:651px) and (max-width:1050px) and (pointer:coarse){#touchControls{padding-inline:32px}#stickArea{width:150px;height:164px}.stick-base{width:140px;height:140px}.mobile-actions .fire-one{width:99px;height:99px}.mobile-actions .fire-heavy{width:119px;height:119px}}
 @media(max-height:560px){.overlay{padding:9px;align-items:start}.panel{margin:auto}.start-grid{margin:auto}.start-actions{margin-top:10px}.intro-specs #shipPreview{height:100px}.brand-block h1{font-size:clamp(38px,9vh,77px)}.chapter{margin:4px 0}.intro{margin:7px 0}.retroflight-title{margin:6px 0}.smalllinks{margin-top:8px}.upgrade-card{min-height:0}.upgrade-grid{margin:9px 0}.panel-intro{margin:8px 0}.settings-panel{max-height:98%;overflow-y:auto}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+
+/* BRAINFLIGHT responsive dual-flight-stick and physical targeting expansion */
+#turnArea{width:clamp(100px,20vw,154px);height:clamp(125px,27vw,168px);display:flex;flex-direction:column;justify-content:center;align-items:center;touch-action:none;pointer-events:auto;user-select:none;-webkit-user-select:none}
+.turn-base{width:clamp(96px,18vw,137px);height:clamp(96px,18vw,137px);position:relative;display:grid;place-items:center;border:2px solid #ffc27d;background:radial-gradient(circle,#744a5988,#150d2bab);box-shadow:0 0 0 7px #ffc77b15;border-radius:50%}
+.turn-base:before,.turn-base:after{content:"";position:absolute;background:#ffcf7d55}
+.turn-base:before{width:1px;height:100%}.turn-base:after{height:1px;width:100%}
+#turnThumb{width:40%;height:40%;border-radius:50%;border:2px solid #ffead1;background:radial-gradient(circle,#ffebac,#ea8d66);box-shadow:0 0 17px #ffb27f55;position:relative;z-index:1;will-change:transform}
+#targetLead,#targetLock{position:absolute;z-index:2;pointer-events:none;transform:translate(-50%,-50%);display:none}
+#targetLead{width:25px;height:25px;border:2px dashed #69f9bc;border-radius:50%;box-shadow:0 0 12px #32eeaa55}
+#targetLead:before,#targetLead:after{content:"";position:absolute;background:#9dffd9}
+#targetLead:before{width:12px;height:1px;left:5px;top:10px}
+#targetLead:after{width:1px;height:12px;left:10px;top:5px}
+#targetLock{width:58px;height:48px;border:2px solid #ff7080;border-radius:10px;box-shadow:0 0 11px #ff708040}
+#assistState{position:absolute;z-index:4;top:max(80px,env(safe-area-inset-top) + 75px);left:50%;transform:translateX(-50%);color:#99fed4;background:#0a2336c9;border:1px solid #235f6e;border-radius:6px;font-size:11px;letter-spacing:1px;padding:5px 10px;pointer-events:none;text-shadow:0 1px 4px #000}
+#gravityReadout{color:#bce9ff}
+#aimAssistSlider{accent-color:#65eab9}
+/* The touch-controls hidden state governs display even on touch Chromebooks with a fine primary pointer. */
+@media(pointer:coarse){#touchControls{justify-content:space-between;gap:5px;align-items:end}#stickArea,#turnArea{flex:0 1 auto}#turnArea{display:flex}}
+@media(max-width:650px){#touchControls{gap:2px;padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(safe-area-inset-right))}#stickArea,#turnArea{width:clamp(83px,25vw,120px);height:132px}.stick-base,.turn-base{width:clamp(74px,23vw,108px);height:clamp(74px,23vw,108px)}.mobile-actions{flex-direction:column-reverse;gap:3px}.mobile-actions .fire-one{width:62px;height:62px}.mobile-actions .fire-heavy{width:70px;height:70px}#assistState{top:96px;font-size:9px}}
+@media(max-width:650px) and (orientation:landscape){#stickArea,#turnArea{width:103px;height:105px}.stick-base,.turn-base{width:88px;height:88px}.mobile-actions{flex-direction:row;gap:5px}.mobile-actions .fire-one{width:65px;height:65px}.mobile-actions .fire-heavy{width:78px;height:78px}.control-note{display:none}#assistState{top:52px}}
+@media(min-width:651px) and (max-width:1050px) and (pointer:coarse){#turnArea{width:148px;height:164px}.turn-base{width:140px;height:140px}}
+@media(max-height:400px){#assistState{display:none}}
+
+/* Compact landscape phones: dedicated low-height flight cockpit rather than scaled desktop HUD. */
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+ #touchControls{bottom:max(4px,env(safe-area-inset-bottom));gap:6px;align-items:flex-end;justify-content:space-between}
+ #stickArea,#turnArea{width:109px;height:104px}
+ .stick-base,.turn-base{width:89px;height:89px}
+ .control-note{display:none}
+ .mobile-actions{flex-direction:row;align-items:center;gap:6px}
+ .mobile-actions .fire-one{width:66px;height:66px}
+ .mobile-actions .fire-heavy{width:79px;height:79px}
+ .mobile-actions button strong{font-size:9px}
+ .mobile-actions button small{font-size:7px}
+ #hud{padding-top:max(5px,env(safe-area-inset-top))}
+ #assistState{top:56px;font-size:9px}
+ #specialIndicator{bottom:4px}
+}

@@ -18,10 +18,11 @@ class GameStaticTests(unittest.TestCase):
         self.assertFalse(missing,missing)
     def test_required_controls_and_round_panel(self):
         p=IDs();p.feed((BASE/'index.html').read_text());ids=set(p.ids)
-        for ident in ('stickArea','stickThumb','fireOneMobile','fireHeavyMobile','upgradeScreen','levelArmor','levelDamage','levelThrusters','gameOverScreen','healthLabels','startBtn','pauseBtn','cameraSelect','modeSelect','hostBtn','joinBtn','audioScreen','cheatsScreen'):
+        for ident in ('stickArea','stickThumb','turnArea','turnThumb','targetLead','targetLock','aimAssistSlider','moveModeHint','fireOneMobile','fireHeavyMobile','upgradeScreen','levelArmor','levelDamage','levelThrusters','gameOverScreen','healthLabels','startBtn','pauseBtn','cameraSelect','modeSelect','hostBtn','joinBtn','audioScreen','cheatsScreen'):
             self.assertIn(ident,ids)
     def test_source_has_real_3d_not_sprite_substitutions(self):
         src=(BASE/'retroflight-game.js').read_text();self.assertIn('THREE.WebGLRenderer',src)
+        self.assertIn('SYS.pilotStep',src);self.assertIn('calculateAim',src);self.assertIn('SYS.gravityAt',src)
         self.assertIn('THREE.IcosahedronGeometry',src);self.assertIn('sphereContact(',src)
         self.assertIn('THREE.Points',src);self.assertIn('PH.heavyCooldown',src)
         self.assertNotIn('ctx.drawImage',src)

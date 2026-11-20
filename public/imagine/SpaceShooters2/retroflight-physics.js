@@ -49,6 +49,7 @@
       const health=Math.max(.25,1-clamp(this.damageImbalance,0,.75));
       const acc=V.add(V.scale(this.forward(),thrust*this.mainThrust*health/this.mass),V.add(V.scale(this.right(),sx*this.strafeThrust/this.mass),V.scale(this.up(),sy*this.strafeThrust/this.mass)));
       this.velocity=V.add(this.velocity,V.scale(acc,dt));
+      if(options.gravityAcceleration)this.velocity=V.add(this.velocity,V.scale(options.gravityAcceleration,dt));
       // Optional planetary gravity is a real acceleration, absent in deep-space sectors.
       if(options.gravityCenter&&options.gravityStrength){const r=V.sub(options.gravityCenter,this.position);let n=V.length(r);if(n>1)this.velocity=V.add(this.velocity,V.scale(r,(options.gravityStrength/(n*n*n))*dt));}
       const rotLocal=V.make(pitch,yaw,roll);
