@@ -100,6 +100,7 @@ function pilotStep(pilot,enemy,player,world={},dt=1/60){
   const dangerous=nearestHazard(body,obstacles);
   if(dangerous)pilot.behavior='avoid';
   else if(wounded&&(pilot.personality==='survivor'||pilot.personality==='defensive'))pilot.behavior='retreat';
+  else if(world.playerPattern?.heavyUse>.5&&range<70&&['defensive','tactical','survivor'].includes(pilot.personality))pilot.behavior='reposition';
   else if(range<pilot.desiredRange*.65)pilot.behavior='reposition';
   else if(!direct&&pilot.confidence<.2)pilot.behavior='search';
   else pilot.behavior='approach';
@@ -108,6 +109,8 @@ function pilotStep(pilot,enemy,player,world={},dt=1/60){
  const age=pilot.track?pilot.elapsed-pilot.track.time:999;
  if(!direct&&age>4)pilot.confidence=0;
  let aimPoint=pilot.track&&pilot.confidence>.1?V.add(pilot.track.position,V.scale(pilot.track.velocity,Math.min(age+.3,1.8))):V.add(body.position,V.scale(body.forward(),25));
+ const anticipation=clamp((world.playerPattern?.avgSpeed||0)/80,0,.35);
+ if(pilot.personality==='veteran'||pilot.personality==='tactical')aimPoint=V.add(aimPoint,V.scale(pilot.track?.velocity||V.make(),anticipation));
  const lead=intercept(body.position,body.velocity,aimPoint,pilot.track?.velocity||V.make(),100);
  aimPoint=lead.predicted;
  const hazard=nearestHazard(body,obstacles);
@@ -119,6 +122,11 @@ function pilotStep(pilot,enemy,player,world={},dt=1/60){
   const away=V.normalized(V.sub(body.position,target));aimPoint=V.add(body.position,V.add(V.scale(away,27),V.scale(body.right(),12)));
  }else if(pilot.behavior==='search'){
   aimPoint=V.add(body.position,V.add(V.scale(body.forward(),32),V.scale(body.right(),Math.sin(pilot.elapsed*.7+pilot.errorSeed)*19)));
+ }
+ if(world.leader&&world.leader.body&&world.leader.body!==body&&pilot.behavior==='approach'&&range>35&&['rookie','defensive','tactical'].includes(pilot.personality)){
+   const leader=world.leader.body,slot=pilot.formation-1.5;
+   const formationPoint=V.add(leader.position,V.add(V.scale(leader.right(),slot*8),V.scale(leader.forward(),-10)));
+   aimPoint=V.add(V.scale(aimPoint,.67),V.scale(formationPoint,.33));
  }
  const side=pilot.personality==='unpredictable'?Math.sin(pilot.elapsed*1.7+pilot.errorSeed)*.6:pilot.personality==='aggressive'?.22:.07;
  const requested=steerToward(body,aimPoint,pilot.experience,side);

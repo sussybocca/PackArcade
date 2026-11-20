@@ -21,13 +21,17 @@ let wave=1,phase='menu',lives=3,score=0,kills=0,killStreak=0,bestStreak=0,
  waveKills=0,heavyLast=-Infinity,roundTimer=0,toastTimer=0,hitTimer=0,invincible=0,autoFire=false,powerTimers={spread:0,homing:0,rapid:0,overdrive:0};
 let enemyAIData={dodges:0,shots:0,playerSpeed:0},remoteState=null,remoteShots=[],roomRole='solo',netSendTimer=0;
 let keys=new Set(),joystick={x:0,y:0,active:false,pointer:null},turnStick={x:0,y:0,vertical:0,rollMode:false,active:false,pointer:null,lastTap:-Infinity},shotListener=false;
+const AI_MEMORY='retroflight-brainflight-memory-v1';
+let aiMemory={battles:0,avgSpeed:0,heavyUse:0,turnRate:0},aiObservation={seconds:0,speedSum:0,turnSeconds:0,salvos:0};
 let gravityBodies=[],aimState={target:null,direction:null,lead:null,enabled:false},manualPointer={x:0,y:0,active:false},moonObject=null;
 let pendingStart=false,visualTime=0,audioCtx=null,bgm=null,userBgmUrl=null,gunAudio=null,explosionAudio=null;
 let lastTime=0,accumulator=0,uiTimer=0,seed=18273,asteroidBodies=[];
 const noise=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
 const saved=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}};
 function writeStorage(key,val){try{localStorage.setItem(key,JSON.stringify(val));return true}catch{return false}}
-function optionsLoaded(){let o=saved(H,{});settings={...defaults,...o};settings.aimAssist=clamp(Number(settings.aimAssist)||0,0,50);upgrades=PH.loadUpgrades(localStorage,U);}
+function optionsLoaded(){let o=saved(H,{});settings={...defaults,...o};settings.aimAssist=clamp(Number(settings.aimAssist)||0,0,50);
+ const history=saved(AI_MEMORY,{});for(const k of ['battles','avgSpeed','heavyUse','turnRate'])aiMemory[k]=clamp(Number(history?.[k])||0,0,k==='battles'?10000:200);
+ upgrades=PH.loadUpgrades(localStorage,U);}
 function stat(){return PH.upgradedStats(upgrades);}
 function toast(msg,seconds=2.6){if(!dom.toast)return;dom.toast.textContent=msg;dom.toast.classList.remove('hidden');toastTimer=seconds;}
 function show(id){$(id).classList.remove('hidden');$(id).classList.add('visible');}
@@ -106,7 +110,7 @@ function resetGame(){
  powerups.forEach(p=>scene.remove(p.mesh));powerups=[];
  particles.forEach(p=>scene.remove(p.mesh));particles=[];
  if(playerMesh)scene.remove(playerMesh);if(remoteMesh)scene.remove(remoteMesh);
- playerMesh=null;remoteMesh=null;remoteState=null;wave=1;lives=3;score=0;kills=0;killStreak=0;bestStreak=0;waveKills=0;heavyLast=-Infinity;nextEnemy=0;spawnRemaining=0;invincible=0;visualTime=0;roundTimer=0;powerTimers={spread:0,homing:0,rapid:0,overdrive:0};enemyAIData={dodges:0,shots:0,playerSpeed:0};
+ playerMesh=null;remoteMesh=null;remoteState=null;aiObservation={seconds:0,speedSum:0,turnSeconds:0,salvos:0};wave=1;lives=3;score=0;kills=0;killStreak=0;bestStreak=0;waveKills=0;heavyLast=-Infinity;nextEnemy=0;spawnRemaining=0;invincible=0;visualTime=0;roundTimer=0;powerTimers={spread:0,homing:0,rapid:0,overdrive:0};enemyAIData={dodges:0,shots:0,playerSpeed:0};
  joystick={x:0,y:0,active:false,pointer:null};turnStick={x:0,y:0,vertical:0,rollMode:false,active:false,pointer:null,lastTap:-Infinity};manualPointer={x:0,y:0,active:false};
  $('stickThumb').style.transform='translate(0px,0px)';$('turnThumb').style.transform='translate(0px,0px)';$('turnModeHint').textContent='TURN / LOOP';
  newPlayer();startWave(1);
@@ -175,7 +179,7 @@ function calculateAim(){
  }
  let best=null,bestAngle=.38;
  for(const e of enemies){
-  if(e.hp<=0||SYS.obscured(pos,e.body.position,asteroidBodies,.12))continue;
+  if(e.hp<=0||SYS.obscured(pos,e.body.position,asteroidBodies.concat(gravityBodies.map(b=>({pos:b.position,radius:b.radius})),[{pos:station?.position||V.make(9999,0,0),radius:27}]),.12))continue;
   const angle=SYS.angle(manual,V.sub(e.body.position,pos));
   if(angle<bestAngle){bestAngle=angle;best=e;}
  }
@@ -213,7 +217,7 @@ function heavyShot(sendRemote=true){if(!canShoot()||visualTime-heavyLast<PH.heav
   const pos=V.add(playerBody.position,V.add(V.scale(aim,3.4),V.scale(side,spread*8)));
   createShot(pos,dir,'player',true);
  }
- heavyLast=visualTime;playFX('heavy');toast(`${count} HEAVY PROJECTILES DEPLOYED · 40s RECHARGE`,1.7);
+ heavyLast=visualTime;aiObservation.salvos++;playFX('heavy');toast(`${count} HEAVY PROJECTILES DEPLOYED · 40s RECHARGE`,1.7);
  if(sendRemote&&NET.isConnected())NET.send('fire',{heavy:true,p:copyV(playerBody.position),d:copyV(aim),count});
  return true;
 }
@@ -239,13 +243,14 @@ function updateEnemies(dt){
  nextEnemy-=dt;if(spawnRemaining>0&&nextEnemy<=0){spawnRemaining--;spawnEnemy();nextEnemy=Math.max(.34,1.1-wave*.035);}
  }
  let sharedTrack=null;
+ const leader=enemies.find(e=>!e.remote&&e.pilot?.personality==='leader'&&e.hp>0);
  const obstacles=asteroidBodies.concat([{pos:station?.position||V.make(9999,0,0),radius:27}]).concat(gravityBodies.map(b=>({pos:b.position,radius:b.radius})));
  for(const e of [...enemies]){
   e.age+=dt;if(!e.remote){
    const distance=V.distance(playerBody.position,e.body.position);
    if(distance>380||e.age>125){removeEnemy(e);continue;}
    if(!e.pilot)e.pilot=SYS.makePilot(e.type,enemies.indexOf(e)+wave*7);
-   const decision=SYS.pilotStep(e.pilot,e,playerBody,{obstacles,gravityBodies,sharedTrack},dt);
+   const decision=SYS.pilotStep(e.pilot,e,playerBody,{obstacles,gravityBodies,sharedTrack,leader,playerPattern:aiMemory},dt);
    if(decision.seen)sharedTrack={position:{...playerBody.position},velocity:{...playerBody.velocity}};
    e.body.step(decision.input,dt,{assist:true,stabilization:e.pilot.experience>0.7?2.2:1.25,gravityAcceleration:decision.gravity});
    const impact=SYS.celestialContact(e.body,gravityBodies);
@@ -282,7 +287,19 @@ function updateObjects(dt){
  if(station)station.rotation.z+=dt*.012;
  if(planet)planet.rotation.y+=dt*.006;
 }
-function completeWave(){if(phase!=='flying')return;phase='upgrade';show('upgradeScreen');updateUpgradeUI();playFX('win');
+function completeWave(){if(phase!=='flying')return;
+ if(aiObservation.seconds>0){
+  const prior=Math.min(20,aiMemory.battles),den=prior+1;
+  const observedSpeed=aiObservation.speedSum/aiObservation.seconds;
+  const observedTurn=aiObservation.turnSeconds/aiObservation.seconds;
+  aiMemory.avgSpeed=(aiMemory.avgSpeed*prior+observedSpeed)/den;
+  aiMemory.heavyUse=(aiMemory.heavyUse*prior+aiObservation.salvos)/den;
+  aiMemory.turnRate=(aiMemory.turnRate*prior+observedTurn)/den;
+  aiMemory.battles=Math.min(10000,aiMemory.battles+1);
+  writeStorage(AI_MEMORY,aiMemory);
+  aiObservation={seconds:0,speedSum:0,turnSeconds:0,salvos:0};
+ }
+ phase='upgrade';show('upgradeScreen');updateUpgradeUI();playFX('win');
  NET.send('waveComplete',{wave,score,kills});
 }
 function chooseUpgrade(which){if(phase!=='upgrade'||!['armor','damage','thrusters'].includes(which))return;
@@ -312,6 +329,8 @@ function simulate(dt){
  };
  const arcade=settings.mode==='arcade',stabilized=settings.mode!=='authentic';
  const playerStats=stat();playerBody.mainThrust=playerStats.mainThrust*(powerTimers.overdrive>0?1.4:1);
+ aiObservation.seconds+=dt;aiObservation.speedSum+=playerBody.speed()*dt;
+ if(Math.abs(input.pitch)+Math.abs(input.yaw)+Math.abs(input.roll)>.32)aiObservation.turnSeconds+=dt;
  playerBody.step(input,dt,{assist:stabilized,stabilization:arcade?8:3.4,dampLinear:arcade,gravityAcceleration:SYS.gravityAt(playerBody.position,gravityBodies)});
  for(const key of Object.keys(powerTimers))powerTimers[key]=Math.max(0,powerTimers[key]-dt);
  // Deep-space waves keep arcade arena rails; planetary waves allow real, unbounded orbital flight.
@@ -546,5 +565,5 @@ if(window.__RETROFLIGHT_TEST__===true||(['localhost','127.0.0.1'].includes(locat
  window.RetroflightTestHarness={finishWave:()=>{if(phase!=='flying')return;spawnRemaining=0;[...enemies].forEach(removeEnemy);completeWave();},setKills:n=>{kills=clamp(Math.floor(n),0,1000);hud();},advanceSeconds:s=>{visualTime+=clamp(s,0,100);hud();},spawnEnemy:type=>spawnEnemy(type),damageEnemy:(id,amount)=>{const e=enemies.find(x=>x.id===id);if(e)damageEnemy(e,amount,V.make());},getBody:()=>playerBody&&({position:{...playerBody.position},velocity:{...playerBody.velocity},angularVelocity:{...playerBody.angularVelocity}})};
 }
 // Read-only diagnostics for automated smoke testing, not a cheat or mutation interface.
-window.RetroflightStatus=()=>({phase,wave,score,kills,lives,health,maxHealth,gravitySources:gravityBodies.length,aimTarget:aimState.target?.id||null,aimStrength:settings.aimAssist,rollMode:turnStick.rollMode,liftMode:joystick.liftMode,turn:{x:turnStick.x,y:turnStick.y,vertical:turnStick.vertical},upgrades:{...upgrades},enemyCount:enemies.length,bullets:shots.length,heavyRemaining:Math.max(0,PH.heavyCooldown-(visualTime-heavyLast)),threeReady:!!renderer,touchUI:isTouchUI()});
+window.RetroflightStatus=()=>({phase,wave,score,kills,lives,health,maxHealth,gravitySources:gravityBodies.length,aimTarget:aimState.target?.id||null,aimStrength:settings.aimAssist,brainflightBattles:aiMemory.battles,rollMode:turnStick.rollMode,liftMode:joystick.liftMode,turn:{x:turnStick.x,y:turnStick.y,vertical:turnStick.vertical},upgrades:{...upgrades},enemyCount:enemies.length,bullets:shots.length,heavyRemaining:Math.max(0,PH.heavyCooldown-(visualTime-heavyLast)),threeReady:!!renderer,touchUI:isTouchUI()});
 })();
