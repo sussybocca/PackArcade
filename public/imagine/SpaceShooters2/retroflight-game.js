@@ -167,9 +167,9 @@ function createShot(pos,direction,owner,heavy=false){
  shots.push(sh);return sh;
 }
 
-function calculateAim(){
+function calculateAim(projectileSpeed=107,originOffset=3.2){
  if(!playerBody)return playerBody?.forward()||V.make(0,0,-1);
- const pos=V.add(playerBody.position,V.scale(playerBody.forward(),3.2));
+ const pos=V.add(playerBody.position,V.scale(playerBody.forward(),originOffset));
  let manual=playerBody.forward();
  if(manualPointer.active&&camera&&innerWidth>0&&innerHeight>0){
   try{
@@ -185,7 +185,7 @@ function calculateAim(){
  }
  if(!best){aimState={target:null,direction:manual,lead:null,enabled:false};return manual;}
  const gd=V.sub(SYS.gravityAt(best.body.position,gravityBodies),SYS.gravityAt(pos,gravityBodies));
- const lead=SYS.intercept(pos,V.scale(playerBody.velocity,.35),best.body.position,best.body.velocity,107,gd);
+ const lead=SYS.intercept(pos,V.scale(playerBody.velocity,.35),best.body.position,best.body.velocity,projectileSpeed,gd);
  const result=SYS.assist(manual,lead.direction,clamp(Number(settings.aimAssist)/100,0,.5),.38);
  aimState={target:best,direction:result.direction,lead:lead.predicted,enabled:result.eligible,correction:result.correction,error:result.error};
  return result.direction;
@@ -210,7 +210,7 @@ function singleShot(sendRemote=true){if(!canShoot())return false;
  return true;
 }
 function heavyShot(sendRemote=true){if(!canShoot()||visualTime-heavyLast<PH.heavyCooldown)return false;
- const count=Math.min(16,PH.heavyCount(kills)+(powerTimers.spread>0?2:0)),aim=calculateAim(),side=playerBody.right(),up=playerBody.up();
+ const count=Math.min(16,PH.heavyCount(kills)+(powerTimers.spread>0?2:0)),aim=calculateAim(64,3.4),side=playerBody.right(),up=playerBody.up();
  for(let i=0;i<count;i++){
   const spread=(i-(count-1)/2)*.075;
   const dir=V.normalized(V.add(aim,V.add(V.scale(side,spread),V.scale(up,Math.sin(i*2.4)*.03))));

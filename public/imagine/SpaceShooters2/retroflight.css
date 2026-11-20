@@ -23,7 +23,7 @@
 #assistState{position:absolute;z-index:4;top:max(80px,env(safe-area-inset-top) + 75px);left:50%;transform:translateX(-50%);color:#99fed4;background:#0a2336c9;border:1px solid #235f6e;border-radius:6px;font-size:11px;letter-spacing:1px;padding:5px 10px;pointer-events:none;text-shadow:0 1px 4px #000}
 #gravityReadout{color:#bce9ff}
 #aimAssistSlider{accent-color:#65eab9}
-@media(pointer:fine){#turnArea{display:none}}
+/* The touch-controls hidden state governs display even on touch Chromebooks with a fine primary pointer. */
 @media(pointer:coarse){#touchControls{justify-content:space-between;gap:5px;align-items:end}#stickArea,#turnArea{flex:0 1 auto}#turnArea{display:flex}}
 @media(max-width:650px){#touchControls{gap:2px;padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(safe-area-inset-right))}#stickArea,#turnArea{width:clamp(83px,25vw,120px);height:132px}.stick-base,.turn-base{width:clamp(74px,23vw,108px);height:clamp(74px,23vw,108px)}.mobile-actions{flex-direction:column-reverse;gap:3px}.mobile-actions .fire-one{width:62px;height:62px}.mobile-actions .fire-heavy{width:70px;height:70px}#assistState{top:96px;font-size:9px}}
 @media(max-width:650px) and (orientation:landscape){#stickArea,#turnArea{width:103px;height:105px}.stick-base,.turn-base{width:88px;height:88px}.mobile-actions{flex-direction:row;gap:5px}.mobile-actions .fire-one{width:65px;height:65px}.mobile-actions .fire-heavy{width:78px;height:78px}.control-note{display:none}#assistState{top:52px}}

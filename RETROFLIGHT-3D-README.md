@@ -46,3 +46,28 @@ No account is required. Upgrade levels are saved under `retroflight-upgrades-v1`
 ## Release status
 
 This is a **development preview**. Physics unit tests, static source tests, and scripted browser tests provide meaningful checks, but they cannot certify all multiplayer paths or every actual device/GPU/driver. Do not claim 90% acceptance until player, device, load, and multiplayer verification is performed. The previous version is recoverable from `legacy-index.html` and the original Git history.
+
+## BRAINFLIGHT + HEAVYFLIGHT + GRAVITYCORE + TARGETLOCK 50 expansion
+
+The new physics expansion lives on the dedicated \`packarcade-brainflight-gravitycore-2026-11-20\` review branch. It preserves the original 3D game systems, plus \`legacy-index.html\`.
+
+- **BRAINFLIGHT** — eight AI pilot personalities with different reaction/flight tendencies, line-of-sight visibility, short-term target memory, obstacle avoidance, shared squad leader formation targets, local player-habit learning persisted as \`retroflight-brainflight-memory-v1\`, and physics-driven commands rather than position teleporting. No LLM or paid API.
+- **HEAVYFLIGHT** — heavier player and enemy bodies, upgraded armor adding mass and inertia, damaged enemy engine efficiency, and the existing full 6DOF rigid body thruster simulation. Authentic, stabilized and arcade flight modes remain.
+- **GRAVITYCORE** — multi-body inverse-square gravity on player, AI spacecraft, projectiles and space debris; different celestial fields by sector; collision impulses at planetary and moon surfaces; unbounded flight in gravitational sectors; gravity vector HUD. Non-gravity waves retain their arcade boundary.
+- **TARGETLOCK 50** — separate manual crosshair, red bracket and green predicted lead marker. The aim direction blends 50% toward a visible target's predicted interception direction only within a narrow acquisition cone; no guaranteed hits. The assistance setting can be reduced from 50% to 0%.
+- **Mobile two-joystick interface** — left stick controls forward/reverse thrust and strafe, double tap left to control vertical lift instead; right stick controls pitch and yaw to loop, double tap right for horizontal roll, or use a two-finger vertical drag on the right stick to lift/descent. Two existing action buttons remain SINGLE (one instant bullet per activation) and SALVO (kill-scaled heavy projectiles, 40-second cooldown). Joysticks have separate pointer capture and distinct portrait, landscape and tablet styling, including touch-enabled Chromebooks.
+- **Original continuity** — retain local permanent armor, damage and thruster upgrades, enemy health bars, wave progression, original cheat codes, player HUD, music and custom audio, original 2D edition and optional PeerJS multiplayer.
+
+### Verification
+
+Run both original and new physics tests:
+
+\`\`\`sh
+node --test tests/retroflight.physics.test.cjs tests/retroflight.systems.test.cjs
+python -m unittest discover -s tests -p retroflight_static.py -v
+python tests/retroflight_browser_smoke.py
+\`\`\`
+
+GitHub Actions workflows \`.github/workflows/retroflight-3d-checks.yml\` and \`.github/workflows/brainflight-gravitycore.yml\` run physics, layout/static, and real browser smoke tests. Browser smoke exercises five viewport/device configurations, touch joystick pitch and roll/lift modes, single and heavy firing, cooldowns, saved upgrades, and reaching the gravitational sector.
+
+**Acceptance caution:** Automated tests do not establish complete behavior on every real device, extended multiplayer sessions, all possible graphics drivers, or production server conditions. This branch is a reviewable development candidate, not a certified 90% completion declaration.
