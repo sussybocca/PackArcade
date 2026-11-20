@@ -51,6 +51,18 @@ function makePilot(type,index=0){
   desiredRange:personality==='defensive'?60:personality==='aggressive'?23:38,
   errorSeed:(index+1)*13.37, input:{forward:0,strafe:0,vertical:0,yaw:0,pitch:0,roll:0}};
 }
+function celestialContact(body,bodies=[],restitution=.18){
+ let highest=0;
+ for(const field of bodies){if(!field.position||!(field.radius>0))continue;
+  const delta=V.sub(body.position,field.position),dist=V.length(delta),safe=field.radius+body.radius;
+  if(dist>=safe)continue;
+  const out=dist>EPS?V.scale(delta,1/dist):V.make(0,1,0);
+  body.position=V.add(field.position,V.scale(out,safe+.025));
+  const along=V.dot(body.velocity,out);
+  if(along<0){highest=Math.max(highest,-along);body.velocity=V.sub(body.velocity,V.scale(out,(1+restitution)*along));}
+ }
+ return highest;
+}
 function nearestHazard(body,obstacles=[],lookahead=2){
  let best=null,dist=Infinity;
  const look=V.add(body.position,V.scale(body.velocity,lookahead));
@@ -126,5 +138,5 @@ function joystickToFlight(left,right,rollMode=false){
  return {forward:-l.y,strafe:l.x,vertical:rollMode?0:(right?.vertical||0),
  yaw:rollMode?0:r.x,pitch:-r.y,roll:rollMode?r.x:0};
 }
-return {gravityAt,celestialBodies,obscured,intercept,assist,angle,makePilot,pilotStep,joystickToFlight,nearestHazard,PERS};
+return {gravityAt,celestialBodies,celestialContact,obscured,intercept,assist,angle,makePilot,pilotStep,joystickToFlight,nearestHazard,PERS};
 });

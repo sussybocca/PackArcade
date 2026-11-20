@@ -68,3 +68,9 @@ test('Mobile dual joystick supports full pitch/yaw plus strafe/thrust and option
  const roll=S.joystickToFlight({x:0,y:0},{x:.7,y:-1},true);
  near(roll.roll,.7);near(roll.pitch,1);
 });
+
+test('GravityCore: planet surface prevents penetration and produces impact response',()=>{
+ const b=new ShipBody({mass:25,radius:2});b.position=V.make(10,0,0);b.velocity=V.make(-12,0,0);
+ const hit=S.celestialContact(b,[{position:V.make(),radius:12,mu:3000}]);
+ assert.ok(hit>=12);assert.ok(V.length(b.position)>=14);assert.ok(b.velocity.x>0);
+});

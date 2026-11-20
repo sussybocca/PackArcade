@@ -27,7 +27,7 @@ let lastTime=0,accumulator=0,uiTimer=0,seed=18273,asteroidBodies=[];
 const noise=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
 const saved=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}};
 function writeStorage(key,val){try{localStorage.setItem(key,JSON.stringify(val));return true}catch{return false}}
-function optionsLoaded(){let o=saved(H,{});settings={...defaults,...o};upgrades=PH.loadUpgrades(localStorage,U);}
+function optionsLoaded(){let o=saved(H,{});settings={...defaults,...o};settings.aimAssist=clamp(Number(settings.aimAssist)||0,0,50);upgrades=PH.loadUpgrades(localStorage,U);}
 function stat(){return PH.upgradedStats(upgrades);}
 function toast(msg,seconds=2.6){if(!dom.toast)return;dom.toast.textContent=msg;dom.toast.classList.remove('hidden');toastTimer=seconds;}
 function show(id){$(id).classList.remove('hidden');$(id).classList.add('visible');}
@@ -248,6 +248,8 @@ function updateEnemies(dt){
    const decision=SYS.pilotStep(e.pilot,e,playerBody,{obstacles,gravityBodies,sharedTrack},dt);
    if(decision.seen)sharedTrack={position:{...playerBody.position},velocity:{...playerBody.velocity}};
    e.body.step(decision.input,dt,{assist:true,stabilization:e.pilot.experience>0.7?2.2:1.25,gravityAcceleration:decision.gravity});
+   const impact=SYS.celestialContact(e.body,gravityBodies);
+   if(impact>3){e.hp=Math.max(0,e.hp-impact*.42);e.body.damageImbalance=clamp(1-e.hp/e.maxHp,0,.65);if(e.hp<=0){scoreKill(e);continue;}}
    e.shotTimer-=dt;
    if(e.shotTimer<=0&&decision.canFire){enemyShot(e);e.shotTimer=1.2+noise()*2.5+(.8-e.pilot.experience);}
    if(distance<e.body.radius+playerBody.radius+1){const hit=sphereContact(e.body,playerBody,.22);
@@ -301,9 +303,9 @@ function simulate(dt){
  visualTime+=dt;
  const left=keys.has('KeyA'),right=keys.has('KeyD'),up=keys.has('ArrowUp'),down=keys.has('ArrowDown');
  const input={
- forward:clamp((keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)-(joystick.active?joystick.y:0),-1,1),
+ forward:clamp((keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)-(joystick.active&&!joystick.liftMode?joystick.y:0),-1,1),
  strafe:clamp((right?1:0)-(left?1:0)+(joystick.active?joystick.x:0),-1,1),
- vertical:clamp((keys.has('KeyR')?1:0)-(keys.has('KeyF')?1:0)+turnStick.vertical,-1,1),
+ vertical:clamp((keys.has('KeyR')?1:0)-(keys.has('KeyF')?1:0)+turnStick.vertical-(joystick.active&&joystick.liftMode?joystick.y:0),-1,1),
  yaw:clamp((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0)-(turnStick.active&&!turnStick.rollMode?turnStick.x:0),-1,1),
  pitch:clamp((up?1:0)-(down?1:0)-(turnStick.active?turnStick.y:0),-1,1),
  roll:clamp((keys.has('KeyQ')?1:0)-(keys.has('KeyE')?1:0)+(turnStick.active&&turnStick.rollMode?turnStick.x:0),-1,1)
@@ -312,10 +314,15 @@ function simulate(dt){
  const playerStats=stat();playerBody.mainThrust=playerStats.mainThrust*(powerTimers.overdrive>0?1.4:1);
  playerBody.step(input,dt,{assist:stabilized,stabilization:arcade?8:3.4,dampLinear:arcade,gravityAcceleration:SYS.gravityAt(playerBody.position,gravityBodies)});
  for(const key of Object.keys(powerTimers))powerTimers[key]=Math.max(0,powerTimers[key]-dt);
- // Bounce off the playable arena boundary using a physical impulse rather than teleporting.
+ // Deep-space waves keep arcade arena rails; planetary waves allow real, unbounded orbital flight.
+ if(gravityBodies.length===0){
  for(const axis of ['x','y','z']){const range=axis==='z'?115:axis==='x'?95:64;
   if(playerBody.position[axis]>range){playerBody.position[axis]=range;playerBody.velocity[axis]=Math.min(0,playerBody.velocity[axis])*.38;}
   if(playerBody.position[axis]<-range){playerBody.position[axis]=-range;playerBody.velocity[axis]=Math.max(0,playerBody.velocity[axis])*.38;}}
+ }else{
+  const surfaceImpact=SYS.celestialContact(playerBody,gravityBodies);
+  if(surfaceImpact>4)takeDamage(Math.min(26,surfaceImpact*.42),gravityBodies[0].position);
+ }
  // Nearby physical asteroid impacts include collision response and hull damage.
  for(const rock of asteroidBodies){const delta=V.sub(playerBody.position,rock.pos),distance=V.length(delta),separation=playerBody.radius+rock.radius;if(distance<separation){const normal=distance>1e-6?V.scale(delta,1/distance):V.make(0,1,0),speedIn=V.dot(playerBody.velocity,normal);playerBody.position=V.add(rock.pos,V.scale(normal,separation+.02));if(speedIn<0){playerBody.velocity=V.sub(playerBody.velocity,V.scale(normal,1.35*speedIn));if(Math.abs(speedIn)>3)takeDamage(Math.abs(speedIn)*.46,rock.pos);}}}
  playerMesh.position.set(playerBody.position.x,playerBody.position.y,playerBody.position.z);
@@ -358,7 +365,8 @@ function hud(){
  $('healthText').textContent=`${Math.round(health)} / ${maxHealth}`;$('healthFill').style.width=`${clamp(health/maxHealth*100,0,100)}%`;
  $('shieldText').textContent=`${Math.round(shield)}%`;$('shieldFill').style.width=`${clamp(shield,0,100)}%`;
  $('livesText').textContent=lives;$('waveText').textContent=String(wave).padStart(2,'0');$('scoreText').textContent=String(score).padStart(6,'0');$('killsText').textContent=kills;
- $('velocityText').textContent=Math.round(playerBody?.speed()||0);$('flightModeLabel').textContent=settings.mode.toUpperCase();
+ $('velocityText').textContent=Math.round(playerBody?.speed()||0);
+ if(playerBody)$('gravityReadout').textContent='GRAVITY '+SYS.gravityAt(playerBody.position,gravityBodies).x.toFixed(1)+' / '+SYS.gravityAt(playerBody.position,gravityBodies).y.toFixed(1)+' / '+SYS.gravityAt(playerBody.position,gravityBodies).z.toFixed(1)+' u/s²';$('flightModeLabel').textContent=settings.mode.toUpperCase();
  const left=Math.max(0,PH.heavyCooldown-(visualTime-heavyLast));$('heavyCount').textContent=`×${PH.heavyCount(kills)}`;$('heavyStatus').textContent=left>0?`${left.toFixed(1)}s`:'READY';
  $('specialIndicator').classList.toggle('cooling',left>0);$('mobileCooldown').textContent=left>0?`${Math.ceil(left)}s`:'READY';$('fireHeavyMobile').disabled=left>0||phase!=='flying';
  $('fireOneMobile').disabled=phase!=='flying';
@@ -408,7 +416,11 @@ function setupInput(){
  function moveStick(e){const rect=area.querySelector('.stick-base').getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2,r=rect.width*.3;
   let dx=e.clientX-cx,dy=e.clientY-cy;const len=Math.hypot(dx,dy);if(len>r){dx=dx/len*r;dy=dy/len*r;}
   joystick.x=dx/r;joystick.y=dy/r;joystick.active=true;thumb.style.transform='translate('+dx+'px,'+dy+'px)';}
- area.addEventListener('pointerdown',e=>{if(phase!=='flying')return;e.preventDefault();joystick.pointer=e.pointerId;try{area.setPointerCapture(e.pointerId);}catch{}moveStick(e);});
+ area.addEventListener('pointerdown',e=>{
+  if(phase!=='flying')return;e.preventDefault();
+  if(e.timeStamp-joystick.lastTap<310){joystick.liftMode=!joystick.liftMode;joystick.lastTap=-Infinity;$('moveModeHint').textContent=joystick.liftMode?'LIFT / STRAFE':'THRUST / STRAFE';}
+  else joystick.lastTap=e.timeStamp;
+  joystick.pointer=e.pointerId;try{area.setPointerCapture(e.pointerId);}catch{}moveStick(e);});
  area.addEventListener('pointermove',e=>{if(e.pointerId===joystick.pointer){e.preventDefault();moveStick(e);}});
  function stopStick(e){if(joystick.pointer!==e.pointerId)return;joystick.pointer=null;joystick.x=0;joystick.y=0;joystick.active=false;thumb.style.transform='translate(0px,0px)';}
  area.addEventListener('pointerup',stopStick);area.addEventListener('pointercancel',stopStick);area.addEventListener('lostpointercapture',stopStick);
@@ -534,5 +546,5 @@ if(window.__RETROFLIGHT_TEST__===true||(['localhost','127.0.0.1'].includes(locat
  window.RetroflightTestHarness={finishWave:()=>{if(phase!=='flying')return;spawnRemaining=0;[...enemies].forEach(removeEnemy);completeWave();},setKills:n=>{kills=clamp(Math.floor(n),0,1000);hud();},advanceSeconds:s=>{visualTime+=clamp(s,0,100);hud();},spawnEnemy:type=>spawnEnemy(type),damageEnemy:(id,amount)=>{const e=enemies.find(x=>x.id===id);if(e)damageEnemy(e,amount,V.make());},getBody:()=>playerBody&&({position:{...playerBody.position},velocity:{...playerBody.velocity},angularVelocity:{...playerBody.angularVelocity}})};
 }
 // Read-only diagnostics for automated smoke testing, not a cheat or mutation interface.
-window.RetroflightStatus=()=>({phase,wave,score,kills,lives,health,maxHealth,gravitySources:gravityBodies.length,aimTarget:aimState.target?.id||null,aimStrength:settings.aimAssist,rollMode:turnStick.rollMode,turn:{x:turnStick.x,y:turnStick.y,vertical:turnStick.vertical},upgrades:{...upgrades},enemyCount:enemies.length,bullets:shots.length,heavyRemaining:Math.max(0,PH.heavyCooldown-(visualTime-heavyLast)),threeReady:!!renderer,touchUI:isTouchUI()});
+window.RetroflightStatus=()=>({phase,wave,score,kills,lives,health,maxHealth,gravitySources:gravityBodies.length,aimTarget:aimState.target?.id||null,aimStrength:settings.aimAssist,rollMode:turnStick.rollMode,liftMode:joystick.liftMode,turn:{x:turnStick.x,y:turnStick.y,vertical:turnStick.vertical},upgrades:{...upgrades},enemyCount:enemies.length,bullets:shots.length,heavyRemaining:Math.max(0,PH.heavyCooldown-(visualTime-heavyLast)),threeReady:!!renderer,touchUI:isTouchUI()});
 })();
